@@ -1,0 +1,11 @@
+SELECT
+      [LFDBEW]
+      ,[ICPMK]
+      ,[ICPML]
+      ,[ANZOP]
+      ,[BGDOP]
+      ,[LSLOK]
+      ,[STORN]
+      ,[FALNR]
+      ,[ORGPF]
+  FROM [Atelier_DataScience].[atl].[LA_ISH_NICP]

@@ -1,0 +1,72 @@
+BWART,Text
+4-BE,Besuch Krankh.
+4-BG,Besuch Gutacht.
+4-BI,B. ex. Institut
+4-BS,Besuch Schwang.
+4-BU,Besuch Unfall
+4-BV,Besuch Vorsorge
+4-BW,Besuch Wissen.
+4-GB,Besuch GG
+4-GK,B.ex.KH GG
+4-KG,B.ex.KH Gutach.
+4-KK,B.ex.KH Krankh.
+4-KS,B.ex.KH Schw.
+4-KU,B.ex.KH Unfall
+4-KV,Kostenvoransch.
+4-KW,B.ex.KH Wissen.
+4-SB,stat. Besuch
+4-VM,Vers.-Mutation
+1-AE,Aufn. Entbind.
+1-AG,Aufn. Gutachten
+1-AK,Aufn. Krankheit
+1-AN,Aufn. Neugeb.
+1-AO,Aufn.Organentn.
+1-AS,Aufn.Muttersch
+1-AT,Totgeburt
+1-AU,Aufn. Unfall
+1-AW,Aufn. Wissensch
+1-AX,Aufn. unklar
+1-EE,Ex.KH Enbind.
+1-EG,Ex.KH Gutachten
+1-EI,Ex. Institut
+1-EK,Ex.KH Krankheit
+1-EN,Ex.KH Neugeb.
+1-ES,Ex.KH Muttersch
+1-EU,Ex.KH Unfall
+1-EW,Ex.KH Wissen.
+1-EX,Ex.KH unklar
+1-GA,Aufnahme GG
+1-GE,Ex.KH GG
+1-GN,Neugeborenes GG
+1-NA,Neugeb. <28T
+1-WA,Wartepat. Aufn.
+3-KA,Klassen+Abt.-W.
+3-KE,Klassen+Einh.-W
+3-KF,Klassen+Fachr.W
+3-KZ,Klassen+ZimmerW
+3-WA,Abteil.-Wechsel
+3-WB,Bettenwechsel
+3-WE,Einh.-Wechsel
+3-WF,Fachr.-Wechsel
+3-WK,Klass.-Wechsel
+3-WS,Stufenwechsel
+3-WZ,Zimmerwechsel
+6-BA,Behandlung Akut
+6-BK,Behandlung ExKh
+6-RA,Rehosp aus
+6-UB,Urlaub-Beginn
+6-UO,Ohne Erlaubnis
+7-EA,Ende Akutbehand
+7-EK,Ende ExBehandl.
+7-RE,Rehosp ein
+7-UE,Urlaub-Ende
+2-EA,Ambulanz ex.KH
+2-EB,Entl. Tarifbere
+2-EI,Entl.ext.Instit
+2-EK,Entl. in ex.KH
+2-EN,Entlassung
+2-EO,Entl.Organentn.
+2-ET,Totgeburt
+2-EV,Verstorben
+2-EW,EntLeigner Wun
+2-WE,Wartepat. Entl.

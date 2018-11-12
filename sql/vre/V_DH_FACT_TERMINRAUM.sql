@@ -1,0 +1,7 @@
+SELECT 
+    [TERMINID],
+    [RAUMID],
+    [TERMINSTART_TS],
+    [TERMINENDE_TS],
+    [DAUERINMIN]
+FROM [Atelier_DataScience].[atl].[V_DH_FACT_TERMINRAUM]
