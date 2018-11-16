@@ -1,5 +1,5 @@
 from datetime import datetime
-from model.Bed import Bed
+from vre.model.Bed import Bed
 import logging
 
 

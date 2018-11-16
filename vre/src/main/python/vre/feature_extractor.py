@@ -2,7 +2,7 @@ from sklearn.feature_extraction import DictVectorizer
 from sklearn import tree
 import numpy as np
 import pandas as pd
-from HDFS_data_loader import HDFS_data_loader
+from vre.HDFS_data_loader import HDFS_data_loader
 import logging
 
 

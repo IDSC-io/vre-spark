@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime
-from model.Employee import Employee
+from vre.model.Employee import Employee
 
 
 class Care:

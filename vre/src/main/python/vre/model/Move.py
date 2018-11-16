@@ -1,5 +1,5 @@
-from model.Room import Room
-from model.Ward import Ward
+from vre.model.Room import Room
+from vre.model.Ward import Ward
 from datetime import datetime
 import logging
 

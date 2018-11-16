@@ -3,21 +3,20 @@ import csv
 import os
 import logging
 
-
-from model.Patient import Patient
-from model.Risk import Risk
-from model.Case import Case
-from model.Room import Room
-from model.Move import Move
-from model.Medication import Medication
-from model.Appointment import Appointment
-from model.Device import Device
-from model.Employee import Employee
-from model.Chop import Chop
-from model.Surgery import Surgery
-from model.Partner import Partner
-from model.Care import Care
-from model.ICD import ICD
+from vre.model.Patient import Patient
+from vre.model.Risk import Risk
+from vre.model.Case import Case
+from vre.model.Room import Room
+from vre.model.Move import Move
+from vre.model.Medication import Medication
+from vre.model.Appointment import Appointment
+from vre.model.Device import Device
+from vre.model.Employee import Employee
+from vre.model.Chop import Chop
+from vre.model.Surgery import Surgery
+from vre.model.Partner import Partner
+from vre.model.Care import Care
+from vre.model.ICD import ICD
 
 ###############################################################################################################
 
