@@ -1,0 +1,252 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>resources folder &mdash; VRE Model 0.0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="sql folder" href="sql.html" />
+    <link rel="prev" title="VRE Model Overview" href="VRE_Model.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> VRE Model
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="VRE_Model.html">VRE Model Overview</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">resources</span></code> folder</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-Query_Atelier_Data">File: Query_Atelier_Data.py</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="sql.html"><code class="docutils literal notranslate"><span class="pre">sql</span></code> folder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="vre.html"><code class="docutils literal notranslate"><span class="pre">vre/src/main/python/vre</span></code> folder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Patient_Test_Data.html">Patient Test Data</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">VRE Model</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li><code class="docutils literal notranslate"><span class="pre">resources</span></code> folder</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/resources.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="resources-folder">
+<h1><code class="docutils literal notranslate"><span class="pre">resources</span></code> folder<a class="headerlink" href="#resources-folder" title="Permalink to this headline">¶</a></h1>
+<p>This folder contains important functions for loading data from SQL into CSV, thereby preparing the “raw” data used for
+building the actual network models.</p>
+<p>Most importantly, this folder also contains the file <code class="docutils literal notranslate"><span class="pre">Update_Model.sh</span></code>, which is a bash script controlling <cite>all steps</cite>
+in the VRE calculation. Since all VRE data are recalculated once per day, this includes (in order):</p>
+<ol class="arabic simple">
+<li><p>Backing up data from the previous calculation cycle in the HDFS file system (from step 4 in the previous run)</p></li>
+<li><p>Reloading data from SQL into CSV</p></li>
+<li><p>Running the VRE analysis (all steps of the analysis are controlled with <code class="docutils literal notranslate"><span class="pre">feature_extractor.py</span></code>)</p></li>
+<li><p>Adding new data (SQL files, CSV files, other data) to the HDFS file system</p></li>
+</ol>
+<div class="section" id="module-Query_Atelier_Data">
+<span id="file-query-atelier-data-py"></span><h2>File: Query_Atelier_Data.py<a class="headerlink" href="#module-Query_Atelier_Data" title="Permalink to this headline">¶</a></h2>
+<p>This script controls the data update for all “raw” data in the VRE Model. It will execute all SQL queries
+(i.e. all files with a ‘.sql’ extension’) found in <code class="docutils literal notranslate"><span class="pre">SQL_DIR</span></code>, and save extracted data to CSV files in <code class="docutils literal notranslate"><span class="pre">CSV_DIR</span></code>.
+CSV and SQL files will be named identically, e.g.:</p>
+<p><code class="docutils literal notranslate"><span class="pre">LA_ISH_NBEW.sql</span></code> <span class="math notranslate nohighlight">\(\longrightarrow\)</span> <code class="docutils literal notranslate"><span class="pre">LA_ISH_NBEW.csv</span></code></p>
+<p>The Atelier_DataScience is queried directly via the <cite>pyodbc</cite> module, and requires an additional connection file
+containing details on the ODBC connection to the Atelier (see VRE Model Overview for more information).</p>
+<dl class="function">
+<dt id="Query_Atelier_Data.WriteSQLToCSV">
+<code class="descclassname">Query_Atelier_Data.</code><code class="descname">WriteSQLToCSV</code><span class="sig-paren">(</span><em>path_to_sql</em>, <em>path_to_csv</em>, <em>csv_sep</em>, <em>connection_file</em>, <em>trusted_connection=True</em><span class="sig-paren">)</span><a class="headerlink" href="#Query_Atelier_Data.WriteSQLToCSV" title="Permalink to this definition">¶</a></dt>
+<dd><p>Executes an SQL query and writes the results to path_to_csv.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path_to_sql</strong> (<em>str</em>) – Path to .sql file containing the query to be executed</p></li>
+<li><p><strong>path_to_csv</strong> (<em>str</em>) – Path to .csv file destination, to which data will be written to in “csv_sep”
+delimited fashion</p></li>
+<li><p><strong>csv_sep</strong> (<em>str</em>) – Delimiter used in the csv file</p></li>
+<li><p><strong>connection_file</strong> (<em>str</em>) – path to file containing information used for server connection and authentication,
+as well as database selection (read and passed to <code class="docutils literal notranslate"><span class="pre">pyodbc.connect()</span></code> )
+This information is read from an external file so as to avoid hard-coding usernames
+and passwords</p></li>
+<li><p><strong>trusted_connection</strong> (<em>bool</em>) – additional argument passed to pyodbc.connect(), converted to “yes” if <code class="docutils literal notranslate"><span class="pre">True</span></code> and
+“no” otherwise</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="sql.html" class="btn btn-neutral float-right" title="sql folder" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="VRE_Model.html" class="btn btn-neutral float-left" title="VRE Model Overview" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, SZ
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -7,7 +7,7 @@
 # Reference: https://intellij-support.jetbrains.com/hc/en-us/articles/206544839
 
 # Ignore .idea directory
-/spitalhygiene/.idea/*
+spitalhygiene/.idea/*
 
 
 # User-specific stuff
@@ -174,7 +174,6 @@ __pycache__/
 
 # Distribution / packaging
 .Python
-build/
 develop-eggs/
 dist/
 downloads/
@@ -231,7 +230,6 @@ instance/
 .scrapy
 
 # Sphinx documentation
-docs/_build/
 
 # PyBuilder
 target/
