@@ -41,13 +41,6 @@ if __name__ == "__main__":
     #####################################
 
     #####################################
-    # ### Various pre-VRE data processing steps
-    # 1) Update VRE Screening Overview file for all wards
-
-    #####################################
-
-
-    #####################################
     # ### Initiate data loader
     logging.info("Initiating HDFS_data_loader")
 
