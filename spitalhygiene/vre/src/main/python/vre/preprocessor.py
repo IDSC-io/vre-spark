@@ -90,7 +90,7 @@ def RecreateWardOverviewData(csv_sep=';'):
 
 def RecreateHospitalMap(csv_sep=';'):
     """
-    Recreates the *Hospital Map*.
+    Recreates the *Hospital Map* in the ``Atelier_DataScience``.
 
     This map links the following important entities in the model:
 
@@ -148,7 +148,7 @@ def RecreateHospitalMap(csv_sep=';'):
 
 def RecreatePflegerischeOEMap(csv_sep=';'):
     """
-    Recreates the map for pflegerische OEs.
+    Recreates the map for pflegerische OEs in the ``Atelier_DataScience``.
 
     This map links "free-text" pflegerische OE names to the *official* names in the ``OE_pflege_abk`` column of the
      ``Atelier_DataScience.dbo.INSEL_MAP`` table.
@@ -190,6 +190,7 @@ def RecreatePflegerischeOEMap(csv_sep=';'):
 
 def RecreateScreeningData(csv_sep=';'):
     """
+    Recreates all screening data in the ``Atelier_DataScience``.
 
     :param csv_sep:
     :return:
