@@ -1,10 +1,13 @@
-from feature_extractor import features_extractor
+import sys
+sys.path.append('../vre')
+
+from feature_extractor import feature_extractor
 
 import pandas as pd
 
 
 def test_prepare_features_and_labels(patient_data):
-    mc = features_extractor()
+    mc = feature_extractor()
     features, labels, dates, v = mc.prepare_features_and_labels(
         patient_data["patients"]
     )
@@ -14,10 +17,8 @@ def test_prepare_features_and_labels(patient_data):
 
 
 def test_export_data(patient_data, tmpdir_factory):
-    mc = features_extractor()
-    features, labels, dates, v = mc.prepare_features_and_labels(
-        patient_data["patients"]
-    )
+    mc = feature_extractor()
+    features, labels, dates, v = mc.prepare_features_and_labels( patient_data["patients"] )
 
     fn = tmpdir_factory.mktemp("data").join("risk_factors.csv")
 
@@ -32,21 +33,18 @@ def test_export_data(patient_data, tmpdir_factory):
 
 
 def test_export_gephi(patient_data, tmpdir_factory):
-    mc = features_extractor()
-    features, labels, dates, v = mc.prepare_features_and_labels(
-        patient_data["patients"]
-    )
+    mc = feature_extractor()
+    features, labels, dates, v = mc.prepare_features_and_labels( patient_data["patients"] )
 
     print(features)
     print(v.feature_names_)
 
-    fn_nodes = tmpdir_factory.mktemp("data").join("node_list.csv")
-    fn_edges = tmpdir_factory.mktemp("data").join("edge_list.csv")
+    file_dir = tmpdir_factory.mktemp("data") # creates a temporary directory only for this test session
 
-    mc.export_gephi(features, labels, dates, v, str(fn_edges), str(fn_nodes))
+    mc.export_gephi(features, labels, dates, v, file_dir)
 
-    result_nodes = pd.read_csv(str(fn_nodes))
-    result_edges = pd.read_csv(str(fn_edges))
+    result_nodes = pd.read_csv(file_dir.join("node_list.csv"))
+    result_edges = pd.read_csv(file_dir.join("edge_list.csv"))
 
     assert result_nodes.shape == (2, 4)
     assert result_edges.shape == (2, 5)

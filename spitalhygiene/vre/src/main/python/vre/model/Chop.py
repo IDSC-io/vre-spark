@@ -98,7 +98,7 @@ class Chop:
         logging.info(f"{len(chops)} chops created")
         return chops
 
-    def chop_code_stats(chops):
+    def chop_code_stats(self, chops):
         """
         Print frequency of different chop codes.
         """

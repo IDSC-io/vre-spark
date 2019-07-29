@@ -37,9 +37,13 @@ class Surgery:
         logging.debug("add_surgery_to_case")
         nr_chop_not_found = 0
         nr_case_not_found = 0
+        nr_surgery_storniert = 0
         nr_ok = 0
         for line in lines:
             surgery = Surgery(*line)
+            if surgery.storn == 'X': # ignore 'stornierte' surgeries
+                nr_surgery_storniert += 1
+                continue
             chop = chops.get(surgery.icpml + "_" + surgery.icpmk, None)
             case = cases.get(surgery.fall_nr, None)
             if chop is not None:
@@ -54,4 +58,5 @@ class Surgery:
                 nr_case_not_found += 1
                 continue
             nr_ok += 1
-        logging.info(f"{nr_ok} ok, {nr_case_not_found} cases not found, {nr_chop_not_found} chop codes not found")
+        logging.info(f"{nr_ok} ok, {nr_case_not_found} cases not found, {nr_chop_not_found} chop codes not found, {nr_surgery_storniert} surgeries storniert")
+

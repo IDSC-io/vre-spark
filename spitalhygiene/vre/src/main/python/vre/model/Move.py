@@ -1,5 +1,5 @@
-from vre.model.Room import Room
-from vre.model.Ward import Ward
+from Room import Room
+from Ward import Ward
 from datetime import datetime
 import logging
 
@@ -31,7 +31,7 @@ class Move:
         self.bew_ty = bew_ty
         self.bw_art = bw_art
         self.bwi_dt = datetime.strptime(
-            bwi_dt + " " + bwi_zt, "%Y-%m-%d %H:%M:%S.0000000"
+            bwi_dt + " " + bwi_zt, "%Y-%m-%d %H:%M:%S"
         )
         self.statu = statu
         self.bwe_dt = None
@@ -84,12 +84,13 @@ class Move:
         --> Adds referring hospital to the Case() and vice versa
         This function will be called by the HDFS_data_loader.patient_data() function (lines is an iterator object). The table from which entries are read is structured as follows:
         >> TABLE NAME: LA_ISH_NBEW
-        ["FALNR",      "LFDNR", "BEWTY",  "BWART",      "BWIDT",        "BWIZT",        "STATU", "BWEDT",       "BWEZT",        "LFDREF", "KZTXT",                "ORGFA", "ORGPF", "ORGAU", "ZIMMR", "BETT", "STORN", "EXTKH"]
-        ["0004496041", "3",     "4",      "SB",         "2014-01-17",   "16:15:00.000", "30",    "2014-01-17",  "16:15:00.000", "0",      "",                     "DIAA",  "DIAA",  "",      "",      "",      "",     ""]
-        ["0004496042", "1",     "4",      "BE",         "2014-03-10",   "08:15:00.000", "30",    "2014-03-10",  "08:15:00.000", "0",      "ej/ nü CT um 10.30 h", "ENDA",  "ENDA",  "IICA",  "",      "",      "",     ""]
+        ["FALNR",      "LFDNR", "BEWTY",  "BWART",      "BWIDT",        "BWIZT",    "STATU", "BWEDT",       "BWEZT",        "LFDREF", "KZTXT",                "ORGFA", "ORGPF", "ORGAU", "ZIMMR", "BETT", "STORN", "EXTKH"]
+        ["0004496041", "3",     "4",      "SB",         "2014-01-17",   "16:15:00", "30",    "2014-01-17",  "16:15:00.000", "0",      "",                     "DIAA",  "DIAA",  "",      "",      "",      "",     ""]
+        ["0004496042", "1",     "4",      "BE",         "2014-03-10",   "08:15:00", "30",    "2014-03-10",  "08:15:00.000", "0",      "ej/ nü CT um 10.30 h", "ENDA",  "ENDA",  "IICA",  "",      "",      "",     ""]
 
         :param faelle:   Dictionary mapping case ids to Case()       --> {'0005976205' : Case(), ... }
         :param rooms:    Dictionary mapping room names to Room()     --> {'BH N 125' : Room(), ... }
+        :param room_ids: Dictionary mapping room IDs to Room()       --> {'127803' : Room(), ... }
         :param wards:    Dictionary mapping ward names to Ward()     --> {'N NORD' : Ward(), ... }
         :param partners: Dictionary mapping partner ids to Partner() --> {'0010000990' : Partner(), ... }
         """
@@ -97,6 +98,7 @@ class Move:
         nr_not_found = 0
         nr_not_formatted = 0
         nr_ok = 0
+        nr_wards_updated = 0
         for counter, line in enumerate(lines):
             if len(line) != 18:
                 nr_not_formatted += 1
@@ -112,22 +114,41 @@ class Move:
                 else:
                     nr_not_found += 1
                     continue
-                if move.zimmr != "" and move.zimmr != "NULL":
-                    if rooms.get(move.zimmr, None) is None:
-                        r = Room(move.zimmr)
-                        rooms[move.zimmr] = r
-                    rooms[move.zimmr].add_move(move)
-                    move.add_room(rooms[move.zimmr])
+                ward = None
+                ### Add ward to move and vice versa
                 if move.org_pf != "" and move.org_pf != "NULL":
                     if wards.get(move.org_pf, None) is None:
                         ward = Ward(move.org_pf)
                         wards[move.org_pf] = ward
                     wards[move.org_pf].add_move(move)
                     move.add_ward(wards[move.org_pf])
+                ### Add move to room and vice versa (including an update of the Room().ward attribute)
+                if move.zimmr != "" and move.zimmr != "NULL":
+                    if rooms.get(move.zimmr, None) is None:
+                        # Note that the rooms are primarily identified through their name
+                        # The names in this file come from SAP (without an associated ID), so they will NOT match the names already present in the rooms dictionary !
+                        this_room = Room(move.zimmr)
+                        rooms[move.zimmr] = this_room
+
+                        # In order to extract the Room ID, we need to 'backtrace' the key in room_ids for which room_ids[key] == move.zimmr (this will not be available for most Rooms)
+                        # If a backtrace is not possible, the room object will be initiated without an ID
+                        # correct_room_id = [(value_tuple[0], value_tuple[1].name) for value_tuple in room_ids.items() if value_tuple[1] == move.zimmr]
+                        # if len(correct_room_id) == 1:
+                        #     logging.info(f"Found room ID for room name {move.zimmr} !")
+                        #     r = Room(move.zimmr, correct_room_id[0][0] ) # correct_room_id at this point will be a list containing one tuple --> [ ('123456', 'BH O 128') ]
+                        # else:
+                        #     r = Room(move.zimmr) # Create the Room() object without providing an ID
+                        # rooms[move.zimmr] = r
+                    # Then add the ward to this room, and update moves with rooms and vice versa
+                    rooms[move.zimmr].add_ward(ward)
+                    rooms[move.zimmr].add_move(move)
+                    move.add_room(rooms[move.zimmr])
+                    nr_wards_updated += 1
+                ### Parse patients from external referrers
                 if move.ext_kh != "":
                     if move.case is not None and partners.get(move.ext_kh, None) is not None:
                         partners[move.ext_kh].add_case(move.case)
                         move.case.add_referrer(partners[move.ext_kh])
                 nr_ok += 1
 
-        logging.info(f"{nr_ok} ok, {nr_not_found} cases not found, {nr_not_formatted} malformed")
+        logging.info(f"{nr_ok} ok, {nr_not_found} cases not found, {nr_not_formatted} malformed, {nr_wards_updated} wards updated")

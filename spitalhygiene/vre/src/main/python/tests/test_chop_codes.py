@@ -1,12 +1,12 @@
 def test_chop_codes_load(patient_data):
-    assert len(patient_data["chops"]) == 249
+    assert len(patient_data["chops"]) == 250
 
 
 def test_chop_code_description(patient_data):
     print(patient_data["chops"].get("Z39.64_18").get_detailed_chop())
     assert (
         patient_data["chops"].get("Z39.64_18").get_detailed_chop()
-        == "VorlÃ¤ufiger Schrittmacher eingesetzt wÃ¤hrend und unmittelbar nach herzchirurgischem Eingriff" # Note weird encoding of german "Umlaut" strings
+        == "Vorläufiger Schrittmacher eingesetzt während und unmittelbar nach herzchirurgischem Eingriff" # Note weird encoding of german "Umlaut" strings
     )
 
 

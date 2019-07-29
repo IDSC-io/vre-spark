@@ -2,24 +2,30 @@ import pytest
 import csv
 import os
 import sys
-sys.path.append("T:/Git Repositories/Bitbucket/stepaza/sqooba/insel/spitalhygiene/vre/src/main/python/vre") # allows import of all classes via model.[Class]
+import configparser
+sys.path.append("../vre/model")
 
-from model.Patient import Patient
-from model.Case import Case
-from model.Move import Move
-from model.Risk import Risk
-from model.Medication import Medication
-from model.Chop import Chop
-from model.Surgery import Surgery
-from model.Appointment import Appointment
-from model.Device import Device
-from model.Employee import Employee
-from model.Room import Room
-from model.Partner import Partner
-from model.Care import Care
-from model.ICD import ICD
+from Patient import Patient
+from Case import Case
+from Move import Move
+from Risk import Risk
+from Medication import Medication
+from Chop import Chop
+from Surgery import Surgery
+from Appointment import Appointment
+from Device import Device
+from Employee import Employee
+from Room import Room
+from Partner import Partner
+from Care import Care
+from ICD import ICD
 
-base_path = "T:/IDSC Projects/VRE Model/Data/Test Data"  # Must point to the directory containing all CSV testfiles - these are patient data and may NOT be in the repo !
+# Load configuration file
+config_reader = configparser.ConfigParser()
+config_reader.read('../vre/BasicConfig.ini')
+
+base_path = config_reader['PATHS']['test_data_dir']  # Must point to the directory containing all CSV testfiles - these are patient data and may NOT be in the repo !
+
 patients_path = os.path.join(base_path, "V_DH_DIM_PATIENT_CUR.csv")
 cases_path = os.path.join(base_path, "V_LA_ISH_NFAL_NORM.csv")
 moves_path = os.path.join(base_path, "LA_ISH_NBEW.csv")
@@ -38,11 +44,11 @@ room_appointment_path = os.path.join(base_path, "V_DH_FACT_TERMINRAUM.csv")
 partner_path = os.path.join(base_path, "LA_ISH_NGPA.csv")
 partner_case_path = os.path.join(base_path, "LA_ISH_NFPZ.csv")
 tacs_path = os.path.join(base_path, "TACS_DATEN.csv")
-icd_path = os.path.join(base_path, "LA_ISH_NDIA.csv")
+icd_path = os.path.join(base_path, "LA_ISH_NDIA_NORM.csv")
 
 def get_hdfs_pipe(path):
     encoding = "iso-8859-1"
-    lines = csv.reader(open(path, 'r'), delimiter=";")
+    lines = csv.reader(open(path, 'r'), delimiter=config_reader['DELIMITERS']['csv_sep'])
     next(lines, None)  # skip header
     return lines
 
@@ -80,9 +86,7 @@ def patient_data():
     Device.add_device_to_appointment(get_hdfs_pipe(device_appointment_path), appointments, devices)
 
     employees = Employee.create_employee_map(get_hdfs_pipe(appointment_employee_path))
-    Employee.add_employee_to_appointment(
-        get_hdfs_pipe(appointment_employee_path), appointments, employees
-    )
+    Employee.add_employee_to_appointment( get_hdfs_pipe(appointment_employee_path), appointments, employees )
 
     Care.add_care_to_case(get_hdfs_pipe(tacs_path), cases, employees)
 

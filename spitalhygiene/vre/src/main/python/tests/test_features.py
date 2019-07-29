@@ -59,6 +59,6 @@ def test_dict_vectorizer(patient_data):
     features = v.fit_transform(risk_factors)
 
     assert len(features) == 2
-    assert len(features[0]) == 206
+    assert len(features[0]) == 203
 
     assert "device=ECC" in v.vocabulary_

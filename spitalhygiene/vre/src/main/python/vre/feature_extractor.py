@@ -1,263 +1,287 @@
+# -*- coding: utf-8 -*-
+"""This script contains the feature_extractor class, which controls the following aspects of VRE:
+
+- Preparation of the feature vector
+- Extraction of patient-patient contacts
+- Export to various sources (Gephi, CSV, Neo4J, etc.)
+
+-----
+"""
+
 from sklearn.feature_extraction import DictVectorizer
-from sklearn import tree
 import numpy as np
 import pandas as pd
-from vre.HDFS_data_loader import HDFS_data_loader
-import logging
+import os
+import datetime
+from dateutil import relativedelta
 
 
-class features_extractor:
+class feature_extractor:
+    """Creates pandas dataframes with features, labels and relevant dates, and provides export functions to various
+    target systems.
     """
-    Creates pandas dataframes with features, labels and relevant dates, and exports them to csv, gephi and neo4j
-    """
-    def prepare_features_and_labels(self, patients):
-        """
-        Creates the feature np array and label np array (along with relevant dates np array).
+    @staticmethod
+    def prepare_features_and_labels(patients):
+        """*Internal function used in various data exports.*
 
-        :param patients: Dictionary mapping patient ids to Patient() objects --> {"00001383264" : Patient(), "00001383310" : Patient(), ...}
+        Creates the feature ``np.array()`` and label ``np.array()``, along with relevant dates.
 
-        :return: (features, labels, dates, v)
+        Args:
+            patients (dict):    Dictionary mapping patient ids to Patient() objects of the form
+                                ``{"00001383264":  Patient(), "00001383310":  Patient(), ...}``
+
+        Returns:
+            tuple: tuple of length 4 of the form :math:`\\longrightarrow` *(features, labels, dates, v)*
+
+            Please refer to function code for more details.
         """
         risk_factors = []
         labels = []
         dates = []
         for patient in patients.values():
-            patient_features = patient.get_features()   # Dictionary of the form --> {"length_of_stay" : 47, "nr_cases" : 3, ... }
+            patient_features = patient.get_features()  # Dictionary --> {"length_of_stay" : 47, "nr_cases" : 3, ... }
             if patient_features is not None:
                 risk_factors.append(patient_features)
-                labels.append(patient.get_label())      # patient.get_label() will return an integer between -1 and 3
-                dates.append(patient.get_risk_date())   # patient.get_risk_date() will return a datetime.datetime() object corresponding to the risk date associated with the label
+                labels.append(patient.get_label())     # patient.get_label() will return an integer between -1 and 3
+                dates.append(patient.get_risk_date())
+                # patient.get_risk_date() will return a datetime.datetime() object corresponding to the label risk date
         v = DictVectorizer(sparse=False)
-        features = v.fit_transform(risk_factors)        # features.shape yields a tuple of dimensions in the format (nrow, ncol), or a tuple (LENGTH, ) in case of only 1 dimension (i.e. a list)
-        # print(features)
-        # print(features.shape)
-        # print(type(features))
+        features = v.fit_transform(risk_factors)
+        # features.shape yields a tuple of dimensions in the format (nrow, ncol),
+        # or a tuple (LENGTH, ) in case of only 1 dimension (i.e. a list)
         ###############################################################################################################
-        # features is a numpy.ndarray() object with one row per patient containing the "fitted" risk factors for each patient in the one-of-K fashion described in the .fit_transform() documentation
-        # E.g. for a categorical value with levels "a", "b", and "c", it will contain three columns containing 0 or 1 and corresponding to value=a, value=b and value=c
+        # Note: features is a numpy.ndarray() object with one row per patient containing the "fitted" risk factors for
+        # each patient in the one-of-K fashion as described in the .fit_transform() documentation
+        # E.g. for a categorical value with levels "a", "b", and "c", it will contain three columns containing 0 or 1
+        # and corresponding to value=a, value=b and value=c
         ###############################################################################################################
         # filter = ~np.isnan(features).any(axis=1)
         # features_filtered = features[~np.isnan(features).any(axis=1)]
         labels_np = np.asarray(labels)
-        # labels_np is a 1-D numpy.ndarray() object based on labels, which is a list of labels between -1 and 3 for each patient in the dataset (e.g. ndarray([1 2 2 -1 3 3 2 1 1 2]) )
-        # print(labels_np)
-        # print(type(labels_np))
+        # --> labels_np is a 1-D numpy.ndarray() object based on labels, which is a list of labels between -1 and 3
+        #       for each patient in the dataset (e.g. ndarray([1 2 2 -1 3 3 2 1 1 2]) )
         ###############################################################################################################
         # labels_np
         # labels_filtered = labels_np[filter]
         dates_np = np.asarray(dates)
-        # same structure as labels_np, but contains the risk date for each patient in the dataset as a datetime.datetime() object
+        # --> same structure as labels_np, but contains the risk date for each patient in the dataset
+        #       as a datetime.datetime() object
         ###############################################################################################################
         # dates_filtered = dates_np[filter]
 
-        return (features, labels_np, dates_np, v)
+        return features, labels_np, dates_np, v
 
-    def export_csv(self, features, labels, dates, v, file_path):
-        """
-        Combines features, labels and dates in a pandas.DataFrame(), and exports all data to the csv file given in file_path.
+    @staticmethod
+    def export_csv(features, labels, dates, v, file_path):
+        """Function for exporting features, labels and dates to CSV.
 
-        :param features:    numpy.ndarray() with one row per patient containing the "fitted" risk factors for each patient in the one-of-K fashion
-        :param labels:      1-D numpy.ndarray() containing the labels for each patient (integers between -1 and 3)
-        :param dates:       1-D numpy.ndarray() containing risk dates labels for each patient
-        :param v:           sklearn.feature_extraction.DictVectorizer() object with which the features parameter was created
+        Combines features, labels and dates in a ``pandas.DataFrame()``, and exports all data to the csv file given
+        in file_path.
+
+        Args:
+            features (numpy.ndarray()): ``numpy.ndarray()`` with one row per patient containing "fitted" risk factors
+                                        for each patient in the one-of-K fashion
+            labels (numpy.ndarray()):   1-D ``numpy.ndarray()`` containing the labels for each patient
+                                        (integers between -1 and 3)
+            dates (numpy.ndarray()):    1-D ``numpy.ndarray()`` containing risk dates for each patient
+            v:                          ``sklearn.feature_extraction.DictVectorizer()`` object with which the *features*
+                                        parameter was created
+            file_path (str):            Absolute path to exported csv file
         """
-        sorted_cols = [k for k in sorted(v.vocabulary_, key=v.vocabulary_.get)] # v.vocabulary_ is a dictionary mapping feature names to feature indices
+        sorted_cols = [k for k in sorted(v.vocabulary_, key=v.vocabulary_.get)]
+        # --> v.vocabulary_ is a dictionary mapping feature names to feature indices
         df = pd.DataFrame(data=features, columns=sorted_cols)
         df["label"] = labels
         df["diagnosis_date"] = dates
-        df.to_csv(file_path, sep=",", encoding="utf-8", index=False) # index = False will prevent writing row names in a separate, unlabeled column
+        df.to_csv(file_path, sep=",", encoding="utf-8", index=False)
+        # --> index = False will prevent writing row names in a separate, unlabeled column
 
-    def export_gephi(
-        self,
-        features,
-        labels,
-        dates,
-        v,
-        edge_filename="edge_list.csv",
-        node_filename="node_list.csv",
-    ):
+    @staticmethod
+    def export_gephi(features, labels, dates, v, dest_path='.', csv_sep=','):
+        """Exports  the node and edge list in Gephi-compatible format for visualisation.
+
+        Edges and nodes will be exported to files ``dest_path/edge_list.csv`` and ``dest_path/node_list.csv``,
+        respectively.
+
+        Args:
+            features (numpy.ndarray()): ``numpy.ndarray()`` with one row per patient containing the "fitted" risk
+                                        factors for each patient in the one-of-K fashion.
+            labels (numpy.ndarray()):   1-D ``numpy.ndarray()`` containing the labels for each patient
+                                        (integers between -1 and 3)
+            dates (numpy.ndarray()):    1-D ``numpy.ndarray()`` containing risk dates for each patient
+            v:                          ``sklearn.feature_extraction.DictVectorizer()`` object with which the features
+                                        parameter was created
+            dest_path (str):            path into which the edge_list.csv and node_list.csv files will be exported
+                                        (defaults to the current working directory)
+            csv_sep (str):              separator for exported csv files (defaults to ``,``)
         """
-        Export the node list and edge list for visualisation in Gephi
-        :param features:
-        :param labels:
-        :param dates:
-        :param v:
-        :return:
-        """
+        # --> Process Rooms
+        room_vocabulary = {key: value for key, value in v.vocabulary_.items() if key.startswith("room")}
+        # Dictionary of the form --> 'room=INE GE06': 176, 'room=KARR EKG': 183, ...}
 
-        room_vocabulary = dict(
-            [(k, v) for k, v in v.vocabulary_.items() if k.startswith("room")]
-        )
-        room_cols = list([v for k, v in room_vocabulary.items()])
+        # Maps the feature (i.e. column) names to their respective column index (useful for array slicing later)
+        room_cols = list(room_vocabulary.values())  # list of indices in v containing room information (for slicing)
 
-        employee_vocabulary = dict(
-            [(k, v) for k, v in v.vocabulary_.items() if k.startswith("employee")]
-        )
-        employee_cols = list([v for k, v in employee_vocabulary.items()])
+        # --> Process Employees
+        employee_vocabulary = {key: value for key, value in v.vocabulary_.items() if key.startswith("employee")}
+        # Dictionary of the form --> 'employee=DHGE035': 126, 'employee=0075470': 178, ...}
 
-        device_vocabulary = dict(
-            [(k, v) for k, v in v.vocabulary_.items() if k.startswith("device")]
-        )
-        device_cols = list([v for k, v in device_vocabulary.items()])
+        # Maps the feature (i.e. column) names to their respective column index (useful for array slicing later)
+        employee_cols = list(employee_vocabulary.values())
 
-        edge_list = open(edge_filename, "w")
-        edge_list.write("Source,Target,Weight,Type,Art\n")
+        # --> Process Devices
+        device_vocabulary = {key: value for key, value in v.vocabulary_.items() if key.startswith("device")}
+        # Dictionary of the form --> 'device=ECC': 14, 'device=XY12344': 251, ...}
+
+        # Maps the feature (i.e. column) names to their respective column index (useful for array slicing later)
+        device_cols = list(device_vocabulary.values())
+
+        #####################################
+        # --> Write EDGE list
+        #####################################
+        edge_list = open(os.path.join(dest_path, 'edge_list.csv'), "w")
+        edge_list.write(csv_sep.join(['Source', 'Target', 'Weight', 'Type', 'Art\n']))
         nr_patients = len(features)
         for ind in range(nr_patients):
-            # only include patients with screening (labels 1,2,3)
-            print(labels.item(ind))
-            if labels.item(ind) >= 1:
-                print(ind)
+            if labels.item(ind) >= 1:  # only include patients with screening (labels 1,2,3)
                 for j in range((ind + 1), nr_patients):
-                    print(j)
-                    # only include patients with screening (labels 1,2,3)
-                    if labels.item(j) >= 1:
+                    if labels.item(j) >= 1:  # only include patients with screening (labels 1,2,3)
+                        #####################################
+                        # --> Process Sources & Targets
+                        #####################################
                         # edge goes from older to newer relevant date
-                        source_target_str = str(ind) + "," + str(j)
+                        source_target_str = str(ind) + csv_sep + str(j)
+                        # Sources and targets are given as integers from 0 to nr_patients - 1 (NOT as patient ids)
                         if dates[ind] is None or dates[j] is None or dates[ind] > dates[j]:
-                            source_target_str = str(j) + "," + str(ind)
-                        # shared rooms
-                        weight_rooms = sum(
-                            np.logical_and(features[ind, room_cols], features[j, room_cols])
-                        )
+                            # indicates that relevant date for patient[j] is older --> switch direction of edge
+                            source_target_str = str(j) + csv_sep + str(ind)
+                        #####################################
+                        # --> Process shared rooms (used as an edge weight)
+                        #####################################
+                        weight_rooms = sum(np.logical_and(features[ind, room_cols], features[j, room_cols]))
+                        # logical_and() performs list-wise comparison on multiple lists of the same length and returns
+                        #   True if all entries at any position are > 0 and False otherwise
                         if weight_rooms > 0:
-                            edge_list.write(
-                                source_target_str
-                                + ","
-                                + str(weight_rooms)
-                                + ',"directed","rooms"\n'
-                            )
-                        # shared employees
-                        weight_employees = sum(
-                            np.logical_and(
-                                features[ind, employee_cols], features[j, employee_cols]
-                            )
-                        )
+                            # Only write to edge_list if weight is > 0 - otherwise, this indicates that patients had
+                            #   never shared the same room (same applies for all edge weights)
+                            edge_list.write(source_target_str + csv_sep + str(weight_rooms) + csv_sep + "directed" +
+                                            csv_sep + "rooms\n")
+                        #####################################
+                        # --> Process shared employees (used as an edge weight)
+                        #####################################
+                        weight_employees = sum(np.logical_and(features[ind, employee_cols], features[j, employee_cols]))
                         if weight_employees > 0:
-                            edge_list.write(
-                                source_target_str
-                                + ","
-                                + str(weight_employees)
-                                + ',"directed","employees"\n'
-                            )
-                        # shared devices
-                        weight_devices = sum(
-                            np.logical_and(features[ind, device_cols], features[j, device_cols])
-                        )
+                            edge_list.write(source_target_str + csv_sep + str(weight_employees) + csv_sep + 'directed'
+                                            + csv_sep + 'employees\n')
+                        #####################################
+                        # --> Process shared devices (used as an edge weight)
+                        #####################################
+                        weight_devices = sum( np.logical_and(features[ind, device_cols], features[j, device_cols]) )
                         if weight_devices > 0:
-                            edge_list.write(
-                                source_target_str
-                                + ","
-                                + str(weight_devices)
-                                + ',"directed","devices"\n'
-                            )
-
+                            edge_list.write(source_target_str + csv_sep + str(weight_devices) + csv_sep + 'directed' +
+                                            csv_sep + 'devices\n')
+        # Close file
         edge_list.close()
 
-        node_list = open(node_filename, "w")
-        node_list.write("Id,Label,Start,Category\n")
-        for ind, dt in enumerate(dates):
+        #####################################
+        # --> Write NODES list
+        #####################################
+        node_list = open(os.path.join(dest_path, 'node_list.csv'), "w")
+        node_list.write(csv_sep.join(['Id', 'Label', 'Start', 'Category\n']))
+        for ind, dt in enumerate(dates):  # dates is a vector of either relevant dt.dt() objects or None
             infection = ""
             if dt is not None:
                 infection = dt.strftime("%Y-%m-%d")
-            node_list.write(str(ind) + ',"' + infection + '",0,' + str(labels[ind]) + "\n")
+            node_list.write(str(ind) + csv_sep + infection + csv_sep + '0' + csv_sep + str(labels[ind]) + "\n")
 
+        # Close file
         node_list.close()
 
-if __name__ == "__main__":
+    @staticmethod
+    def get_contact_patients_for_case(cases, contact_pats):
+        """Extracts contact patients for specific cases.
 
-    logging.basicConfig(format='%(asctime)s - %(levelname)s: %(message)s', level=logging.INFO, datefmt='%d.%m.%Y %H:%M:%S')
+        Appends tuples of length 6 (see param contact_pats) directly to contact_pats, which is a list recording all
+        patient contacts.
 
-    logging.info("Initiating HDFS_data_loader")
-    # loader = HDFS_data_loader(base_path='T:/IDSC Projects/VRE Model/Data/Model Data', hdfs_pipe = False) # hdfs_pipe = False --> files will be loaded directly from CSV
-    loader = HDFS_data_loader(base_path="T:/IDSC Projects/VRE Model/Data/Test Data", hdfs_pipe=False)  # For testing purposes --> switch delimiter to ";" !
-    patient_data = loader.patient_data()
+        Args:
+            cases (dict):           Dictionary mapping case ids to Case() objects --> {"0003536421" : Case(),
+                                    "0003473241" : Case(), ...}
+            contact_pats (list):    List containing tuples of length 6 of either the format: `(source_pat_id,
+                                    dest_pat_id, start_overlap_dt, end_overlap_dt, room_name, "kontakt_raum")` in the
+                                    case of a contact room, or the format `(source_pat_id, dest_pat_id,
+                                    start_overlap_dt, end_overlap_dt, ward_name, "kontakt_org")` in the case of a
+                                    contact organization.
+        """
+        for move in cases.moves.values():
+            ####################################################
+            # --> Extract contacts in the same room
+            ####################################################
+            if move.bwe_dt is not None and move.room is not None:
+                overlapping_moves = move.room.get_moves_during(move.bwi_dt, move.bwe_dt)
+                # get_moves_during() returns a list of all moves overlapping with the .bwi_dt - .bwe_dt interval
+                for overlap_move in overlapping_moves:
+                    if overlap_move.case is not None and move.case is not None:
+                        if overlap_move.case.fal_ar == "1" and overlap_move.bew_ty in ["1", "2", "3"] and \
+                                overlap_move.bwe_dt is not None:
+                            start_overlap = max(move.bwi_dt, overlap_move.bwi_dt)
+                            end_overlap = min(move.bwe_dt, overlap_move.bwe_dt)
+                            contact_pats.append(
+                                (
+                                    move.case.patient_id,
+                                    overlap_move.case.patient_id,
+                                    start_overlap.strftime("%Y-%m-%dT%H:%M"),
+                                    end_overlap.strftime("%Y-%m-%dT%H:%M"),
+                                    move.room.name,
+                                    "kontakt_raum",
+                                ))  # append data in the form of a tuple
+            ####################################################
+            # --> Extract contacts in the same ward (ORGPF)
+            ####################################################
+            if move.bwe_dt is not None and move.ward is not None:
+                overlapping_moves = move.ward.get_moves_during(move.bwi_dt, move.bwe_dt)
+                for overlap_move in overlapping_moves:
+                    if overlap_move.case is not None and move.case is not None:
+                        if overlap_move.case.fal_ar == "1" and overlap_move.bew_ty in ["1", "2", "3"] and \
+                                overlap_move.bwe_dt is not None and \
+                                (overlap_move.zimmr is None or move.zimmr is None or overlap_move.zimmr != move.zimmr):
+                            start_overlap = max(move.bwi_dt, overlap_move.bwi_dt)
+                            end_overlap = min(move.bwe_dt, overlap_move.bwe_dt)
+                            contact_pats.append(
+                                (
+                                    move.case.patient_id,
+                                    overlap_move.case.patient_id,
+                                    start_overlap.strftime("%Y-%m-%dT%H:%M"),
+                                    end_overlap.strftime("%Y-%m-%dT%H:%M"),
+                                    move.ward.name,
+                                    "kontakt_org",
+                                ))
 
-    logging.info("creating model")
-    model_creator = features_extractor()
-    (features, labels, dates, v) = model_creator.prepare_features_and_labels(patient_data["patients"])
+    def get_contact_patients(self, patients):
+        """Extracts all patient contacts.
 
-    logging.info("exporting data")
-    model_creator.export_csv(features, labels, dates, v, "patients.csv")
+        Extract all contacts between patients in the same room and same ward which occurred during the last year.
 
-    ##########################################################################
-    ### For overview purposes (works only on test data)
+        Args:
+            patients (dict):    Dictionary mapping patient ids to Patient() objects --> {"00001383264" : Patient(),
+                                "00001383310" : Patient(), ...}
 
-    # Room object
-    # print('\nRoom object')
-    # for attribute in ['name', 'moves', 'appointments', 'beds']:
-    #     print(getattr(patient_data['rooms']['BH N 125'], attribute), type(getattr(patient_data['rooms']['BH N 125'], attribute)))
-    #
-    # # Bed object
-    # print('\nBed object')
-    # for attribute in ['name', 'moves']:
-    #     print(getattr(patient_data['rooms']['BH N 125'].beds['BHN125F'], attribute), type(getattr(patient_data['rooms']['BH N 125'].beds['BHN125F'], attribute)))
-    #
-    # # Moves object
-    # print('\nMoves object')
-    # for attribute in ['fal_nr', 'lfd_nr','bew_ty','bw_art','bwi_dt','statu','bwe_dt','ldf_ref','kz_txt','org_fa','org_pf','org_au','zimmr','bett','storn','ext_kh', 'room', 'ward', 'case']:
-    #     print(getattr(patient_data['rooms']['BH N 125'].moves[0], attribute), type(getattr(patient_data['rooms']['BH N 125'].moves[0], attribute)))
-    #
-    # # Ward object
-    # print('\nWard object')
-    # for attribute in ['name', 'moves', 'appointments']:
-    #     print(getattr(patient_data['rooms']['BH N 125'].moves[0].ward, attribute), type(getattr(patient_data['rooms']['BH N 125'].moves[0].ward, attribute)))
-    #
-    # # Case object
-    # print('\nCase object')
-    # for attribute in ['patient_id','case_id','case_typ','case_status','fal_ar','beg_dt','end_dt','patient_typ','patient_status','appointments','cares','surgeries','moves','moves_start','moves_end','referrers','patient','medications']:
-    #     print(getattr(patient_data['rooms']['BH N 125'].moves[0].case, attribute), type(getattr(patient_data['rooms']['BH N 125'].moves[0].case, attribute)))
-    #
-    # # Patient object
-    # print('\nPatient object')
-    # for attribute in ['patient_id','geschlecht','geburtsdatum','plz','wohnort','kanton','sprache','cases','risks']:
-    #     print(getattr(patient_data['rooms']['BH N 125'].moves[0].case.patient, attribute), type(getattr(patient_data['rooms']['BH N 125'].moves[0].case.patient, attribute)))
-    #
-    # # Care object
-    # print('\nCare object')
-    # for attribute in ['patient_id','case_id','dt','duration_in_minutes','employee_nr','employee']:
-    #     print(getattr(patient_data['rooms']['BH N 125'].moves[0].case.cares[0], attribute), type(getattr(patient_data['rooms']['BH N 125'].moves[0].case.cares[0], attribute)))
-    #
-    # # Employee object
-    # print('\nEmployee object')
-    # for attribute in ['mitarbeiter_id']:
-    #     print(getattr(patient_data['rooms']['BH N 125'].moves[0].case.cares[0].employee, attribute), type(getattr(patient_data['rooms']['BH N 125'].moves[0].case.cares[0].employee, attribute)))
-    #
-    # # Appointment object
-    # print('\nAppointment object')
-    # for attribute in ['termin_id','is_deleted','termin_bezeichnung','termin_art','termin_typ','termin_datum','dauer_in_min','devices','employees','rooms']:
-    #     print(getattr(patient_data['rooms']['BH N 125'].moves[0].case.appointments[0], attribute), type(getattr(patient_data['rooms']['BH N 125'].moves[0].case.appointments[0], attribute)))
-    #
-    # # Surgery object
-    # print('\nSurgery object')
-    # for attribute in ['bgd_op','lfd_bew','icpmk','icpml','anzop','lslok','fall_nr','storn','org_pf','chop']:
-    #     print(getattr(patient_data['rooms']['BH N 125'].moves[0].case.surgeries[0], attribute), type(getattr(patient_data['rooms']['BH N 125'].moves[0].case.surgeries[0], attribute)))
-    #
-    # # Chop object
-    # print('\nChop object')
-    # for attribute in ['chop_code','chop_verwendungsjahr','chop','chop_code_level1','chop_level1','chop_code_level2','chop_level2','chop_code_level3','chop_level3','chop_code_level4','chop_level4','chop_code_level5','chop_level5','chop_code_level6','chop_level6','chop_status','chop_sap_katalog_id','cases']:
-    #     print(getattr(patient_data['rooms']['BH N 125'].moves[0].case.surgeries[0].chop, attribute), type(getattr(patient_data['rooms']['BH N 125'].moves[0].case.surgeries[0].chop, attribute)))
-    #
-    # # Medication object
-    # print('\nMedication object')
-    # for attribute in ['patient_id','case_id','drug_text','drug_atc','drug_quantity','drug_unit','drug_dispform','drug_submission']:
-    #     print(getattr(patient_data['rooms']['BH N 125'].moves[0].case.medications[0], attribute), type(getattr(patient_data['rooms']['BH N 125'].moves[0].case.medications[0], attribute)))
-    #
-    # # Partner object - these are found in the 'referrers' set attribute, which is why the attribute is converted to a list()
-    # print('\nPartner object')
-    # for attribute in ['gp_art','name1','name2','name3','land','pstlz','ort','ort2','stras','krkhs','referred_cases']:
-    #     print(getattr(list(patient_data['rooms']['BH N 125'].moves[0].case.referrers)[0], attribute), type(getattr(list(patient_data['rooms']['BH N 125'].moves[0].case.referrers)[0], attribute)))
-    #
-    # # Device object
-    # print('\nDevice object')
-    # for attribute in ['geraet_id','geraet_name']:
-    #     print(getattr(patient_data['devices']['64174'], attribute), type(getattr(patient_data['devices']['64174'], attribute)))
-    #
-    # # Risk object
-    # print('\nRisk object --> see class definition')
-    ##########################################################################
+        Returns:
+            list: List containing tuples of length 6 of either the format
 
-    logging.info("data exported successfully")
+            `(source_pat_id, dest_pat_id, start_overlap_dt, end_overlap_dt, room_name, "kontakt_raum")`
 
+            or the format
 
+            `(source_pat_id, dest_pat_id, start_overlap_dt, end_overlap_dt, ward_name, "kontakt_org")`
+        """
+        contact_pats = []
+        for pat in patients.values():
+            if pat.has_risk():
+                for case in pat.cases.values():
+                    # if case.fal_ar == "1": # only stationary cases
+                    if case.moves_end is not None and case.moves_end > \
+                            datetime.datetime.now() - relativedelta.relativedelta(years=1):
+                        self.get_contact_patients_for_case(case, contact_pats)
+        return contact_pats
 

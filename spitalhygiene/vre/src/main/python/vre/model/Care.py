@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime
-from vre.model.Employee import Employee
+from Employee import Employee
 
 
 class Care:
@@ -27,9 +27,9 @@ class Care:
         self.patient_id = patient_patientid
         self.case_id = fall_nummer
         try:
-            self.dt = datetime.strptime(datum_betreuung, "%Y-%m-%d %H:%M:%S.0")
+            self.dt = datetime.strptime(datum_betreuung, "%Y-%m-%d %H:%M:%S")
         except ValueError as e:
-            self.dt = datetime.strptime(datum_betreuung, "%Y-%m-%d %H:%M:%S.000")
+            self.dt = datetime.strptime(datum_betreuung, "%Y-%m-%d %H:%M:%S")
         self.duration_in_minutes = int(dauer_betreuung_in_min)
         self.employee_nr = mitarbeiter_personalnummer
 

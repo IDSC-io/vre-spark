@@ -1,0 +1,20 @@
+SELECT
+	sum (case when [LFDBEW] is null then 0 else 1 end) as "LFDBEW_NONNULLCOUNT",
+	sum (case when [LFDBEW] is null then 1 else 0 end) as "LFDBEW_NULLCOUNT",
+	sum (case when [ICPMK] is null then 0 else 1 end) as "ICPMK_NONNULLCOUNT",
+	sum (case when [ICPMK] is null then 1 else 0 end) as "ICPMK_NULLCOUNT",
+	sum (case when [ICPML] is null then 0 else 1 end) as "ICPML_NONNULLCOUNT",
+	sum (case when [ICPML] is null then 1 else 0 end) as "ICPML_NULLCOUNT",
+	sum (case when [ANZOP] is null then 0 else 1 end) as "ANZOP_NONNULLCOUNT",
+	sum (case when [ANZOP] is null then 1 else 0 end) as "ANZOP_NULLCOUNT",
+	sum (case when [BGDOP] is null then 0 else 1 end) as "BGDOP_NONNULLCOUNT",
+	sum (case when [BGDOP] is null then 1 else 0 end) as "BGDOP_NULLCOUNT",
+	sum (case when [LSLOK] is null then 0 else 1 end) as "LSLOK_NONNULLCOUNT",
+	sum (case when [LSLOK] is null then 1 else 0 end) as "LSLOK_NULLCOUNT",
+	sum (case when [STORN] is null then 0 else 1 end) as "STORN_NONNULLCOUNT",
+	sum (case when [STORN] is null then 1 else 0 end) as "STORN_NULLCOUNT",
+	sum (case when [FALNR] is null then 0 else 1 end) as "FALNR_NONNULLCOUNT",
+	sum (case when [FALNR] is null then 1 else 0 end) as "FALNR_NULLCOUNT",
+	sum (case when [ORGPF] is null then 0 else 1 end) as "ORGPF_NONNULLCOUNT",
+	sum (case when [ORGPF] is null then 1 else 0 end) as "ORGPF_NULLCOUNT"
+FROM [Atelier_DataScience].[atl].[LA_ISH_NICP]

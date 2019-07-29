@@ -22,7 +22,7 @@ class Medication:
         self.drug_unit = drug_unit
         self.drug_dispform = drug_dispform
         self.drug_submission = datetime.strptime(
-            drug_submission, "%Y-%m-%d %H:%M:%S.0000000"
+            drug_submission, "%Y-%m-%d %H:%M:%S"
         )
 
     def is_antibiotic(self):

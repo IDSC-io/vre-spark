@@ -15,7 +15,7 @@ class Patient:
         self.kanton = kanton
         self.sprache = sprache
         self.cases = dict()
-        self.risks = dict()
+        self.risks = dict() # dictionary mapping dt.dt() objects to Risk() objects, indicating at which datetime a particular VRE code has been entered in one of the Insel systems
 
     def get_relevant_case_and_date(self):
         case = self.get_relevant_case()
@@ -36,7 +36,7 @@ class Patient:
         :param risk:
         :return:
         """
-        self.risks[risk.rfs_nr] = risk
+        self.risks[risk.entry_date] = risk
 
     def has_risk(self, code_text_list=[(32, None), (42, None), (142, None)]):
         """
@@ -99,17 +99,13 @@ class Patient:
             dt = risk_dt.date()
         return dt
 
-    def get_relevant_case(
-        self,
-        dt=datetime.datetime.now().date(),
-        since=datetime.datetime(2017, 12, 31, 0, 0).date(),
-    ):
+    def get_relevant_case(self, dt=datetime.datetime.now().date(), since=datetime.datetime(2017, 12, 31, 0, 0).date() ):
         """
         Definition of relevant case:
         The most recent stationary case, which was still open during relevant date or closed after "since" date.
-        :param dt: Relevant date for patients without risk factor.
-        :param since: Relevant case must still be open at "since"
-        :return:
+        :param dt:      Relevant date for patients without risk factor.
+        :param since:   Relevant case must still be open at "since"
+        :return:        A Case() object in case there is a relevant case, or None otherwise
         """
         relevant_dt = self.get_relevant_date(dt)
 
@@ -126,9 +122,8 @@ class Patient:
                 and case.open_before_or_at_date(relevant_dt)
                 and case.closed_after_or_at_date(since)
             ):
-                if relevant_case is None or case.closed_after_or_at_date(
-                    relevant_case.moves_end.date()
-                ):
+                if relevant_case is None or case.closed_after_or_at_date( relevant_case.moves_end.date() ):
+                    # Here we make sure to consider only the LATEST case, by comparing whether case() was closed after the closing date of the relevant case --> update relevant case !
                     relevant_case = case
         return relevant_case
 
@@ -412,6 +407,40 @@ class Patient:
 
         return features
 
+    def get_location_info(self, focus_date, comparison_type='exact'):
+        """Returns ward, room and bed information for a patient at a specific date.
+
+        This function will go through all Move() objects of each Cases() object of this patient, and return a tuple of
+        Move() objects for which
+
+        Move().bwi_dt <= focus_date <= Move().bwe_dt
+
+        The exact location of a patient at focus_date can then be extracted from the ``Move().org_fa``,
+        ``Move().org_pf``, ``Move().org_au``, ``Move().zimmr`` and ``Move().bett`` attributes.
+
+        Args:
+            focus_date (datetime.date()):   Date for which all moves are to be extracted from a patient
+            comparison_type (str):          Type of comparison between Move() objects and focus_date. If set to
+                                            ``exact`` (the default), only Move() objects with non-None Move().bwi_dt
+                                            `and` Move().bwe_dt attributes will be considered.
+
+        Returns:
+            tuple:   tuple of Move() objects for which Move().bwi_dt < focus_date < Move().bwe_dt
+        """
+        location_moves = []
+
+        for each_case in self.cases.values():
+            for each_move in each_case.moves.values():
+                if comparison_type == 'exact' and (each_move.bwi_dt is None or each_move.bwe_dt is None):
+                    continue
+                # bwi_dt_date = datetime.date(each_move.bwi_dt.day, each_move.bwi_dt.month, each_move.bwi_dt.day)
+                # bwe_dt_date = datetime.date(each_move.bwe_dt.day, each_move.bwe_dt.month, each_move.bwe_dt.day)
+                if each_move.bwi_dt.date() <= focus_date <= each_move.bwe_dt.date():
+                    location_moves.append(each_move)
+
+        return tuple(location_moves)
+
+    @staticmethod
     def create_patient_dict(lines):
         """
         Read the patient csv and create Patient objects from the rows.

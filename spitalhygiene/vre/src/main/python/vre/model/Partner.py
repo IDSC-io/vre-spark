@@ -41,6 +41,7 @@ class Partner:
         '''
         self.referred_cases[case.case_id] = case
 
+    @staticmethod
     def create_partner_map(lines):
         '''
         Creates and returns a map of business partners from a csv reader. This function will be called by the HDFS_data_loader.patient_data() function. The lines argument corresponds to a
@@ -61,9 +62,11 @@ class Partner:
                 continue
             partner = Partner(*line)
             partners[partner.gp_art] = partner
+
         logging.info(f"{len(partners)} created, {nr_malformed} partners malformed")
         return partners
 
+    @staticmethod
     def add_partners_to_cases(lines, cases, partners):
         '''
         Reads lines from csv reader originating from SAP IS-H table NFPZ, and updates the referring physician (Partner() object) from partners to the corresponding case,
@@ -81,7 +84,7 @@ class Partner:
         nr_partners_not_found = 0
         nr_ok = 0
         for line in lines:
-            if line[0]=='U' and line[5]!='X':
+            if line[0] == 'U' and line[5] != 'X':  # line[5] corresponds to the "STORN" column ('X' --> storniert)
                 if cases.get(line[2], None) is None:
                     nr_cases_not_found += 1
                     continue

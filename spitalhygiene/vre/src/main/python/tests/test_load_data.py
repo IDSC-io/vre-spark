@@ -1,15 +1,22 @@
 import os
-
+import sys
+sys.path.append('../vre/model')
 import pytest
+import configparser
 
-from model.Patient import Patient
-from model.Case import Case
-from model.Move import Move
-from model.Risk import Risk
+from Patient import Patient
+from Case import Case
+from Move import Move
+from Risk import Risk
 
 from conftest import get_hdfs_pipe
 
-base_path = "T:/IDSC Projects/VRE Model/Data/Test Data"
+# Load configuration file
+config_reader = configparser.ConfigParser()
+config_reader.read('../vre/BasicConfig.ini')
+
+base_path = config_reader['PATHS']['test_data_dir']
+
 patients_path = os.path.join(base_path, "V_DH_DIM_PATIENT_CUR.csv")
 cases_path = os.path.join(base_path, "V_LA_ISH_NFAL_NORM.csv")
 moves_path = os.path.join(base_path, "LA_ISH_NBEW.csv")

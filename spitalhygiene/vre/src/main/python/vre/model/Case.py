@@ -101,13 +101,9 @@ class Case:
 
     def add_move(self, move):
         self.moves[move.lfd_nr] = move
-        if move.bwe_dt is not None and (
-            (self.moves_end is None) or (move.bwe_dt > self.moves_end)
-        ):
+        if move.bwe_dt is not None and ( (self.moves_end is None) or (move.bwe_dt > self.moves_end) ):
             self.moves_end = move.bwe_dt
-        if move.bwi_dt is not None and (
-            (self.moves_start is None) or (move.bwi_dt < self.moves_start)
-        ):
+        if move.bwi_dt is not None and ( (self.moves_start is None) or (move.bwi_dt < self.moves_start) ):
             self.moves_start = move.bwi_dt
 
     def correct_move_enddt(self):
@@ -161,8 +157,8 @@ class Case:
     def get_moves_before_dt(self, dt):
         """
         The list of moves that start before a given datetime.
-        :param dt: datetime.datetime
-        :return: List of moves
+        :param dt:  datetime.datetime
+        :return:    List of moves
         """
         moves = []
         for move in self.moves.values():
@@ -170,6 +166,7 @@ class Case:
                 moves.append(move)
         return moves
 
+    @staticmethod
     def create_case_map(lines, patienten):
         """
         Read the case csv and create Case objects from the rows. Populate a dict with cases (case_id -> case) that are not 'storniert'. Note that the function goes both ways, i.e. it adds
@@ -183,14 +180,18 @@ class Case:
 
         :param patienten: Dictionary mapping patient ids to Patient() objects --> {"00001383264" : Patient(), "00001383310" : Patient(), ...}
 
-        Returns: Dictionary mapping case ids to Case() objects --> {"0003536421" : Case(), "0003473241" : Case(), ...}
+        :return: Dictionary mapping case ids to Case() objects --> {"0003536421" : Case(), "0003473241" : Case(), ...}
         """
         logging.debug("create_case_map")
         nr_not_found = 0
         nr_ok = 0
+        nr_not_stationary = 0
         cases = dict()
         for line in lines:
             fall = Case(*line)
+            if fall.fal_ar != '1': # exclude non-stationary cases (for stationary cases: Case().falar == '1' !)
+                nr_not_stationary += 1
+                continue
             if fall.case_status == "aktiv": # exclude entries where "CASESTATUS" is "storniert"
                 cases[fall.case_id] = fall
                 if patienten.get(fall.patient_id, None) is not None:
@@ -202,5 +203,6 @@ class Case:
             else:
                 continue
             nr_ok += 1
-        logging.info(f"{nr_ok} ok, {nr_not_found} patients not found")
+
+        logging.info(f"{nr_ok} ok, {nr_not_found} patients not found, {nr_not_stationary} cases not stationary")
         return cases

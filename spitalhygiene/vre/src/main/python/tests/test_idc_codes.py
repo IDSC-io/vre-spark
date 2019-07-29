@@ -2,6 +2,7 @@
 def test_icd_code(patient_data):
     """
     Test ICD codes for case "0006148746"
+
     :param patient_data: Dictionary containing all VRE-relevant information (see @pytest.fixture patient_data() for details)
     """
     icd_list = [each_icd.icd_code for each_icd in patient_data['cases'].get('0006148746').icd_codes]
