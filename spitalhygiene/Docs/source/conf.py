@@ -17,6 +17,7 @@ import sys
 sys.path.insert(0, os.path.abspath('../../resources'))
 sys.path.insert(0, os.path.abspath('../../vre'))
 sys.path.insert(0, os.path.abspath('../../vre/src/main/python/vre'))
+sys.path.insert(0, os.path.abspath('../../vre/src/main/python/vre/model'))
 
 
 # -- Project information -----------------------------------------------------

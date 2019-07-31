@@ -991,7 +991,7 @@ class surface_model:
         Args:
             focus_nodes (list or None): List of nodes considered for distribution.
             csv_sep (str):              Separator used in export file.
-             export_path (str):         Path to which node files will be written. If set to `None` (the default), the
+            export_path (str):          Path to which node files will be written. If set to `None` (the default), the
                                         exported file will be written to `self.data_dir`.
 
         """

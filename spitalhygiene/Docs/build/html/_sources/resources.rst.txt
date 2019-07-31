@@ -19,3 +19,10 @@ File: Query_Atelier_Data.py
 
 .. automodule:: Query_Atelier_Data
    :members:
+
+   
+File: preprocesor.py
+===============================
+
+.. automodule:: preprocessor
+   :members:

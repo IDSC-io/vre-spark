@@ -1,8 +1,16 @@
+# -*- coding: utf-8 -*-
+"""This script contains the ``Medication`` class used in the VRE model.
+
+-----
+"""
+
 from datetime import datetime
 import logging
 
 
 class Medication:
+    """Models a ``Medication`` object.
+    """
     def __init__(
         self,
         patient_id,
@@ -21,27 +29,40 @@ class Medication:
         self.drug_quantity = drug_quantity
         self.drug_unit = drug_unit
         self.drug_dispform = drug_dispform
-        self.drug_submission = datetime.strptime(
-            drug_submission, "%Y-%m-%d %H:%M:%S"
-        )
+        self.drug_submission = datetime.strptime(drug_submission, "%Y-%m-%d %H:%M:%S")
 
     def is_antibiotic(self):
-        """
-        Does the ATC code start with J01?
-        :return: boolean
+        """Returns the antibiotic status of a Medication.
+
+        Antibiotics are identified via the prefix ``J01``.
+
+        Returns:
+            bool:   Whether or not the medication ``self.drug_atc`` attribute starts with ``J01``.
         """
         return self.drug_atc.startswith("J01")
 
+    @staticmethod
     def create_drug_map(lines):
-        """
-        Creates a dictionary of ATC codes to human readable drug names based on the entries in the CSV file.
-        This function will be called by the HDFS_data_loader.patient_data() function (lines is an iterator object). The underlying table is structured as follows:
-        >> TABLE NAME: V_LA_IPD_DRUG_NORM
-        ["PATIENTID",   "CASEID",       "DRUG_TEXT",                                "DRUG_ATC", "DRUG_QUANTITY",    "DRUG_UNIT",    "DRUG_DISPFORM",    "DRUG_SUBMISSION"]
-        ["00001711342", "0006437617",   "Torem Tabl 10 mg (Torasemid)",             "C03CA04",  "2.0000000000000",  "Stk",          "p.o.",             "2018-03-24 09:52:28.0000000"]
-        ["00001711342", "0006437617",   "Ecofenac Sandoz Lipogel 1 % (Diclofenac)", "M02AA15",  "1.0000000000000",  "Dos",          "lokal / topisch",  "2018-03-24 09:52:28.0000000"]
+        """Creates a dictionary of ATC codes to human readable drug names.
 
-        Returns: A dictionary mapping drug codes to their respective text description --> {'B02BA01' : 'NaCl Braun Inf LÃ¶s 0.9 % 500 ml (Natriumchlorid)', ... }
+        This function will be called by the HDFS_data_loader.patient_data() function (lines is an iterator object).
+        The underlying table in the Atelier_DataScience is called V_LA_IPD_DRUG_NORM and structured as follows:
+
+        =========== ========== ======================================== ======== =============== ========= =============== ===========================
+        PATIENTID   CASEID     DRUG_TEXT                                DRUG_ATC DRUG_QUANTITY   DRUG_UNIT DRUG_DISPFORM   DRUG_SUBMISSION
+        =========== ========== ======================================== ======== =============== ========= =============== ===========================
+        00001711342 0006437617 Torem Tabl 10 mg (Torasemid)             C03CA04  2.0000000000000 Stk       p.o.            2018-03-24 09:52:28.0000000
+        00001711342 0006437617 Ecofenac Sandoz Lipogel 1 % (Diclofenac) M02AA15  1.0000000000000 Dos       lokal / topisch 2018-03-24 09:52:28.0000000
+        =========== ========== ======================================== ======== =============== ========= =============== ===========================
+
+        Args:
+            lines (iterator() object):  csv iterator from which data will be read
+
+        Returns:
+            dict:
+                Dictionary mapping drug codes to their respective text description
+
+                :math:`\\longrightarrow` ``{'B02BA01' : 'NaCl Braun Inf LÃ¶s 0.9 % 500 ml (Natriumchlorid)', ... }``
         """
         logging.debug("create_drug_map")
         drugs = dict()
@@ -51,13 +72,19 @@ class Medication:
         logging.info(f"{len(drugs)} drugs created")
         return drugs
 
+    @staticmethod
     def add_medication_to_case(lines, cases):
-        """
-        Read all the medication entries from the V_LA_IPD_DRUG_NORM table, and adds the drug (Medication() object) to the corresponding Case() (in cases) via Case.add_medication().
-        This function will be called by the HDFS_data_loader.patient_data() function (lines is an iterator object).
-        For a schema of the V_LA_IPD_DRUG_NORM table, see the function create_drug_map() above.
+        """Adds Medication() objects to Case() objects.
 
-        :param cases: Dictionary mapping case ids to Case()       --> {'0005976205' : Case(), ... }
+        This function will be called by the HDFS_data_loader.patient_data() function (lines is an iterator object), and
+        will add all Medication() objects to their corresponding Case() object in cases. The underlying table is
+        identical to the one used in the ``create_drug_map`` function.
+
+        Args:
+            lines (iterator() object):  csv iterator from which data will be read
+            cases (dict):               Dictionary mapping case ids to Case()
+
+                                        :math:`\\longrightarrow` ``{'0005976205' : Case(), ... }``
         """
         logging.debug("add_medication_to_case")
         nr_cases_not_found = 0
