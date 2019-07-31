@@ -19,7 +19,6 @@ Please refer to the script code for details.
 from HDFS_data_loader import HDFS_data_loader
 from feature_extractor import feature_extractor
 from networkx_graph import surface_model, create_model_snapshots
-import preprocessor
 import logging
 import os
 import datetime

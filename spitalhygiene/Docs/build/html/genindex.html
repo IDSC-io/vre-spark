@@ -85,7 +85,9 @@
 <li class="toctree-l1"><a class="reference internal" href="VRE_Model.html">VRE Model Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="resources.html"><code class="docutils literal notranslate"><span class="pre">resources</span></code> folder</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sql.html"><code class="docutils literal notranslate"><span class="pre">sql</span></code> folder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Unused.html"><code class="docutils literal notranslate"><span class="pre">Unused</span></code> folder</a></li>
 <li class="toctree-l1"><a class="reference internal" href="vre.html"><code class="docutils literal notranslate"><span class="pre">vre/src/main/python/vre</span></code> folder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model.html"><code class="docutils literal notranslate"><span class="pre">vre/src/main/python/vre/model</span></code> folder</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Patient_Test_Data.html">Patient Test Data</a></li>
 </ul>
 
@@ -154,6 +156,7 @@
 
 <div class="genindex-jumpbox">
  <a href="#A"><strong>A</strong></a>
+ | <a href="#B"><strong>B</strong></a>
  | <a href="#C"><strong>C</strong></a>
  | <a href="#D"><strong>D</strong></a>
  | <a href="#E"><strong>E</strong></a>
@@ -162,6 +165,7 @@
  | <a href="#H"><strong>H</strong></a>
  | <a href="#I"><strong>I</strong></a>
  | <a href="#L"><strong>L</strong></a>
+ | <a href="#M"><strong>M</strong></a>
  | <a href="#N"><strong>N</strong></a>
  | <a href="#P"><strong>P</strong></a>
  | <a href="#Q"><strong>Q</strong></a>
@@ -175,19 +179,95 @@
 <h2 id="A">A</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="model.html#Appointment.Appointment.add_appointment_to_case">add_appointment_to_case() (Appointment.Appointment static method)</a>
+</li>
+      <li><a href="model.html#Care.Care.add_care_to_case">add_care_to_case() (Care.Care static method)</a>
+</li>
+      <li><a href="model.html#Chop.Chop.add_case">add_case() (Chop.Chop method)</a>
+
+      <ul>
+        <li><a href="model.html#ICD.ICD.add_case">(ICD.ICD method)</a>
+</li>
+      </ul></li>
+      <li><a href="model.html#Appointment.Appointment.add_device">add_device() (Appointment.Appointment method)</a>
+</li>
+      <li><a href="model.html#Device.Device.add_device_to_appointment">add_device_to_appointment() (Device.Device static method)</a>
+</li>
       <li><a href="vre.html#networkx_graph.surface_model.add_edge_infection">add_edge_infection() (networkx_graph.surface_model method)</a>
 </li>
+      <li><a href="model.html#Appointment.Appointment.add_employee">add_employee() (Appointment.Appointment method)</a>
+
+      <ul>
+        <li><a href="model.html#Care.Care.add_employee">(Care.Care method)</a>
+</li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="model.html#Employee.Employee.add_employee_to_appointment">add_employee_to_appointment() (Employee.Employee static method)</a>
+</li>
+      <li><a href="model.html#ICD.ICD.add_icd_to_case">add_icd_to_case() (ICD.ICD static method)</a>
+</li>
+      <li><a href="model.html#Medication.Medication.add_medication_to_case">add_medication_to_case() (Medication.Medication static method)</a>
+</li>
+      <li><a href="model.html#Bed.Bed.add_move">add_move() (Bed.Bed method)</a>
+</li>
       <li><a href="vre.html#networkx_graph.surface_model.add_network_data">add_network_data() (networkx_graph.surface_model method)</a>
 </li>
+      <li><a href="model.html#Appointment.Appointment.add_room">add_room() (Appointment.Appointment method)</a>
+</li>
+      <li><a href="model.html#Appointment.Appointment">Appointment (class in Appointment)</a>
+
+      <ul>
+        <li><a href="model.html#module-Appointment">(module)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="B">B</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="model.html#Bed.Bed">Bed (class in Bed)</a>
+
+      <ul>
+        <li><a href="model.html#module-Bed">(module)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
 <h2 id="C">C</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="model.html#Care.Care">Care (class in Care)</a>
+
+      <ul>
+        <li><a href="model.html#module-Care">(module)</a>
+</li>
+      </ul></li>
+      <li><a href="model.html#Chop.Chop">Chop (class in Chop)</a>
+
+      <ul>
+        <li><a href="model.html#module-Chop">(module)</a>
+</li>
+      </ul></li>
+      <li><a href="model.html#Chop.Chop.chop_code_stats">chop_code_stats() (Chop.Chop method)</a>
+</li>
+      <li><a href="model.html#Chop.Chop.create_chop_dict">create_chop_dict() (Chop.Chop static method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="model.html#Device.Device.create_device_map">create_device_map() (Device.Device static method)</a>
+</li>
+      <li><a href="model.html#Medication.Medication.create_drug_map">create_drug_map() (Medication.Medication static method)</a>
+</li>
+      <li><a href="model.html#Employee.Employee.create_employee_map">create_employee_map() (Employee.Employee static method)</a>
+</li>
+      <li><a href="model.html#ICD.ICD.create_icd_dict">create_icd_dict() (ICD.ICD static method)</a>
+</li>
       <li><a href="vre.html#networkx_graph.create_model_snapshots">create_model_snapshots() (in module networkx_graph)</a>
+</li>
+      <li><a href="model.html#Appointment.Appointment.create_termin_map">create_termin_map() (Appointment.Appointment static method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -198,19 +278,35 @@
       <li><a href="vre.html#module-data_compiler">data_compiler (module)</a>
 </li>
   </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="model.html#Device.Device">Device (class in Device)</a>
+
+      <ul>
+        <li><a href="model.html#module-Device">(module)</a>
+</li>
+      </ul></li>
+  </ul></td>
 </tr></table>
 
 <h2 id="E">E</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="model.html#Employee.Employee">Employee (class in Employee)</a>
+
+      <ul>
+        <li><a href="model.html#module-Employee">(module)</a>
+</li>
+      </ul></li>
+      <li><a href="resources.html#preprocessor.ExecuteSQL">ExecuteSQL() (in module preprocessor)</a>
+</li>
       <li><a href="vre.html#feature_extractor.feature_extractor.export_csv">export_csv() (feature_extractor.feature_extractor static method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="vre.html#feature_extractor.feature_extractor.export_gephi">export_gephi() (feature_extractor.feature_extractor static method)</a>
 </li>
       <li><a href="vre.html#networkx_graph.surface_model.export_node_betweenness">export_node_betweenness() (networkx_graph.surface_model method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="vre.html#networkx_graph.surface_model.export_patient_degree_ratio">export_patient_degree_ratio() (networkx_graph.surface_model method)</a>
 </li>
       <li><a href="vre.html#networkx_graph.surface_model.export_shortest_path_length_overview">export_shortest_path_length_overview() (networkx_graph.surface_model method)</a>
@@ -239,11 +335,15 @@
 </li>
       <li><a href="vre.html#feature_extractor.feature_extractor.get_contact_patients_for_case">get_contact_patients_for_case() (feature_extractor.feature_extractor static method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="vre.html#HDFS_data_loader.HDFS_data_loader.get_csv_file">get_csv_file() (HDFS_data_loader.HDFS_data_loader method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="model.html#Chop.Chop.get_detailed_chop">get_detailed_chop() (Chop.Chop method)</a>
+</li>
       <li><a href="vre.html#HDFS_data_loader.HDFS_data_loader.get_hdfs_pipe">get_hdfs_pipe() (HDFS_data_loader.HDFS_data_loader method)</a>
+</li>
+      <li><a href="model.html#Chop.Chop.get_lowest_level_code">get_lowest_level_code() (Chop.Chop method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -263,6 +363,12 @@
 <h2 id="I">I</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="model.html#ICD.ICD">ICD (class in ICD)</a>
+
+      <ul>
+        <li><a href="model.html#module-ICD">(module)</a>
+</li>
+      </ul></li>
       <li><a href="vre.html#networkx_graph.surface_model.identify_id">identify_id() (networkx_graph.surface_model method)</a>
 </li>
   </ul></td>
@@ -270,6 +376,8 @@
       <li><a href="vre.html#networkx_graph.surface_model.identify_node">identify_node() (networkx_graph.surface_model method)</a>
 </li>
       <li><a href="vre.html#networkx_graph.surface_model.inspect_network">inspect_network() (networkx_graph.surface_model method)</a>
+</li>
+      <li><a href="model.html#Medication.Medication.is_antibiotic">is_antibiotic() (Medication.Medication method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -279,6 +387,18 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="vre.html#networkx_graph.surface_model.load_from_json">load_from_json() (networkx_graph.surface_model static method)</a>
 </li>
+  </ul></td>
+</tr></table>
+
+<h2 id="M">M</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="model.html#Medication.Medication">Medication (class in Medication)</a>
+
+      <ul>
+        <li><a href="model.html#module-Medication">(module)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -309,11 +429,13 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="vre.html#networkx_graph.surface_model.parse_filename">parse_filename() (networkx_graph.surface_model static method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="vre.html#HDFS_data_loader.HDFS_data_loader.patient_data">patient_data() (HDFS_data_loader.HDFS_data_loader method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="vre.html#feature_extractor.feature_extractor.prepare_features_and_labels">prepare_features_and_labels() (feature_extractor.feature_extractor static method)</a>
+</li>
+      <li><a href="resources.html#module-preprocessor">preprocessor (module)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -329,6 +451,16 @@
 <h2 id="R">R</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="resources.html#preprocessor.RecreateHospitalMap">RecreateHospitalMap() (in module preprocessor)</a>
+</li>
+      <li><a href="resources.html#preprocessor.RecreatePflegerischeOEMap">RecreatePflegerischeOEMap() (in module preprocessor)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="resources.html#preprocessor.RecreateScreeningData">RecreateScreeningData() (in module preprocessor)</a>
+</li>
+      <li><a href="resources.html#preprocessor.RecreateWardOverviewData">RecreateWardOverviewData() (in module preprocessor)</a>
+</li>
       <li><a href="vre.html#networkx_graph.surface_model.remove_isolated_nodes">remove_isolated_nodes() (networkx_graph.surface_model method)</a>
 </li>
   </ul></td>

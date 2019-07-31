@@ -12,14 +12,10 @@ Welcome to the VRE Model documentation!
    VRE_Model.rst
    resources.rst
    sql.rst
+   Unused.rst
    vre.rst
+   model.rst
    Patient_Test_Data.rst
 
 
 
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`

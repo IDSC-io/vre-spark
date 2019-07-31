@@ -36,8 +36,8 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Patient Test Data" href="Patient_Test_Data.html" />
-    <link rel="prev" title="sql folder" href="sql.html" /> 
+    <link rel="next" title="vre/src/main/python/vre/model folder" href="model.html" />
+    <link rel="prev" title="Unused folder" href="Unused.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -86,6 +86,7 @@
 <li class="toctree-l1"><a class="reference internal" href="VRE_Model.html">VRE Model Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="resources.html"><code class="docutils literal notranslate"><span class="pre">resources</span></code> folder</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sql.html"><code class="docutils literal notranslate"><span class="pre">sql</span></code> folder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Unused.html"><code class="docutils literal notranslate"><span class="pre">Unused</span></code> folder</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">vre/src/main/python/vre</span></code> folder</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#module-data_compiler">File: data_compiler.py</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-feature_extractor">File: feature_extractor.py</a></li>
@@ -93,6 +94,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#module-networkx_graph">File: networkx_graph.py</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="model.html"><code class="docutils literal notranslate"><span class="pre">vre/src/main/python/vre/model</span></code> folder</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Patient_Test_Data.html">Patient Test Data</a></li>
 </ul>
 
@@ -372,7 +374,8 @@ csv.reader() instance. This function is used in the method patient_data() if hdf
 <div><p>{ “rooms” <span class="math notranslate nohighlight">\(\longrightarrow\)</span> <em>Rooms</em>,</p>
 <p>”wards” <span class="math notranslate nohighlight">\(\longrightarrow\)</span> <em>Wards</em>, etc. }</p>
 </div></blockquote>
-<p>Please refer to the <code class="docutils literal notranslate"><span class="pre">vre/src/main/python/vre/model</span></code> folder documentation for more details.</p>
+<p>Please refer to the <code class="docutils literal notranslate"><span class="pre">vre/src/main/python/vre/model</span></code> folder documentation for more details on the
+various objects.</p>
 </p>
 </dd>
 <dt class="field-odd">Return type</dt>
@@ -493,8 +496,8 @@ Employee-Patient (NOT Patient-Employee), etc.</p></li>
 </div></blockquote>
 </li>
 <li><p>The graph is undirected</p></li>
-<li><p>The python built-in <code class="docutils literal notranslate"><span class="pre">None</span></code>-type object should not be used for attributes according to the networkx docs. Instead,
-unknown values will be set to “NULL” or “”</p></li>
+<li><p>The python built-in <code class="docutils literal notranslate"><span class="pre">None</span></code>-type object should not be used for attributes according to the networkx docs.
+Instead, unknown values will be set to “NULL” or “”</p></li>
 </ul>
 <dl class="exception">
 <dt id="networkx_graph.surface_model.NodeBetweennessException">
@@ -513,7 +516,7 @@ will be set to <code class="docutils literal notranslate"><span class="pre">True
 
 <dl class="method">
 <dt id="networkx_graph.surface_model.add_network_data">
-<code class="descname">add_network_data</code><span class="sig-paren">(</span><em>patient_dict</em>, <em>subset='relevant_case'</em>, <em>snapshot=datetime.datetime(2019</em>, <em>6</em>, <em>17</em>, <em>12</em>, <em>42</em>, <em>25</em>, <em>728731)</em><span class="sig-paren">)</span><a class="headerlink" href="#networkx_graph.surface_model.add_network_data" title="Permalink to this definition">¶</a></dt>
+<code class="descname">add_network_data</code><span class="sig-paren">(</span><em>patient_dict</em>, <em>subset='relevant_case'</em>, <em>snapshot=datetime.datetime(2019</em>, <em>7</em>, <em>31</em>, <em>18</em>, <em>21</em>, <em>24</em>, <em>991461)</em><span class="sig-paren">)</span><a class="headerlink" href="#networkx_graph.surface_model.add_network_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>Adds nodes and edges data to the network.</p>
 <p>Nodes and edges are added based on the data in patient_dict according to the subset specified (see description
 of parameters below).</p>
@@ -545,7 +548,7 @@ network.</p></li>
 
 <dl class="method">
 <dt id="networkx_graph.surface_model.export_node_betweenness">
-<code class="descname">export_node_betweenness</code><span class="sig-paren">(</span><em>csv_sep=';'</em><span class="sig-paren">)</span><a class="headerlink" href="#networkx_graph.surface_model.export_node_betweenness" title="Permalink to this definition">¶</a></dt>
+<code class="descname">export_node_betweenness</code><span class="sig-paren">(</span><em>csv_sep=';'</em>, <em>export_path=None</em><span class="sig-paren">)</span><a class="headerlink" href="#networkx_graph.surface_model.export_node_betweenness" title="Permalink to this definition">¶</a></dt>
 <dd><p>Exports node betweenness.</p>
 <p>This function will export node betweenness for all nodes from the network. This is done by exporting the sum
 of all fractions of shortest paths a particular node is in, which is found in the attribute keys starting with
@@ -561,20 +564,28 @@ has been called. Nodes without an attribute key starting with the “SP-” pref
 </ul>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>csv_sep</strong> (<em>str</em>) – separator to be used in export file.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>csv_sep</strong> (<em>str</em>) – separator to be used in export file.</p></li>
+<li><p><strong>export_path</strong> (<em>str</em>) – Path to which node files will be written. If set to <cite>None</cite> (the default), the
+exported file will be written to <cite>self.data_dir</cite>.</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="networkx_graph.surface_model.export_patient_degree_ratio">
-<code class="descname">export_patient_degree_ratio</code><span class="sig-paren">(</span><em>csv_sep=';'</em><span class="sig-paren">)</span><a class="headerlink" href="#networkx_graph.surface_model.export_patient_degree_ratio" title="Permalink to this definition">¶</a></dt>
+<code class="descname">export_patient_degree_ratio</code><span class="sig-paren">(</span><em>csv_sep=';'</em>, <em>export_path=None</em><span class="sig-paren">)</span><a class="headerlink" href="#networkx_graph.surface_model.export_patient_degree_ratio" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculates and exports patient degree ratio for all nodes in the network.</p>
 <p>The patient degree ratio is defined for a single node_x as:</p>
 <p>number of infected edges between node_x and patients / number of total edges between node_x and patients</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>csv_sep</strong> (<em>str</em>) – Separator for created csv file.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>csv_sep</strong> (<em>str</em>) – Separator for created csv file.</p></li>
+<li><p><strong>export_path</strong> (<em>str</em>) – Path to which export file will be written. If set to <cite>None</cite> (the default), the
+exported file will be written to <cite>self.data_dir</cite>.</p></li>
+</ul>
 </dd>
 </dl>
 <p>The result file will be written to the path [self.data_dir]/[self.snapshot_dt]_pdr.txt, and contains the
@@ -589,7 +600,7 @@ following columns:
 
 <dl class="method">
 <dt id="networkx_graph.surface_model.export_shortest_path_length_overview">
-<code class="descname">export_shortest_path_length_overview</code><span class="sig-paren">(</span><em>focus_nodes=None</em>, <em>csv_sep=';'</em><span class="sig-paren">)</span><a class="headerlink" href="#networkx_graph.surface_model.export_shortest_path_length_overview" title="Permalink to this definition">¶</a></dt>
+<code class="descname">export_shortest_path_length_overview</code><span class="sig-paren">(</span><em>focus_nodes=None</em>, <em>csv_sep=';'</em>, <em>export_path=None</em><span class="sig-paren">)</span><a class="headerlink" href="#networkx_graph.surface_model.export_shortest_path_length_overview" title="Permalink to this definition">¶</a></dt>
 <dd><p>Exports an overview of shortest path lengths in the network to self.data_dir.</p>
 <p>Exports an overview of shortest path lengths of all nodes in the network (if <em>focus_nodes</em> is <cite>None</cite>,
 default). If a list of node identifiers is provided in <em>focus_nodes</em> instead, only these nodes will be
@@ -603,6 +614,8 @@ considered for the data export. Data are exported to the self.data_dir directory
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>focus_nodes</strong> (<em>list</em><em> or </em><em>None</em>) – List of nodes considered for distribution.</p></li>
 <li><p><strong>csv_sep</strong> (<em>str</em>) – Separator used in export file.</p></li>
+<li><p><strong>export_path</strong> (<em>str</em>) – Path to which node files will be written. If set to <cite>None</cite> (the default), the
+exported file will be written to <cite>self.data_dir</cite>.</p></li>
 </ul>
 </dd>
 </dl>
@@ -610,7 +623,7 @@ considered for the data export. Data are exported to the self.data_dir directory
 
 <dl class="method">
 <dt id="networkx_graph.surface_model.export_total_degree_ratio">
-<code class="descname">export_total_degree_ratio</code><span class="sig-paren">(</span><em>csv_sep=';'</em><span class="sig-paren">)</span><a class="headerlink" href="#networkx_graph.surface_model.export_total_degree_ratio" title="Permalink to this definition">¶</a></dt>
+<code class="descname">export_total_degree_ratio</code><span class="sig-paren">(</span><em>csv_sep=';'</em>, <em>export_path=None</em><span class="sig-paren">)</span><a class="headerlink" href="#networkx_graph.surface_model.export_total_degree_ratio" title="Permalink to this definition">¶</a></dt>
 <dd><p>Exports total degree ratio (TDR) for all nodes in the network.</p>
 <p>Will calculate and export the total degree ratio for all nodes in the network, which is defined for a
 single <em>node_x</em> as:</p>
@@ -627,7 +640,11 @@ following columns:</p>
 </ul>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>csv_sep</strong> (<em>str</em>) – Separator for created csv file.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>csv_sep</strong> (<em>str</em>) – Separator for created csv file.</p></li>
+<li><p><strong>export_path</strong> (<em>str</em>) – Path to which node files will be written. If set to <cite>None</cite> (the default), the
+exported file will be written to <cite>self.data_dir</cite>.</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
@@ -941,11 +958,14 @@ overwritten with the values in attribute_dict.</p>
 with a <code class="docutils literal notranslate"><span class="pre">SP-</span></code> prefix to tuples of length 2 containing (shortest_paths_through_this_node, total_shortest_paths)
 For example:</p>
 <p><code class="docutils literal notranslate"><span class="pre">{</span> <span class="pre">'SP-Node1-Node2':</span> <span class="pre">(2,</span> <span class="pre">5)</span> <span class="pre">,</span> <span class="pre">'SP-Node1-Node3':</span> <span class="pre">(1,</span> <span class="pre">8),</span> <span class="pre">...</span> <span class="pre">}</span> <span class="pre">}</span></code></p>
-<p>Note that this may result in a lot of additional attributes for nodes which are integral to the network. This
-approach is chosen because of the fact that the networkx module does not allow updates to a dict-of-a-dict type
-of attributes (i.e. if these attributes were to be combined in a 1st-level key ‘shortest-paths’, the entire
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This may result in a lot of additional attributes for nodes which are integral to the network. This ap-</p>
+<p>proach is chosen because the networkx module does not allow updates to a dict-of-a-dict type
+of attributes - i.e. if these attributes were to be combined in a 1st-level key ‘shortest-paths’, the entire
 content would have to be copied every time a new node-pair attribute is added, which would make the function
 extremely inefficient.</p>
+</div>
 <p>This is an important prerequisite function for the calculation of betweenness centrality.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -954,7 +974,9 @@ extremely inefficient.</p>
 considered. <strong>WARNING: this may be extremely ressource-intensive !</strong></p></li>
 <li><p><strong>approximate</strong> (<em>bool</em>) – Flag indicating whether to consider all shortest paths in the network
 (<code class="docutils literal notranslate"><span class="pre">False</span></code>, default) or approximate the betweenness statistic using the
-<cite>max_path_length</cite> argument.</p></li>
+<cite>max_path_length</cite> argument. Note that if this is set to <cite>False</cite>, attributes of all
+nodes will be written <strong>to file</strong> so as to avoid memory overflows. This requires a
+preceding call to <cite>self.write_node_files()</cite>.</p></li>
 <li><p><strong>max_path_length</strong> (<em>int</em>) – Maximum path length to consider for pairs of nodes when <cite>approximate</cite> == <code class="docutils literal notranslate"><span class="pre">True</span></code>.
 If set to <code class="docutils literal notranslate"><span class="pre">None</span></code> (default), all possible shortest paths will be considered.</p></li>
 </ul>
@@ -964,7 +986,7 @@ If set to <code class="docutils literal notranslate"><span class="pre">None</spa
 
 <dl class="method">
 <dt id="networkx_graph.surface_model.write_node_files">
-<code class="descname">write_node_files</code><span class="sig-paren">(</span><em>node_attributes</em><span class="sig-paren">)</span><a class="headerlink" href="#networkx_graph.surface_model.write_node_files" title="Permalink to this definition">¶</a></dt>
+<code class="descname">write_node_files</code><span class="sig-paren">(</span><em>attribute_subset=None</em>, <em>export_path=None</em><span class="sig-paren">)</span><a class="headerlink" href="#networkx_graph.surface_model.write_node_files" title="Permalink to this definition">¶</a></dt>
 <dd><p>Writes a JSON representation of all nodes in the network to file.</p>
 <p>For each node in the network, this function will write a JSON representation containing a dictionary of
 node_data_dict[keys], where keys are all entries in node_attributes if that key is actually found in the node
@@ -977,8 +999,13 @@ betweenness centrality and avoid memory overflows.</p>
 </div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>node_attributes</strong> (<em>list</em>) – List of keys in a node’s attribute_dict to be included in the written JSON
-representation of the node.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>attribute_subset</strong> (<em>list</em>) – List of keys in a node’s attribute_dict to be included in the written JSON
+representation of the node. If set to <cite>None</cite> (the default), all attributes will
+be included.</p></li>
+<li><p><strong>export_path</strong> (<em>str</em>) – Path to which node files will be written. If set to <cite>None</cite> (the default), all
+files will be written to <cite>self.data_dir</cite>.</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
@@ -996,10 +1023,10 @@ representation of the node.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="Patient_Test_Data.html" class="btn btn-neutral float-right" title="Patient Test Data" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="model.html" class="btn btn-neutral float-right" title="vre/src/main/python/vre/model folder" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="sql.html" class="btn btn-neutral float-left" title="sql folder" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="Unused.html" class="btn btn-neutral float-left" title="Unused folder" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

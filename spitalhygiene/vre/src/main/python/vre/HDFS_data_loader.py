@@ -69,7 +69,7 @@ class HDFS_data_loader:
         self.surgery_path = os.path.join(self.base_path, "LA_ISH_NICP.csv")
         self.tacs_path = os.path.join(self.base_path, "TACS_DATEN.csv")
         self.icd_path = os.path.join(self.base_path, "LA_ISH_NDIA_NORM.csv")
-        self.VRE_screenings_path = os.path.join(self.base_path, "VRE_Screenings_Final.csv")
+        self.VRE_screenings_path = os.path.join(self.base_path, "V_VRE_SCREENING_DATA.csv")
 
         self.hdfs_pipe = hdfs_pipe  # binary attribute specifying whether to read data Hadoop (True) or CSV (False)
 
@@ -136,7 +136,8 @@ class HDFS_data_loader:
 
                     "wards" :math:`\\longrightarrow` *Wards*, etc. }
 
-            Please refer to the ``vre/src/main/python/vre/model`` folder documentation for more details.
+            Please refer to the ``vre/src/main/python/vre/model`` folder documentation for more details on the
+            various objects.
         """
         rooms = dict()  # dictionary mapping room names to Room() objects --> {'BH N 123' : Room(), ... }
         wards = dict()
