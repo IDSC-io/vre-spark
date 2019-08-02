@@ -440,6 +440,36 @@ class Patient:
 
         return tuple(location_moves)
 
+    def get_moves_at_date(self, target_date):
+        """Extracts all moves from cases for this patient at ``target_date``.
+
+        This function returns a list of all moves for this patient that took place at ``target_date``. This should
+        ideally be only a single entry, since a patient cannot be stationed in two or more places simultaneously.
+        However, a situation may arise when a patient is transferred between wards, in which case there will be two
+        moves matching the criteria.
+
+        Args:
+            target_date (datetime.date()):  Date for which moves will be extracted form this patient's cases.
+
+        Returns:
+            list:   List of Move() objects which have taken place for this patient at ``target_date``.
+        """
+        candidate_moves = []
+        for each_case in self.cases.values():
+            # print(each_case.moves)
+            for each_move in each_case.moves.values():
+                # print(each_move.bwe_dt)
+                # each_move is a dictionary of the form {1: Move(), 2: Move(),...}
+                move_start = each_move.bwi_dt.date() if each_move.bwi_dt is not None else None
+                move_end = each_move.bwe_dt.date() if each_move.bwe_dt is not None else None
+                if move_start is None or move_end is None:
+                    continue
+                else:
+                    if move_start <= target_date <= move_end:
+                        candidate_moves.append(each_move)
+
+        return candidate_moves
+
     @staticmethod
     def create_patient_dict(lines, load_limit=None):
         """

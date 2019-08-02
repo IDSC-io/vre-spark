@@ -71,10 +71,14 @@ class HDFS_data_loader:
         self.icd_path = os.path.join(self.base_path, "LA_ISH_NDIA_NORM.csv")
         self.VRE_screenings_path = os.path.join(self.base_path, "V_VRE_SCREENING_DATA.csv")
         self.VRE_ward_screenings_path = os.path.join(self.base_path, "WARD_SCREENINGS.csv")
+        self.oe_pflege_map_path = os.path.join(self.base_path, "OE_PFLEGE_MAP.csv")
 
         self.hdfs_pipe = hdfs_pipe  # binary attribute specifying whether to read data Hadoop (True) or CSV (False)
 
         self.file_delim = config_reader['DELIMITERS']['csv_sep']  # delimiter character for reading CSV files
+
+        self.load_limit = None if config_reader['PARAMETERS']['load_limit'] == 'None' \
+                                else int(config_reader['PARAMETERS']['load_limit'])
 
     def get_hdfs_pipe(self, path):
         """Loads a datafile from HDFS.
@@ -150,13 +154,13 @@ class HDFS_data_loader:
         logging.info("loading patient data")
         patients = Patient.create_patient_dict(self.get_hdfs_pipe(self.patients_path) if self.hdfs_pipe is True
                                                else self.get_csv_file(self.patients_path),
-                                               load_limit=1000)
+                                               load_limit=self.load_limit)
 
         # Load Case data from table: V_LA_ISH_NFAL_NORM
         logging.info("loading case data")
         cases = Case.create_case_map(self.get_hdfs_pipe(self.cases_path) if self.hdfs_pipe is True
                                      else self.get_csv_file(self.cases_path), patients,
-                                     load_limit=1000)
+                                     load_limit=self.load_limit)
 
         # Load Partner data from table: LA_ISH_NGPA
         partners = Partner.create_partner_map(self.get_hdfs_pipe(self.partner_path) if self.hdfs_pipe is True
@@ -168,9 +172,25 @@ class HDFS_data_loader:
         # Load Move data from table: LA_ISH_NBEW
         logging.info("loading move data")
         Move.add_move_to_case(self.get_hdfs_pipe(self.moves_path) if self.hdfs_pipe is True
-                              else self.get_csv_file(self.moves_path), cases, rooms, wards, partners)
+                              else self.get_csv_file(self.moves_path), cases, rooms, wards, partners,
+                              load_limit=self.load_limit)
         # --> Note: Move() objects are not part of the returned dictionary, they are only used in
         #                           Case() objects --> Case().moves = [1 : Move(), 2 : Move(), ...]
+
+        # Generate ward screening overview map
+        screen_map = Risk.generate_screening_overview_map(self.get_hdfs_pipe(self.VRE_ward_screenings_path)
+                                                          if self.hdfs_pipe is True
+                                                          else self.get_csv_file(self.VRE_ward_screenings_path))
+        # --> this yields a dictionary mapping dt.date() objects to tuples of (ward_name, screening_type)
+        # i.e. of the form {'2018-10-22' : ('O SUED', 'W'), '2018-09-15' : ('IB BLAU', 'E'), ...}
+
+        # Generate OE_pflege_map
+        oe_pflege_map = Risk.generate_oe_pflege_map(self.get_hdfs_pipe(self.oe_pflege_map_path)
+                                                    if self.hdfs_pipe is True
+                                                    else self.get_csv_file(self.oe_pflege_map_path))
+        # --> yields a dictionary mapping "inofficial" ward names to official ones found in the OE_pflege_abk column
+        #       of the dbo.INSEL_MAP table in the Atelier_DataScience. This name allows linkage to Waveware !
+        # i.e. of the form {'BEWA' : 'C WEST', 'E 121' : 'E 120-21', ...}
 
         # ----------------------------------------------------------------
         # Load Risk data --> ADJUST THIS SECTION !
@@ -183,9 +203,11 @@ class HDFS_data_loader:
         # else self.get_csv_file(self.deleted_risks_path), patients
         # )
         # ## --> NEW VERSION: from file VRE_Screenings_Final.csv
-        Risk.add_screening_data_to_patients(lines=self.get_hdfs_pipe(self.VRE_screenings_path)
-                                            if self.hdfs_pipe is True
-                                            else self.get_csv_file(self.VRE_screenings_path), patient_dict=patients)
+        Risk.add_annotated_screening_data_to_patients(self.get_hdfs_pipe(self.VRE_screenings_path)
+                                                      if self.hdfs_pipe is True
+                                                      else self.get_csv_file(self.VRE_screenings_path),
+                                                      patient_dict=patients)
+
 
         if risk_only:
             logging.info("keeping only risk patients")

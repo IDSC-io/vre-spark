@@ -18,3 +18,4 @@ SELECT
     ,[STORN]
     ,[EXTKH]
 FROM [Atelier_DataScience].[atl].[LA_ISH_NBEW]
+WHERE STORN IS NULL -- Exclude stornierte Bewegungen

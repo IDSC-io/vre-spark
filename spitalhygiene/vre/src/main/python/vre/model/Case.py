@@ -190,9 +190,9 @@ class Case:
         cases = dict()
         for line in lines:
             fall = Case(*line)
-            if fall.fal_ar != '1': # exclude non-stationary cases (for stationary cases: Case().falar == '1' !)
-                nr_not_stationary += 1
-                continue
+            # if fall.fal_ar != '1': # exclude non-stationary cases (for stationary cases: Case().falar == '1' !)
+            #     nr_not_stationary += 1 # NOW INCLUDED DIRECTLY IN THE SQL QUERY
+            #     continue
             if fall.case_status == "aktiv": # exclude entries where "CASESTATUS" is "storniert"
                 cases[fall.case_id] = fall
                 if patienten.get(fall.patient_id, None) is not None:

@@ -79,7 +79,7 @@ if __name__ == '__main__':  # Necessary to avoid code parsing by Sphinx
 
     sql_files = [each_file for each_file in os.listdir(SQL_DIR) if each_file.endswith('.sql')]
     # --> Use this line instead for loading only specific files:
-    # sql_files = [each_file for each_file in os.listdir(SQL_DIR) if each_file in ['deleted_screenings.sql']]
+    # sql_files = [each_file for each_file in os.listdir(SQL_DIR) if each_file in ['OE_PFLEGE_MAP.sql']]
 
     for each_file in sql_files:
         print('--> Loading file: ' + each_file + ' ... ', end='', flush=True)
