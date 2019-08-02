@@ -34,7 +34,7 @@ class Medication:
     def is_antibiotic(self):
         """Returns the antibiotic status of a Medication.
 
-        Antibiotics are identified via the prefix ``J01``.
+        Antibiotics are identified via the prefix ``J01`` in the ``self.drug_atc`` attribute.
 
         Returns:
             bool:   Whether or not the medication ``self.drug_atc`` attribute starts with ``J01``.
