@@ -167,7 +167,7 @@ class Case:
         return moves
 
     @staticmethod
-    def create_case_map(lines, patienten):
+    def create_case_map(lines, patienten, load_limit=None):
         """
         Read the case csv and create Case objects from the rows. Populate a dict with cases (case_id -> case) that are not 'storniert'. Note that the function goes both ways, i.e. it adds
         Cases to Patients and vice versa. This function will be called by the HDFS_data_loader.patient_data() function. The lines argument corresponds to a csv.reader() instance
@@ -183,6 +183,7 @@ class Case:
         :return: Dictionary mapping case ids to Case() objects --> {"0003536421" : Case(), "0003473241" : Case(), ...}
         """
         logging.debug("create_case_map")
+        import_count = 0
         nr_not_found = 0
         nr_ok = 0
         nr_not_stationary = 0
@@ -197,6 +198,9 @@ class Case:
                 if patienten.get(fall.patient_id, None) is not None:
                     patienten[fall.patient_id].add_case(fall)
                     fall.add_patient(patienten[fall.patient_id])
+                    import_count += 1
+                    if load_limit is not None and import_count > load_limit:
+                        break
                 else:
                     nr_not_found += 1
                     continue

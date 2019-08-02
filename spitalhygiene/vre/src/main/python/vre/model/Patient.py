@@ -441,7 +441,7 @@ class Patient:
         return tuple(location_moves)
 
     @staticmethod
-    def create_patient_dict(lines):
+    def create_patient_dict(lines, load_limit=None):
         """
         Read the patient csv and create Patient objects from the rows.
         Populate a dict (patient_id -> patient). This function will be called by the HDFS_data_loader.patient_data() function. The lines argument corresponds to a csv.reader() instance
@@ -455,10 +455,14 @@ class Patient:
         Returns: Dictionary mapping PATIENTID to Patient() objects, i.e. {"00001383264" : Patient(), "00001383310" : Patient(), ...}
         """
         logging.debug("create_patient_dict")
+        import_count = 0
         patients = dict()
         for line in lines:
             patient = Patient(*line)
             patients[patient.patient_id] = patient
+            import_count += 1
+            if load_limit is not None and import_count > load_limit:
+                break
 
         logging.info(f"{len(patients)} patients created")
         return patients

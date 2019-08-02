@@ -70,6 +70,7 @@ class HDFS_data_loader:
         self.tacs_path = os.path.join(self.base_path, "TACS_DATEN.csv")
         self.icd_path = os.path.join(self.base_path, "LA_ISH_NDIA_NORM.csv")
         self.VRE_screenings_path = os.path.join(self.base_path, "V_VRE_SCREENING_DATA.csv")
+        self.VRE_ward_screenings_path = os.path.join(self.base_path, "WARD_SCREENINGS.csv")
 
         self.hdfs_pipe = hdfs_pipe  # binary attribute specifying whether to read data Hadoop (True) or CSV (False)
 
@@ -148,12 +149,14 @@ class HDFS_data_loader:
         # Load Patient data from table: V_DH_DIM_PATIENT_CUR
         logging.info("loading patient data")
         patients = Patient.create_patient_dict(self.get_hdfs_pipe(self.patients_path) if self.hdfs_pipe is True
-                                               else self.get_csv_file(self.patients_path))
+                                               else self.get_csv_file(self.patients_path),
+                                               load_limit=1000)
 
         # Load Case data from table: V_LA_ISH_NFAL_NORM
         logging.info("loading case data")
         cases = Case.create_case_map(self.get_hdfs_pipe(self.cases_path) if self.hdfs_pipe is True
-                                     else self.get_csv_file(self.cases_path), patients)
+                                     else self.get_csv_file(self.cases_path), patients,
+                                     load_limit=1000)
 
         # Load Partner data from table: LA_ISH_NGPA
         partners = Partner.create_partner_map(self.get_hdfs_pipe(self.partner_path) if self.hdfs_pipe is True
