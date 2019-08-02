@@ -74,7 +74,7 @@ class Move:
             bwart[line[0]] = line[1]
         return bwart
 
-    def add_move_to_case(lines, faelle, rooms, wards, partners):
+    def add_move_to_case(lines, faelle, rooms, wards, partners, load_limit=None):
         """
         Reads the moves csv and performs the following:
         --> creates a Move() object from the read-in line data
@@ -105,8 +105,8 @@ class Move:
             else:
                 move = Move(*line)
                 # don't consider cancelled movements
-                if move.storn == "X":
-                    continue
+                # if move.storn == "X":  # NOW INCLUDED DIRECTLY IN THE SQL QUERY
+                #     continue
 
                 if faelle.get(move.fal_nr, None) is not None:
                     faelle[move.fal_nr].add_move(move)
@@ -150,5 +150,7 @@ class Move:
                         partners[move.ext_kh].add_case(move.case)
                         move.case.add_referrer(partners[move.ext_kh])
                 nr_ok += 1
+                if load_limit is not None and nr_ok > load_limit:
+                    break
 
         logging.info(f"{nr_ok} ok, {nr_not_found} cases not found, {nr_not_formatted} malformed, {nr_wards_updated} wards updated")
