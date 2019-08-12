@@ -1,0 +1,546 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Patient Test Data &mdash; VRE Model 0.0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="vre/src/main/python/vre folder" href="vre.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> VRE Model
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="VRE_Model.html">VRE Model Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="resources.html"><code class="docutils literal notranslate"><span class="pre">resources</span></code> folder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sql.html"><code class="docutils literal notranslate"><span class="pre">sql</span></code> folder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="vre.html"><code class="docutils literal notranslate"><span class="pre">vre/src/main/python/vre</span></code> folder</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Patient Test Data</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">VRE Model</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Patient Test Data</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/Patient_Test_Data.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="patient-test-data">
+<h1>Patient Test Data<a class="headerlink" href="#patient-test-data" title="Permalink to this headline">¶</a></h1>
+<p>The test patient dataset for the VRE model consists of a small subset of the complete dataset. The SQL queries used to
+extract the test patient data are <cite>identical</cite> to those used for the true dataset, with the exception that data are
+restricted to a small subset in the form of a simple <code class="docutils literal notranslate"><span class="pre">WHERE</span></code> statement. This filter includes the following 3 patient
+IDs:</p>
+<ul class="simple">
+<li><p>00003067149</p></li>
+<li><p>00008301433</p></li>
+<li><p>00004348346</p></li>
+</ul>
+<p>Associated with these patients are the following 40 case IDs:</p>
+<table class="docutils align-center">
+<colgroup>
+<col style="width: 44%" />
+<col style="width: 56%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Patient ID</p></th>
+<th class="head"><p>Case ID</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>00003067149</p></td>
+<td><p>0006280483</p></td>
+</tr>
+<tr class="row-odd"><td><p>00003067149</p></td>
+<td><p>0006314210</p></td>
+</tr>
+<tr class="row-even"><td><p>00003067149</p></td>
+<td><p>0006336438</p></td>
+</tr>
+<tr class="row-odd"><td><p>00003067149</p></td>
+<td><p>0005889802</p></td>
+</tr>
+<tr class="row-even"><td><p>00003067149</p></td>
+<td><p>0005873082</p></td>
+</tr>
+<tr class="row-odd"><td><p>00003067149</p></td>
+<td><p>0006065973</p></td>
+</tr>
+<tr class="row-even"><td><p>00003067149</p></td>
+<td><p>0006091736</p></td>
+</tr>
+<tr class="row-odd"><td><p>00003067149</p></td>
+<td><p>0006148746</p></td>
+</tr>
+<tr class="row-even"><td><p>00003067149</p></td>
+<td><p>0006334066</p></td>
+</tr>
+<tr class="row-odd"><td><p>00003067149</p></td>
+<td><p>0006059391</p></td>
+</tr>
+<tr class="row-even"><td><p>00003067149</p></td>
+<td><p>0005976205</p></td>
+</tr>
+<tr class="row-odd"><td><p>00003067149</p></td>
+<td><p>0006057834</p></td>
+</tr>
+<tr class="row-even"><td><p>00003067149</p></td>
+<td><p>0005983693</p></td>
+</tr>
+<tr class="row-odd"><td><p>00003067149</p></td>
+<td><p>0006520444</p></td>
+</tr>
+<tr class="row-even"><td><p>00003067149</p></td>
+<td><p>0006931777</p></td>
+</tr>
+<tr class="row-odd"><td><p>00003067149</p></td>
+<td><p>0006812114</p></td>
+</tr>
+<tr class="row-even"><td><p>00003067149</p></td>
+<td><p>0005965462</p></td>
+</tr>
+<tr class="row-odd"><td><p>00003067149</p></td>
+<td><p>0006452545</p></td>
+</tr>
+<tr class="row-even"><td><p>00003067149</p></td>
+<td><p>0006433446</p></td>
+</tr>
+<tr class="row-odd"><td><p>00003067149</p></td>
+<td><p>0006466165</p></td>
+</tr>
+<tr class="row-even"><td><p>00004348346</p></td>
+<td><p>0001927876</p></td>
+</tr>
+<tr class="row-odd"><td><p>00004348346</p></td>
+<td><p>0004555507</p></td>
+</tr>
+<tr class="row-even"><td><p>00004348346</p></td>
+<td><p>0004728517</p></td>
+</tr>
+<tr class="row-odd"><td><p>00004348346</p></td>
+<td><p>0001928507</p></td>
+</tr>
+<tr class="row-even"><td><p>00004348346</p></td>
+<td><p>0002802610</p></td>
+</tr>
+<tr class="row-odd"><td><p>00004348346</p></td>
+<td><p>0004204668</p></td>
+</tr>
+<tr class="row-even"><td><p>00004348346</p></td>
+<td><p>0004181978</p></td>
+</tr>
+<tr class="row-odd"><td><p>00003067149</p></td>
+<td><p>0006951942</p></td>
+</tr>
+<tr class="row-even"><td><p>00003067149</p></td>
+<td><p>0005880782</p></td>
+</tr>
+<tr class="row-odd"><td><p>00008301433</p></td>
+<td><p>0002289902</p></td>
+</tr>
+<tr class="row-even"><td><p>00008301433</p></td>
+<td><p>0004411153</p></td>
+</tr>
+<tr class="row-odd"><td><p>00008301433</p></td>
+<td><p>0004411005</p></td>
+</tr>
+<tr class="row-even"><td><p>00008301433</p></td>
+<td><p>0006565152</p></td>
+</tr>
+<tr class="row-odd"><td><p>00008301433</p></td>
+<td><p>0003962974</p></td>
+</tr>
+<tr class="row-even"><td><p>00008301433</p></td>
+<td><p>0006594482</p></td>
+</tr>
+<tr class="row-odd"><td><p>00008301433</p></td>
+<td><p>0006596375</p></td>
+</tr>
+<tr class="row-even"><td><p>00008301433</p></td>
+<td><p>0006551728</p></td>
+</tr>
+<tr class="row-odd"><td><p>00003067149</p></td>
+<td><p>0005864325</p></td>
+</tr>
+<tr class="row-even"><td><p>00003067149</p></td>
+<td><p>0005877026</p></td>
+</tr>
+<tr class="row-odd"><td><p>00003067149</p></td>
+<td><p>0006069476</p></td>
+</tr>
+</tbody>
+</table>
+<p>For partners, only a single entry associated to one of the three test patients is used:</p>
+<ul class="simple">
+<li><p>0010000990</p></li>
+</ul>
+<p>For CHOP codes, the following sub-selection of codes will be imported:</p>
+<ul class="simple">
+<li><p>Z99.B8.11</p></li>
+<li><p>Z50.27.32</p></li>
+<li><p>Z00.99.60</p></li>
+<li><p>Z88.38.60</p></li>
+<li><p>Z99.85</p></li>
+<li><p>Z89.07.24</p></li>
+<li><p>Z50.27.32</p></li>
+<li><p>Z00.99.60</p></li>
+<li><p>Z88.38.60</p></li>
+<li><p>Z99.85</p></li>
+<li><p>Z50.23.13</p></li>
+<li><p>Z50.12.09</p></li>
+<li><p>Z88.79.50</p></li>
+<li><p>Z00.9A.13</p></li>
+<li><p>Z39.32.41</p></li>
+<li><p>Z50.93</p></li>
+<li><p>Z34.84</p></li>
+<li><p>Z34.89.99</p></li>
+<li><p>Z39.29.89</p></li>
+<li><p>Z50.52</p></li>
+<li><p>Z00.93.99</p></li>
+<li><p>Z00.90.99</p></li>
+<li><p>Z00.99.10</p></li>
+<li><p>Z50.27.32</p></li>
+<li><p>Z00.99.60</p></li>
+<li><p>Z88.38.60</p></li>
+<li><p>Z99.85</p></li>
+<li><p>Z99.04.10</p></li>
+<li><p>Z94.8X.40</p></li>
+<li><p>Z99.B7.12</p></li>
+<li><p>Z99.07.3C</p></li>
+<li><p>Z99.04.15</p></li>
+<li><p>Z99.05.47</p></li>
+<li><p>Z99.B7.13</p></li>
+<li><p>Z99.0A</p></li>
+<li><p>Z99.28.11</p></li>
+<li><p>Z50.52</p></li>
+<li><p>Z54.52</p></li>
+<li><p>Z00.93.99</p></li>
+<li><p>Z00.90.99</p></li>
+<li><p>Z51.22.11</p></li>
+<li><p>Z39.29.89</p></li>
+<li><p>Z99.00</p></li>
+<li><p>Z54.12.11</p></li>
+<li><p>Z50.12.12</p></li>
+<li><p>Z88.79.50</p></li>
+<li><p>Z54.25</p></li>
+<li><p>Z36.11.22</p></li>
+<li><p>Z36.11.26</p></li>
+<li><p>Z36.1C.12</p></li>
+<li><p>Z39.61.10</p></li>
+<li><p>Z39.63</p></li>
+<li><p>Z39.64</p></li>
+<li><p>Z88.79.50</p></li>
+<li><p>Z01.16.12</p></li>
+<li><p>Z99.00</p></li>
+</ul>
+<p>For appointments (german: “Termine”), only the following 98 TerminIDs are used:</p>
+<ul class="simple">
+<li><p>38515699</p></li>
+<li><p>38321122</p></li>
+<li><p>35416924</p></li>
+<li><p>1164130</p></li>
+<li><p>38470639</p></li>
+<li><p>41827160</p></li>
+<li><p>39893063</p></li>
+<li><p>38411180</p></li>
+<li><p>35571391</p></li>
+<li><p>35130813</p></li>
+<li><p>36160483</p></li>
+<li><p>40766840</p></li>
+<li><p>42155710</p></li>
+<li><p>39491988</p></li>
+<li><p>36067632</p></li>
+<li><p>37374631</p></li>
+<li><p>36129549</p></li>
+<li><p>39001478</p></li>
+<li><p>39425469</p></li>
+<li><p>34338471</p></li>
+<li><p>35630084</p></li>
+<li><p>35139096</p></li>
+<li><p>38431954</p></li>
+<li><p>38452040</p></li>
+<li><p>40344805</p></li>
+<li><p>13831398</p></li>
+<li><p>38063644</p></li>
+<li><p>38539785</p></li>
+<li><p>34220024</p></li>
+<li><p>39819467</p></li>
+<li><p>39423020</p></li>
+<li><p>38386995</p></li>
+<li><p>42394432</p></li>
+<li><p>38446243</p></li>
+<li><p>42213628</p></li>
+<li><p>38565198</p></li>
+<li><p>39893320</p></li>
+<li><p>37244357</p></li>
+<li><p>37554138</p></li>
+<li><p>41124954</p></li>
+<li><p>39051017</p></li>
+<li><p>36129560</p></li>
+<li><p>35621237</p></li>
+<li><p>38772701</p></li>
+<li><p>21130116</p></li>
+<li><p>38063650</p></li>
+<li><p>39608858</p></li>
+<li><p>39427731</p></li>
+<li><p>21131159</p></li>
+<li><p>38331618</p></li>
+<li><p>38062724</p></li>
+<li><p>24171386</p></li>
+<li><p>14908956</p></li>
+<li><p>41909560</p></li>
+<li><p>39114133</p></li>
+<li><p>14091256</p></li>
+<li><p>38939623</p></li>
+<li><p>35626775</p></li>
+<li><p>35139491</p></li>
+<li><p>36006751</p></li>
+<li><p>38329080</p></li>
+<li><p>41909690</p></li>
+<li><p>35130747</p></li>
+<li><p>36129541</p></li>
+<li><p>1278803</p></li>
+<li><p>38507433</p></li>
+<li><p>1192059</p></li>
+<li><p>39456191</p></li>
+<li><p>14091249</p></li>
+<li><p>39933520</p></li>
+<li><p>24291359</p></li>
+<li><p>36071093</p></li>
+<li><p>36160474</p></li>
+<li><p>19096210</p></li>
+<li><p>40218521</p></li>
+<li><p>1162144</p></li>
+<li><p>38660148</p></li>
+<li><p>42211133</p></li>
+<li><p>39613790</p></li>
+<li><p>24230235</p></li>
+<li><p>38262758</p></li>
+<li><p>35417252</p></li>
+<li><p>19252406</p></li>
+<li><p>39215737</p></li>
+<li><p>38446041</p></li>
+<li><p>36830543</p></li>
+<li><p>35200182</p></li>
+<li><p>40766156</p></li>
+<li><p>36070942</p></li>
+<li><p>34310589</p></li>
+<li><p>37232112</p></li>
+<li><p>34337667</p></li>
+<li><p>38446523</p></li>
+<li><p>34482529</p></li>
+<li><p>17297480</p></li>
+<li><p>39298995</p></li>
+<li><p>36830574</p></li>
+<li><p>1405150</p></li>
+</ul>
+<p>And finally for devices, the subset is restricted to the following GeraetIDs:</p>
+<ul class="simple">
+<li><p>134074</p></li>
+<li><p>125922</p></li>
+<li><p>137160</p></li>
+<li><p>125916</p></li>
+<li><p>125981</p></li>
+<li><p>125981</p></li>
+<li><p>64174</p></li>
+<li><p>125921</p></li>
+<li><p>125981</p></li>
+<li><p>125981</p></li>
+<li><p>125981</p></li>
+<li><p>125981</p></li>
+<li><p>125981</p></li>
+<li><p>28609</p></li>
+<li><p>86293</p></li>
+<li><p>125981</p></li>
+<li><p>125981</p></li>
+<li><p>125981</p></li>
+<li><p>86293</p></li>
+<li><p>125981</p></li>
+<li><p>125981</p></li>
+<li><p>64174</p></li>
+<li><p>125981</p></li>
+<li><p>125981</p></li>
+<li><p>125981</p></li>
+<li><p>125981</p></li>
+<li><p>125981</p></li>
+<li><p>125974</p></li>
+<li><p>28609</p></li>
+<li><p>125981</p></li>
+</ul>
+<hr class="docutils" />
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="vre.html" class="btn btn-neutral float-left" title="vre/src/main/python/vre folder" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, SZ
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
