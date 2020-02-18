@@ -9,16 +9,16 @@ import os
 this_filepath = os.path.dirname(os.path.realpath(__file__))
 csv_sep = ';'
 
-def write_geraet(geraet_tuple, filepath = os.path.join(this_filepath, 'Geraet.csv'), csv_sep = csv_sep):
+def write_device(device_tuple, filepath = os.path.join(this_filepath, 'Geraet.csv'), csv_sep = csv_sep):
     """
     Will write the two entries in geraet_tuple (tuple of length 2) to filepath using csv_sep.
-    :param geraet:      Tuple of length 2
+    :param device_tuple:      Tuple of length 2
     :param filepath:    Path of the CSV file to write to in "a" mode
     :param csv_sep:     CSV separator to use in the file
     """
     try:
         with open(filepath, 'a') as writefile:
-            writefile.write(f"{geraet_tuple[0]}{csv_sep}{geraet_tuple[1]}\n")
+            writefile.write(f"{device_tuple[0]}{csv_sep}{device_tuple[1]}\n")
     except Exception as e:
         print(f"Error: {e}")
 

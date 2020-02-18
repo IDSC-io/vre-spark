@@ -16,7 +16,7 @@ import pyodbc
 import csv
 
 
-def WriteSQLToCSV(path_to_sql, path_to_csv, csv_sep, connection_file, trusted_connection=True):
+def write_sql_to_csv(path_to_sql, path_to_csv, csv_sep, connection_file, trusted_connection=True):
     """Executes an SQL query and writes the results to path_to_csv.
 
     Args:
@@ -86,9 +86,9 @@ if __name__ == '__main__':  # Necessary to avoid code parsing by Sphinx
         start_dt = datetime.datetime.now()
 
         # Execute query and write results
-        WriteSQLToCSV(path_to_sql=os.path.join(SQL_DIR, each_file),
-                      path_to_csv=os.path.join(CSV_DIR, each_file.replace('.sql', '.csv')), csv_sep=CSV_DELIM,
-                      connection_file=config_reader['PATHS']['odbc_file_path'], trusted_connection=False)
+        write_sql_to_csv(path_to_sql=os.path.join(SQL_DIR, each_file),
+                         path_to_csv=os.path.join(CSV_DIR, each_file.replace('.sql', '.csv')), csv_sep=CSV_DELIM,
+                         connection_file=config_reader['PATHS']['odbc_file_path'], trusted_connection=False)
 
         print(f'\tDone !\t Total processing time: {str(datetime.datetime.now()-start_dt).split(".")[0]}')
         # --> print timedelta without fractional seconds (original string would be printed as 0:00:13.4567)

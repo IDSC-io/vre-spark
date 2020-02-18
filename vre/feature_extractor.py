@@ -47,27 +47,6 @@ class feature_extractor:
                 # patient.get_risk_date() will return a datetime.datetime() object corresponding to the label risk date
         v = DictVectorizer(sparse=False)
         features = v.fit_transform(risk_factors)
-        # features.shape yields a tuple of dimensions in the format (nrow, ncol),
-        # or a tuple (LENGTH, ) in case of only 1 dimension (i.e. a list)
-        ###############################################################################################################
-        # Note: features is a numpy.ndarray() object with one row per patient containing the "fitted" risk factors for
-        # each patient in the one-of-K fashion as described in the .fit_transform() documentation
-        # E.g. for a categorical value with levels "a", "b", and "c", it will contain three columns containing 0 or 1
-        # and corresponding to value=a, value=b and value=c
-        ###############################################################################################################
-        # filter = ~np.isnan(features).any(axis=1)
-        # features_filtered = features[~np.isnan(features).any(axis=1)]
-        labels_np = np.asarray(labels)
-        # --> labels_np is a 1-D numpy.ndarray() object based on labels, which is a list of labels between -1 and 3
-        #       for each patient in the dataset (e.g. ndarray([1 2 2 -1 3 3 2 1 1 2]) )
-        ###############################################################################################################
-        # labels_np
-        # labels_filtered = labels_np[filter]
-        dates_np = np.asarray(dates)
-        # --> same structure as labels_np, but contains the risk date for each patient in the dataset
-        #       as a datetime.datetime() object
-        ###############################################################################################################
-        # dates_filtered = dates_np[filter]
 
         return features, labels_np, dates_np, v
 

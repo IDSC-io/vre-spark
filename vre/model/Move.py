@@ -86,7 +86,7 @@ class Move:
         >> TABLE NAME: LA_ISH_NBEW
         ["FALNR",      "LFDNR", "BEWTY",  "BWART",      "BWIDT",        "BWIZT",    "STATU", "BWEDT",       "BWEZT",        "LFDREF", "KZTXT",                "ORGFA", "ORGPF", "ORGAU", "ZIMMR", "BETT", "STORN", "EXTKH"]
         ["0004496041", "3",     "4",      "SB",         "2014-01-17",   "16:15:00", "30",    "2014-01-17",  "16:15:00.000", "0",      "",                     "DIAA",  "DIAA",  "",      "",      "",      "",     ""]
-        ["0004496042", "1",     "4",      "BE",         "2014-03-10",   "08:15:00", "30",    "2014-03-10",  "08:15:00.000", "0",      "ej/ nü CT um 10.30 h", "ENDA",  "ENDA",  "IICA",  "",      "",      "",     ""]
+        ["0004496042", "1",     "4",      "BE",         "2014-03-10",   "08:15:00", "30",    "2014-03-10",  "08:15:00.000", "0",      "ej/ n CT um 10.30 h", "ENDA",  "ENDA",  "IICA",  "",      "",      "",     ""]
 
         :param faelle:   Dictionary mapping case ids to Case()       --> {'0005976205' : Case(), ... }
         :param rooms:    Dictionary mapping room names to Room()     --> {'BH N 125' : Room(), ... }

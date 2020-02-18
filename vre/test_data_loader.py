@@ -2,7 +2,7 @@
 
 from HDFS_data_loader import HDFS_data_loader
 from feature_extractor import feature_extractor
-from networkx_graph import surface_model, create_model_snapshots
+from networkx_graph import SurfaceModel, create_model_snapshots
 import logging
 import os
 import datetime

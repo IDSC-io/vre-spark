@@ -39,7 +39,7 @@ def create_model_snapshots(orig_model, snapshot_dt_list):
         the snapshot date of the model used as a basis for the other models).
 
     Args:
-        orig_model (surface_model): Original surface_model() object that will be used as starting point for all
+        orig_model (SurfaceModel): Original surface_model() object that will be used as starting point for all
                                     subsequent snapshots
         snapshot_dt_list (list):    List of dt.dt() objects, all smaller than self.snapshot_dt
 
@@ -70,7 +70,7 @@ def create_model_snapshots(orig_model, snapshot_dt_list):
     return model_list
 
 
-class surface_model:
+class SurfaceModel:
     """Represents the `Surface Model` graph in networkx.
 
     Nodes can be one of:
@@ -905,7 +905,7 @@ class surface_model:
         - Total number of patient-related edges
         - Total number of edges (i.e. degree of node_x)
         """
-        if self.edges_infected == False:
+        if not self.edges_infected:
             logging.error('This operation requires infection data on edges !')
             return None
         exact_path = self.data_dir if export_path is None else export_path
@@ -1099,159 +1099,3 @@ class surface_model:
         self.node_files_written = True
 
 
-
-
-
-
-
-
-
-
-        # logging.info(f"##################################################################################")
-        # logging.info(f'Calculating betweenness centrality (based on {"all" if considered_nodes is None else "specific"} nodes)...')
-        # if considered_nodes is None:
-        #     bw_cent = nx.betweenness_centrality(self.S_GRAPH, normalized=normalize)
-        #     logging.info('Successfully calculated betweenness centrality for all nodes.')
-        #     return bw_cent
-        # else:
-        #     node_combinations = list(itertools.combinations(considered_nodes, 2)) # Returns a list of tuples containing all unique pairs of nodes in considered_nodes
-        #     logging.info(f'--> Calculating betweenness centrality considering {len(considered_nodes)} nodes yielding {len(node_combinations)} combinations')
-        #     node_dict = {each_node[0] : {'scores' : [], 'attributes' : each_node[1] }  # dictionary mapping node identifiers to lists of tuples of the format (shortest_paths_through_node, number_of_shortest_paths) for each combination of considered_nodes
-        #                  for each_node in self.S_GRAPH.nodes(data=True) } # S_GRAPH.nodes(data=True) returns tuples of length 2 of ('node_id', attribute_dict)
-        #     for index, combo_tuple in enumerate(node_combinations):
-        #         if index % 1 == 0:
-        #             logging.info(f" <> Processed {index} combinations")
-        #         all_shortest_paths = list(nx.all_shortest_paths(self.S_GRAPH, source=combo_tuple[0], target=combo_tuple[1])) # Yields a list of list of shortest paths for that combination of nodes
-        #         all_shortest_paths = [path_list[1:len(path_list) - 1] for path_list in all_shortest_paths]  # Remove the source and target node in each list of shortest path, as these should not be counted
-        #         involved_nodes = set([node for sublist in all_shortest_paths for node in sublist]) # includes all involved nodes
-        #         for inv_node in involved_nodes:
-        #             involved_list = [True if inv_node in sub_list else False for sub_list in all_shortest_paths] # list containing True if inv_node is involved in a particular list of all_shortest_paths, and False otherwise
-        #             node_dict[inv_node]['scores'].append((sum(involved_list), len(involved_list)))
-        # ### Then combine all entries in node_dict to true scores
-        # score_dict = {each_key : sum([each_tuple[0]/each_tuple[1] for each_tuple in node_dict[each_key]['scores']]) for each_key in node_dict.keys()}
-        # if normalize == True:
-        #     total_nodes = len(self.S_GRAPH.nodes)
-        #     score_dict = {each_key : score_dict[each_key] * ( 2 / ((total_nodes-1) * (total_nodes-2)) ) for each_key in score_dict.keys()}
-        # logging.info('Successfully calculated betweenness centrality.')
-        # self.betweenness_centrality = score_dict
-        # ### Write results to file
-        # with open(os.path.join(self.data_dir, self.snapshot_dt.strftime('%Y_%m_%d') + '_node_bwn.txt'), 'w') as outfile:
-        #     outfile.write(f'Node ID{csv_sep}Node Type{csv_sep}Betweenness_Score\n')
-        #     for key in sorted(score_dict.keys()):
-        #         outfile.write(f"{key}{csv_sep}{node_dict[key]['attributes']['type']}{csv_sep}{score_dict[key]}\n")
-        # logging.info(f"Successfully wrote betweenness scores for {len(score_dict.keys())} nodes to {os.path.join(self.data_dir, self.snapshot_dt.strftime('%Y_%m_%d') + '_node_bwn.txt')}")
-
-
-
-    # def add_patient_contacts(self, patient_contacts, patient_dict):
-    #     """
-    #     Adds patient-patient interactions in cases where 2 patients came into contact with each other during their relevant case.
-    #
-    #     :param patient_contacts:    List containing tuples of length 6 of either the format:   (source_pat_id, dest_pat_id, start_overlap_dt, end_overlap_dt, room_name, "kontakt_raum")
-    #                                                                           or the format:   (source_pat_id, dest_pat_id, start_overlap_dt, end_overlap_dt, ward_name, "kontakt_org")
-    #     :param patient_dict:        Dictionary mapping PATIENTID to Patient() objects, i.e. {"00001383264" : Patient(), "00001383310" : Patient(), ...}
-    #     """
-    #     contact_count = 0
-    #     for contact in patient_contacts: # list of tuples --> can be directly added to the network
-    #         if patient_dict[contact[0]].get_relevant_case() is not None and patient_dict[contact[1]].get_relevant_case() is not None: # make sure to include only patients with a relevant date !
-    #             self.S_GRAPH.add_node(str(contact[0]), type = 'Patient')
-    #             self.S_GRAPH.add_node(str(contact[1]), type = 'Patient')
-    #             self.S_GRAPH.add_edge(str(contact[0]), str(contact[1]))
-    #             contact_count += 1
-    #     # Update log file
-    #     logging.info(f'GRAPH: Created {contact_count} patient-patient contacts.')
-
-    # def add_patient_room(self, patient_dict):
-    #     """
-    #     Adds patient-room interactions, i.e. rooms occupied by a particular patient during his or her relevant case.
-    #
-    #     :param patient_dict: Dictionary mapping PATIENTID to Patient() objects, i.e. {"00001383264" : Patient(), "00001383310" : Patient(), ...}
-    #     """
-    #     relcase_count = 0
-    #     patient_count = 0
-    #     room_count = 0
-    #
-    #     for patient in patient_dict.values():
-    #         patient_count += 1
-    #         pat_rel_case = patient.get_relevant_case()
-    #         if pat_rel_case is not None:
-    #             relcase_count += 1
-    #             for move in pat_rel_case.moves.values(): # the Case().moves attribute is a dictionary mapping the order of moves to Moves() objects
-    #                 if move.room is not None:
-    #                     self.S_GRAPH.add_node(str(patient.patient_id), type = 'Patient')
-    #                     self.S_GRAPH.add_node(str(move.room.name), type='Room')
-    #                     self.S_GRAPH.add_edge(str(patient.patient_id), str(move.room.name))
-    #                     room_count += 1
-    #     # update logfile
-    #     logging.info(f'GRAPH: Wrote {room_count} rooms (based on moves) for {relcase_count} patients with relevant cases out of {patient_count} patients.')
-    #
-    # def add_patient_employee(self, patient_dict):
-    #     """
-    #     Add all contacts between an employee and a patient during the patient's relevant case.
-    #
-    #     :param patient_dict: Dictionary mapping PATIENTID to Patient() objects, i.e. {"00001383264" : Patient(), "00001383310" : Patient(), ...}
-    #     """
-    #     pat_count = 0
-    #     relcase_count = 0
-    #     contact_count = 0
-    #
-    #     for k, p in patient_dict.items():
-    #         pat_rel_case = p.get_relevant_case() # returns None if patient has no relevant case
-    #         pat_count += 1
-    #         if pat_rel_case is not None:
-    #             relcase_count += 1
-    #             for t in pat_rel_case.appointments:
-    #                 for e in t.employees:
-    #                     if e.mitarbeiter_id != "-1": # indicates an unknown mitarbeiter - these cases are ignored
-    #                         self.S_GRAPH.add_node(str(p.patient_id), type = 'Patient')
-    #                         self.S_GRAPH.add_node(str(e.mitarbeiter_id), type = 'Employee')
-    #                         self.S_GRAPH.add_edge(str(p.patient_id), str(e.mitarbeiter_id))
-    #                         contact_count += 1
-    #     # Update log file
-    #     logging.info(f'GRAPH: Created {contact_count} contacts in {relcase_count} relevant cases from {pat_count} patients.')
-
-    ################################################################################################################
-    ###  Functions for retrieving graph statistics
-    ################################################################################################################
-
-    # def get_node_count(self, type_filter = None):
-    #     """
-    #     Return the number of nodes in the graph, possibly also applying a filter to the type of nodes to be returned.
-    #
-    #     :param type_filter: Filter for the "type" attribute of nodes. If None, all nodes in the graph will be returned.
-    #     :return:            Number of nodes matching the specified filter criteria.
-    #     """
-    #     if filter is None:
-    #         return self.S_GRAPH.number_of_nodes()
-    #     else:
-    #         return len([data for node, data in self.S_GRAPH.nodes(data=True) if data['type'] == type_filter]) # S_GRAPH.nodes() returns a list of dictionaries of all node attributes
-    #
-    # def get_edge_count(self, type_filter = None):
-    #     """
-    #     Return the number of edges in the graph, possibly also applying a filter to the type of edge to be returned.
-    #
-    #     :param type_filter: Filter for the "type" attribute of edges. If None, all edges in the graph will be returned.
-    #     :return:            Number of edges matching the specified filter criteria.
-    #     """
-    #     if type is None:
-    #         return self.S_GRAPH.number_of_edges()
-    #     else:
-    #         return len([data_tuple for data_tuple in self.S_GRAPH.edges(data=True) if data_tuple[2]['type'] == type_filter]) # S_GRAPH.edges() returns a list of tuples of length 3 in the format (source_node, dest_node, {'attribute1' : value1, ...})
-    #
-    # def get_node_degree_centrality(self):
-    #     """
-    #     Calculate the node degree centrality for each node of the graph.
-    #
-    #     :return: List of tuples of length 2 --> (node_name, centrality)
-    #     """
-    #     return nx.degree_centrality(self.S_GRAPH)
-    #
-    # def get_node_betweenness_centrality(self, normalized = False):
-    #     """
-    #     Calculate the node betweenness centrality (raw or normalized) for each node of the graph.
-    #
-    #     :param normalized:  boolean indicating whether or not to return raw (False) or normalized (True) values
-    #     :return:            List of tuples of length 2 --> (node_name, centrality)
-    #     """
-    #     return nx.betweenness_centrality(self.S_GRAPH, normalized=normalized)
-    # [END OF FILE}
