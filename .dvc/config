@@ -1,4 +1,4 @@
-['remote "localrepo"']
-url = ..\LociInfectologyvre-local-repository
+['remote "localrepository"']
+url = C:/Loci/Infectology/vre-local-repository
 [core]
-remote = localrepo
+remote = localrepository
