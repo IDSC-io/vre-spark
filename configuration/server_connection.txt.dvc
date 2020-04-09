@@ -1,0 +1,7 @@
+md5: 3f21d888c584ca421f4fc8b181a36fdf
+outs:
+- md5: 56e47bc1bbd7b5c7161a042b0c40586d
+  path: server_connection.txt
+  cache: true
+  metric: false
+  persist: false
