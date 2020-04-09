@@ -1,0 +1,4 @@
+['remote "localrepo"']
+url = ..\LociInfectologyvre-local-repository
+[core]
+remote = localrepo
