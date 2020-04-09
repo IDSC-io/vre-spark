@@ -1,0 +1,190 @@
+Standort;Department_Abk;Department;OE_Fachlich_Abk;OE_Fachlich_Name;OE_Pflege_Abk;OE_Pflege_Details;Gebäude_Abk;Gebäude_Details;Stock
+61 AARBERG;Extern;Extern;XXXX;Unbekannt;61 NOTFS;Notfall Aarberg stationär;EXT;Extern;Extern
+61 AARBERG;Extern;Extern;XXXX;Unbekannt;61 PLAN;Planfälle Aarberg;EXT;Extern;Extern
+61 AARBERG;Extern;Extern;XXXX;Unbekannt;61 STAT 1;;EXT;Extern;Extern
+61 AARBERG;Extern;Extern;XXXX;Unbekannt;61 STAT 2;;EXT;Extern;Extern
+61 AARBERG;Extern;Extern;XXXX;Unbekannt;61 STAT 3;;EXT;Extern;Extern
+61 AARBERG;Extern;Extern;XXXX;Unbekannt;61 ZAWR;Aufwachraum Aarberg;EXT;Extern;Extern
+62 MUENSINGEN;Extern;Extern;XXXX;Unbekannt;62 A;;EXT;Extern;Extern
+62 MUENSINGEN;Extern;Extern;XXXX;Unbekannt;62 B;;EXT;Extern;Extern
+62 MUENSINGEN;Extern;Extern;XXXX;Unbekannt;62 GEBS;M_Gebärsäle;EXT;Extern;Extern
+62 MUENSINGEN;Extern;Extern;XXXX;Unbekannt;62 NOTFS;Notfall Münsingen stationär;EXT;Extern;Extern
+62 MUENSINGEN;Extern;Extern;XXXX;Unbekannt;62 PLAN;Planfälle Münsingen;EXT;Extern;Extern
+62 MUENSINGEN;Extern;Extern;XXXX;Unbekannt;62 STAT A;;EXT;Extern;Extern
+62 MUENSINGEN;Extern;Extern;XXXX;Unbekannt;62 STAT B;;EXT;Extern;Extern
+62 MUENSINGEN;Extern;Extern;XXXX;Unbekannt;62 STAT C;;EXT;Extern;Extern
+62 MUENSINGEN;Extern;Extern;XXXX;Unbekannt;62 STATION A;;EXT;Extern;Extern
+62 MUENSINGEN;Extern;Extern;XXXX;Unbekannt;62 ZAWR;Aufwachraum Muensingen;EXT;Extern;Extern
+63 RIGGISBERG;Extern;Extern;XXXX;Unbekannt;63 NOTFS;Notfall Riggisberg stationär;EXT;Extern;Extern
+63 RIGGISBERG;Extern;Extern;XXXX;Unbekannt;63 PLAN;Planfälle Riggisberg;EXT;Extern;Extern
+63 RIGGISBERG;Extern;Extern;XXXX;Unbekannt;63 STAT 1;;EXT;Extern;Extern
+63 RIGGISBERG;Extern;Extern;XXXX;Unbekannt;63 STAT 2;;EXT;Extern;Extern
+63 RIGGISBERG;Extern;Extern;63NRES;Neurorehabilitation Stationär;63 STAT 3;;EXT;Extern;Extern
+63 RIGGISBERG;Extern;Extern;63NRES;Neurorehabilitation Stationär;63 STAT 4;;EXT;Extern;Extern
+64 BELP;Extern;Extern;XXXX;Unbekannt;64 ALTERS;B_Altersheim;EXT;Extern;Extern
+64 BELP;Extern;Extern;64GRES;Geri Reha stationär Belp;64 GERI 1;;EXT;Extern;Extern
+64 BELP;Extern;Extern;64GRES;Geri Reha stationär Belp;64 GERI 2;;EXT;Extern;Extern
+64 BELP;Extern;Extern;64GRES;Geri Reha stationär Belp;64 GERIR 1;;EXT;Extern;Extern
+64 BELP;Extern;Extern;64GRES;Geri Reha stationär Belp;64 GERIR 2;;EXT;Extern;Extern
+64 BELP;Extern;Extern;64GRES;Geri Reha stationär Belp;64 GERIREHA 1;;EXT;Extern;Extern
+64 BELP;Extern;Extern;XXXX;Unbekannt;64 LANGZP;B_Langzeitpflege und Betreuung;EXT;Extern;Extern
+64 BELP;Extern;Extern;XXXX;Unbekannt;64 REHA 1;;EXT;Extern;Extern
+64 BELP;Extern;Extern;XXXX;Unbekannt;64 REHA 2;;EXT;Extern;Extern
+71 TIEFENAU;Extern;Extern;XXXX;Unbekannt;71 CHIRURGIE WEST;;EXT;Extern;Extern
+71 TIEFENAU;Extern;Extern;XXXX;Unbekannt;71 IB;Intensivbetreuung;EXT;Extern;Extern
+71 TIEFENAU;Extern;Extern;XXXX;Unbekannt;71 IMC;IMC Tiefenau;EXT;Extern;Extern
+71 TIEFENAU;Extern;Extern;XXXX;Unbekannt;71 IPS;;EXT;Extern;Extern
+71 TIEFENAU;Extern;Extern;XXXX;Unbekannt;71 MITTE 1;;EXT;Extern;Extern
+71 TIEFENAU;Extern;Extern;XXXX;Unbekannt;71 MITTE 2;;EXT;Extern;Extern
+71 TIEFENAU;Extern;Extern;XXXX;Unbekannt;71 MITTE P;;EXT;Extern;Extern
+71 TIEFENAU;Extern;Extern;XXXX;Unbekannt;71 NOTFS;Notfall Betten Tiefenau;EXT;Extern;Extern
+71 TIEFENAU;Extern;Extern;71GUKS;Geriatrie Akut Stat.Tiefenau;71 OST 1;;EXT;Extern;Extern
+71 TIEFENAU;Extern;Extern;XXXX;Unbekannt;71 OST 2;;EXT;Extern;Extern
+71 TIEFENAU;Extern;Extern;XXXX;Unbekannt;71 PLAN;Planfälle Tiefenau;EXT;Extern;Extern
+71 TIEFENAU;Extern;Extern;XXXX;Unbekannt;71 WEST 1;;EXT;Extern;Extern
+71 TIEFENAU;Extern;Extern;XXXX;Unbekannt;71 WEST 2;;EXT;Extern;Extern
+71 TIEFENAU;Extern;Extern;XXXX;Unbekannt;71 WEST P;;EXT;Extern;Extern
+71 TIEFENAU;Extern;Extern;XXXX;Unbekannt;71 ZAWR;Zentraler Aufwachraum Tiefenau;EXT;Extern;Extern
+ISB;KAIM;Universitätsklinik für Allgemeine Innere Medizin;AIMA;Poliklinik Allg. Inn. Medizin;AIMA;;H5;Haus 5;E
+ISB;;;ANGK;Angiologie Bettenstation P;APTA LAB;Angiologie PTA Labor;BHH;Bettenhochhaus;C
+ISB;;;NREH;Neuropsycholog. Rehabilitation;ASH 1 OG;;ASH;Anna-Seiler Haus;1
+ISB;;;NREH;Neuropsycholog. Rehabilitation;ASH 2 OG;;ASH;Anna-Seiler Haus;2
+ISB;;;RHEU;Rheumatologische Klinik;B EGH;B EGH;BHH;Bettenhochhaus;B
+ISB;;;DERK;Dermatologische Klinik Betten;B OST;;DERK;Dermatologie;B
+ISB;;;RHEU;Rheumatologische Klinik;B RHEUTK;B Tagesklinik Rheumatologie;H5;Haus 5;B
+ISB;;;RHEU;Rheumatologische Klinik;B SUED;;BHH;Bettenhochhaus;B
+ISB;;;ORTK;Orthopädische Klinik Betten;B WEST;;DERK;Dermatologie;B
+ISB;;;BEWA;Bewachungsstation;C WEST;;DERK;Dermatologie;C
+ISB;;;IMCI;Interdisziplinäre IMC;E 108-09;BHH IMC E 108-09;BHH;Bettenhochhaus;E
+ISB;;;NCHI;Neurochirurgie Ueberwachung;E 113-15;BHH IMC E 113-15;BHH;Bettenhochhaus;E
+ISB;;;IMCI;Interdisziplinäre IMC;E 116;BHH IMC E 116;BHH;Bettenhochhaus;E
+ISB;;;NCHI;Neurochirurgie Ueberwachung;E 120-21;BHH IMC E 120-21;BHH;Bettenhochhaus;E
+ISB;;;MELO;Med. Abt. Lory Bettenstation;LORY EG OST;;Lory;Lory Haus;EG
+ISB;;;MELO;Med. Abt. Lory Bettenstation;LORY EG WEST;;Lory;Lory Haus;EG
+ISB;;;PLWB;Plast.- u Wiederherst. Betten;F MITTE;;BHH;Bettenhochhaus;F
+ISB;;;KIMC;Kardiologie IMC Station;F SUED;;BHH;Bettenhochhaus;F
+ISB;;;HERB;Herz Betten;G IMC;;BHH;Bettenhochhaus;G
+ISB;;;HERB;Herz Betten;G MITTE ;G MITTE;BHH;Bettenhochhaus;G
+ISB;;;HERB;Herz Betten;G NORD;;BHH;Bettenhochhaus;G
+ISB;;;HERB;Herz Betten;G SUED;;BHH;Bettenhochhaus;G
+ISB;;;VMCK;Visz.Med.u.Chir.Bettenstation;H NORD;;BHH;Bettenhochhaus;H
+ISB;;;VMCK;Visz.Med.u.Chir.Bettenstation;H NORD 1;;BHH;Bettenhochhaus;H
+ISB;;;VMCK;Visz.Med.u.Chir.Bettenstation;H NORD 2;;BHH;Bettenhochhaus;H
+ISB;;;VMCK;Visz.Med.u.Chir.Bettenstation;H SUED 1;;BHH;Bettenhochhaus;H
+ISB;;;VMCK;Visz.Med.u.Chir.Bettenstation;H SUED 2;;BHH;Bettenhochhaus;H
+ISB;;;VMCK;Visz.Med.u.Chir.Bettenstation;H VNBS;;BHH;Bettenhochhaus;H
+ISB;;;UROK;Urologie Betten;HINTEN 3;;ASH;Anna-Seiler Haus;3
+ISB;;;UROK;Urologie Betten;HINTEN 4;;ASH;Anna-Seiler Haus;4
+ISB;;;KHKL;Kardiologie Herzkatheter Labor;HK LABOR;Herzkatheterlabor;BHH;Bettenhochhaus;C
+ISB;;;IBME;Klinik für Intensivmedizin;IB BLAU 1;Intensivbetreuung;INO;INO Zentrum;E
+ISB;;;IBME;Klinik für Intensivmedizin;IB BLAU 2;Intensivbetreuung;INO;INO Zentrum;E
+ISB;;;IBME;Klinik für Intensivmedizin;IB GELB 1;Intensivbetreuung;INO;INO Zentrum;E
+ISB;;;IBME;Klinik für Intensivmedizin;IB GELB 2;Intensivbetreuung;INO;INO Zentrum;E
+ISB;;;IBME;Klinik für Intensivmedizin;IB GRUEN;Intensivbetreuung;INO;INO Zentrum;E
+ISB;;;UIMC;IMC Station Urologie;IMC URO 4;IMC Urologie 4. Stock;ASH;Anna-Seiler Haus;4
+ISB;;;HNOB;HNO Chirurgie Betten;J MITTE;;BHH;Bettenhochhaus;J
+ISB;;;KINB;Kard. Invasive Betten;J NORD;;BHH;Bettenhochhaus;J
+ISB;;;HNOB;HNO Chirurgie Betten;J SUED;;BHH;Bettenhochhaus;J
+ISB;;;SKGE;Schaedel-Kiefer+Gesichtschir.;J SUED;;BHH;Bettenhochhaus;J
+ISB;;;ORTK;Orthopädische Klinik Betten;K MITTE;;BHH;Bettenhochhaus;K
+ISB;;;ORTK;Orthopädische Klinik Betten;K NORD;;BHH;Bettenhochhaus;K
+ISB;;;ORTK;Orthopädische Klinik Betten;K SUED;;BHH;Bettenhochhaus;K
+ISB;;;IPMK;Intensivpflege Kinderklinik;KK B IB;;KKL;Kinderklinik;B
+ISB;;;NEOI;Neonatologie IMC;KK C NO;;KKL;Kinderklinik;C
+ISB;;;KMEK;Kindermed. Klinik Bettenstat.;KK C SU;;KKL;Kinderklinik;C
+ISB;;;KCHK;Kinderchirurgie Bettenstation;KK D NO;;KKL;Kinderklinik;D
+ISB;;;KCHK;Kinderchirurgie Bettenstation;KK E NO;;KKL;Kinderklinik;E
+ISB;;;KCHK;Kinderchirurgie Bettenstation;KK E SU;;KKL;Kinderklinik;E
+ISB;;;KMEK;Kindermed. Klinik Bettenstat.;KK H NO;Kinderklinik H Nord;KKL;Kinderklinik;H
+ISB;;;KMEK;Kindermed. Klinik Bettenstat.;KK H SU;;KKL;Kinderklinik;H
+ISB;;;KMEK;Kindermed. Klinik Bettenstat.;KK J SU;;KKL;Kinderklinik;J
+ISB;;;KMEK;Kindermed. Klinik Bettenstat.;KK K NO;Infektiologie;KKL;Kinderklinik;K
+ISB;;;KMEK;Kindermed. Klinik Bettenstat.;KK K SU;Infektiologie;KKL;Kinderklinik;K
+ISB;;;PAWB;Postoperative Überwachung KKL;KK PAWB;KK PAWB;KKL;Kinderklinik;B
+ISB;;;NRLK;Neurologie Bettenstation;L MITTE;;BHH;Bettenhochhaus;L
+ISB;;;NCHK;Neurochirurgie Bettenstation;L NORD;L NORD;BHH;Bettenhochhaus;L
+ISB;;;NSTB;Stroke Unit;L STROKE;;BHH;Bettenhochhaus;L
+ISB;;;NRLK;Neurologie Bettenstation;L SUED;;BHH;Bettenhochhaus;L
+ISB;;;PSMK;Psychosomatik Lory;LO G 2;;Lory;Lory Haus;2
+ISB;;;ONKP;Medizinische Onkologie;LORY G 1;;Lory;Lory Haus;1
+ISB;;;NCHK;Neurochirurgie Bettenstation;M NORD;;BHH;Bettenhochhaus;M
+ISB;;;NSTB;Stroke Unit;M STROKE;NRLK-Stroke Unit;BHH;Bettenhochhaus;M
+ISB;;;NCHK;Neurochirurgie Bettenstation;M SUED;;BHH;Bettenhochhaus;M
+ISB;;;MEAS;Med. Anna Seiler Bettenstatio;N MITTE;;BHH;Bettenhochhaus;N
+ISB;;;HERB;Herz Betten;N NORD;;BHH;Bettenhochhaus;N
+ISB;;;MEAS;Med. Anna Seiler Bettenstatio;N SUED;;BHH;Bettenhochhaus;N
+ISB;;;NEPH;Nephrologie;NE CAPD F;NEPH CAPD;KKL;Kinderklinik;F
+ISB;;;NEPH;Nephrologie;NE DIAL F;NEPH DIAL;KKL;Kinderklinik;F
+ISB;;;NEPH;Nephrologie;NE NIERE F;NEPH NIERE;KKL;Kinderklinik;F
+ISB;;;NEPH;Nephrologie;NE TRANS F;NEPH TRANS;KKL;Kinderklinik;F
+ISB;;;NEPH;Nephrologie;NE AKUT G;NEPH AKUT G5;KKL;Kinderklinik;G
+ISB;;;NEPH;Nephrologie;NE CAPD G;NEPH CAPD;KKL;Kinderklinik;G
+ISB;;;NEPH;Nephrologie;NE HEIMD G;NEPH HEIMD;KKL;Kinderklinik;G
+ISB;;;NEPH;Nephrologie;NE NIERE G;NEPH NIERE;KKL;Kinderklinik;G
+ISB;;;NEPH;Nephrologie;NE SBDIA G;NEPH SBDIA;KKL;Kinderklinik;G
+ISB;;;NEPH;Nephrologie;NE TRANS G;NEPH TRANS;KKL;Kinderklinik;G
+ISB;;;NOTB;Notfallbettenstation;NOTA INO;Notfallstation A;INO;INO Zentrum;C
+ISB;;;NOTB;Notfallbettenstation;NOTB INO;Notfallstation B;INO;INO Zentrum;C
+ISB;;;ONHB;Med. Onkologie Stationär;O MITTE;;BHH;Bettenhochhaus;O
+ISB;;;HERB;Herz Betten;O NORD;;BHH;Bettenhochhaus;O
+ISB;;;ONHB;Med. Onkologie Stationär;O SUED;;BHH;Bettenhochhaus;O
+ISB;;;AUGK;Augenklinik;OP AUGK;OPS Augenklinik;INO;INO Zentrum;D
+ISB;;;GYKF;Gynäkologie Frauenklinik;OP GYKF;OPS Gynäkologie;TKH;Theodor-Kocher Haus;D
+ISB;;;HCHB;Handchirurgie Betten;OP HCHB;OPS Handchirurgie;INO;INO Zentrum;D
+ISB;;;HGEP;Herz-Gefaesschirurgie Poli.;OP HGEK;OPS Herz-Gefässchirurgie;INO;INO Zentrum;D
+ISB;;;HNOB;HNO Chirurgie Betten;OP HNOB;OPS HNO - Klinik;INO;INO Zentrum;D
+ISB;;;KCHK;Kinderchirurgie Bettenstation;OP KCHK;OPS Kinderklinik;KKL;Kinderklinik;B
+ISB;;;NCHK;Neurochirurgie Bettenstation;OP NCHK;OPS Neurochirurgie;INO;INO Zentrum;D
+ISB;;;ORTK;Orthopädische Klinik Betten;OP ORTK;OPS Orthopädie;INO;INO Zentrum;D
+ISB;;;PLWB;Plast.- u Wiederherst. Betten;OP PLWB;OPS Plast-u.Wiederherst.;INO;INO Zentrum;D
+ISB;;;SKGB;Schaedel-Kiefer+Gesicht.Betten;OP SKGB;OPS Kieferchirurgie;INO;INO Zentrum;D
+ISB;;;TCSQ;Thoraxchirurg. Bettenstation;OP TCSQ;OPS THG-Chirurgie;INO;INO Zentrum;D
+ISB;;;UROK;Urologie Betten;OP UROK;OPS Urologie;ASH;Anna-Seiler Haus;4
+ISB;;;VMCK;Visz.Med.u.Chir.Bettenstation;OP VMCK;OPS Viszeralchirurgie;INO;INO Zentrum;D
+ISB;;;KCHK;Kinderchirurgie Bettenstation;OPSK G 1;OPSK G1 Kinderklinik;KKL;Kinderklinik;B
+ISB;;;AUGK;Augenklinik;OST 1;Existiert nicht mehr;AKL;Augenklinik;2
+ISB;;;AUGK;Augenklinik;OST 2;Existiert nicht mehr;AKL;Augenklinik;2
+ISB;;;KIMC;Kardiologie IMC Station;P IMC;;BHH;Bettenhochhaus;P
+ISB;;;KINB;Kard. Invasive Betten;P MITTE;;BHH;Bettenhochhaus;P
+ISB;;;KINB;Kard. Invasive Betten;P NORD;;BHH;Bettenhochhaus;P
+ISB;;;KINB;Kard. Invasive Betten;P SUED;;BHH;Bettenhochhaus;P
+ISB;;;AUGP;Augenpoliklinik;PKT 1 D;Polikliniktrakt 1 D;BHH;Bettenhochhaus;B
+ISB;;;TCSQ;Thoraxchirurg. Bettenstation;Q 109 TK;Q 109 Tagesklinik DMLL;BHH;Bettenhochhaus;Q
+ISB;;;PMLK;Pneumologie Bettenstation;Q MITTE;;BHH;Bettenhochhaus;Q
+ISB;;;VMCK;Visz.Med.u.Chir.Bettenstation;Q NORD;;BHH;Bettenhochhaus;Q
+ISB;;;TCSQ;Thoraxchirurg. Bettenstation;Q SUED;;BHH;Bettenhochhaus;Q
+ISB;;;NEBR;Nephrologie Bettenstation;R MITTE 1;;BHH;Bettenhochhaus;R
+ISB;;;ONHB;Med. Onkologie Stationär;R MITTE 2;;BHH;Bettenhochhaus;R
+ISB;;;ONHB;Med. Onkologie Stationär;R NORD;;BHH;Bettenhochhaus;R
+ISB;;;NEBR;Nephrologie Bettenstation;R SUED;;BHH;Bettenhochhaus;R
+ISB;;;ROTB;Radio-Onkologie Stationär;ROPL ANM;ROPL ANM;OPO;Operationstrakt OST;A
+ISB;;;ROTB;Radio-Onkologie Stationär;ROPL SEK;ROPL SEKR;OPO;Operationstrakt OST;A
+ISB;;;ROTB;Radio-Onkologie Stationär;ROPL SIM;ROPL SIM;OPO;Operationstrakt OST;A
+ISB;;;ROTB;Radio-Onkologie Stationär;ROPL SRA;ROPL SRA;OPO;Operationstrakt OST;A
+ISB;;;ROTB;Radio-Onkologie Stationär;ROTH ASK;ROTH ASKL;OPO;Operationstrakt OST;A
+ISB;;;ROTB;Radio-Onkologie Stationär;ROTH CO;ROTH CO;OPO;Operationstrakt OST;A
+ISB;;;ROTB;Radio-Onkologie Stationär;ROTH HDR;ROTH HDR;OPO;Operationstrakt OST;A
+ISB;;;ROTB;Radio-Onkologie Stationär;ROTH LA 1;ROTH LA1;OPO;Operationstrakt OST;A
+ISB;;;ROTB;Radio-Onkologie Stationär;ROTH LA 2;ROTH LA2;OPO;Operationstrakt OST;A
+ISB;;;ROTB;Radio-Onkologie Stationär;ROTH NAK;ROTH NAKO;OPO;Operationstrakt OST;A
+ISB;;;ROTB;Radio-Onkologie Stationär;ROTH SEK;ROTH SEKR;OPO;Operationstrakt OST;A
+ISB;;;AIMB;Allg. Inneren Med. Betten;SAHLI 1 OG;;SH1;Sahli Haus 1;1
+ISB;;;AIMB;Allg. Inneren Med. Betten;SAHLI 2 OG;;SH2;Sahli Haus 2;2
+ISB;;;PACB;Palliative Care Stationär;SWAN C;;SWAN;SWAN-Haus;C
+ISB;;;NUKK;Nuklearmedizin stationär;SWAN D;;SWAN;SWAN-Haus;D
+ISB;;;GYKF;Gynäkologie Frauenklinik;TKH AWRF;Theodor Kocherhaus Aufwachraum;TKH;Theodor-Kocher Haus;D
+ISB;;;GBHF;Geburtshilfe Frauenklinik;TKH D 1;;TKH;Theodor-Kocher Haus;D
+ISB;;;NIPS;Neonatologie IB;TKH E 1;;TKH;Theodor-Kocher Haus;E
+ISB;;;NEOI;Neonatologie IMC;TKH E 2;;TKH;Theodor-Kocher Haus;E
+ISB;;;GBHF;Geburtshilfe Frauenklinik;TKH F 1;;TKH;Theodor-Kocher Haus;F
+ISB;;;GBHF;Geburtshilfe Frauenklinik;TKH F 2;;TKH;Theodor-Kocher Haus;F
+ISB;;;NGSF;Wochenbett Saeuglinge;TKH F 2 K;Theodor Kocher Haus F2K;TKH;Theodor-Kocher Haus;F
+ISB;;;GYKF;Gynäkologie Frauenklinik;TKH G 1;;TKH;Theodor-Kocher Haus;G
+ISB;;;NOKB;Notfallbeobachtung NZKJ;U 1 NOKB;KK U1 NOKB;KKL;Kinderklinik;U1
+ISB;;;UROK;Urologie Betten;VORNE 3;;ASH;Anna-Seiler Haus;3
+ISB;;;UROK;Urologie Betten;VORNE 4;;ASH;Anna-Seiler Haus;4
+ISB;;;AUGK;Augenklinik;WEST 1;;AKL;Augenklinik;2
+ISB;;;AUGK;Augenklinik;WEST 2;;AKL;Augenklinik;2
+ISB;;;ZAWB;Zentraler Aufwachraum Betten;ZAWR_INO;Zentraler Aufwachraum INO;INO;INO Zentrum;D
+ISB;;;IMCI;Interdisziplinäre IMC;IMC BHH E;Manueller Eintrag (2 Stationen);INO;INO Zentrum;E
+ISB;;;NCHI;Neurochirurgie Ueberwachung;NEURO BHH E;Manueller Eintrag (2 Stationen);INO;INO Zentrum;E

@@ -1,0 +1,7 @@
+md5: 07cd26dce276bc595cc35fd6a3df8dac
+outs:
+- md5: 2dcb3ffe4f75f4e7b81ee0e7a31141be
+  path: LA_ISH_NFPZ.csv
+  cache: true
+  metric: false
+  persist: false

@@ -1,0 +1,7 @@
+md5: c1cf03b66559c3a5a87c398cac371125
+outs:
+- md5: 2fbe543de7604e85226a2d68899ca1e9
+  path: LA_ISH_NBEW.csv
+  cache: true
+  metric: false
+  persist: false

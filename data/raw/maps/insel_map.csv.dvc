@@ -1,0 +1,7 @@
+md5: bbbf24d0d0131c82012e850484115f9f
+outs:
+- md5: 0a66ca93e4d86b8df36c3d29bb7eb226
+  path: insel_map.csv
+  cache: true
+  metric: false
+  persist: false

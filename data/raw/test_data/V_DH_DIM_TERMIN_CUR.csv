@@ -1,0 +1,106 @@
+TERMINID,IS_DELETED,TERMINBEZEICHNUNG,TERMINART,TERMINTYP,TERMINDATUM,DAUERINMIN
+14908956,0,Sklerotherapie 60',Sklerotherapie 60',Patiententermin,2012-12-03 00:00:00,60.00000
+19096210,0,Venensprechstunde 60',Venensprechstunde 90',Patiententermin,2013-01-29 00:00:00,60.00000
+1162144,0,K45 HINF,K45 HINF,Patiententermin,2005-07-26 00:00:00,45.00000
+1164130,0,K45 HINF,K45 HINF,Patiententermin,2005-10-26 00:00:00,45.00000
+1192059,0,K Pflege ,K Pflege ,Patiententermin,2005-08-25 00:00:00,30.00000
+1405150,0,K Pflege ,K Pflege ,Patiententermin,2006-03-02 00:00:00,30.00000
+34310589,0,Konsultation NEU 30',Konsultation NEU 30',Patiententermin,2017-04-03 00:00:00,70.00000
+35130747,0,MWA,Biopsien 90',Patiententermin,2017-05-26 00:00:00,120.00000
+35130813,0,MWA,CT Body,Operation,2017-05-26 00:00:00,127.00000
+35571391,0,WEISSE ZONE,WEISSE ZONE,Patiententermin,2017-06-16 00:00:00,124.00000
+36006751,0,Konsultation 30',Konsultation 30',Patiententermin,2017-09-08 00:00:00,47.00000
+36129541,0,Stressecho,Stressecho,Patiententermin,2017-08-10 00:00:00,60.00000
+36129549,0,Stressecho-Vorschall,Stressecho-Vorschall,Patiententermin,2017-08-10 00:00:00,60.00000
+36129560,0,EKG,EKG,Patiententermin,2017-08-10 00:00:00,15.00000
+38329080,0,"St. n. OLT; Revisionslaparotomie; Lavage, Leberbiopsie +  US",Viszeralchirurgie,Operation,2018-01-07 00:00:00,134.00000
+38431954,0,Konsultation 30',Konsultation 30',Patiententermin,2018-04-09 00:00:00,53.00000
+38507433,0,Konsultation 30',Konsultation 30',Patiententermin,2018-01-25 00:00:00,45.00000
+39001478,0,OLT,OLT,Patiententermin,2018-03-29 00:00:00,50.00000
+39051017,0,OLT,OLT,Patiententermin,2018-04-06 00:00:00,39.00000
+39114133,0,OLT,OLT,Patiententermin,2018-04-18 00:00:00,38.00000
+39425469,0,KOLO diagnostisch Kaderärzte STANDBY 75',KOLO diagnostisch Kaderärzte STANDBY 75',Operation,2018-05-25 00:00:00,23.00000
+39427731,0,KONSULTATION POLI VK 15',KONSULTATION POLI VK 15',Patiententermin,2018-05-18 00:00:00,15.00000
+39456191,0,Konsultation 30',Konsultation 30',Patiententermin,2018-08-13 00:00:00,70.00000
+39613790,0,Duplex 60',Duplex 60',Patiententermin,2018-06-01 00:00:00,60.00000
+40344805,0,OLT,OLT,Patiententermin,2018-10-12 00:00:00,32.00000
+17297480,0,Venensprechstunde 60',Venensprechstunde 90',Patiententermin,2013-05-28 00:00:00,60.00000
+1278803,0,K45 HINF,K45 HINF,Patiententermin,2006-01-26 00:00:00,45.00000
+19252406,0,Impfen,Impfen,Patiententermin,2013-03-06 00:00:00,30.00000
+34220024,0,KONS NEU + BE + FIBROSCAN,KONS NEU + BE + FIBROSCAN,Patiententermin,2017-03-29 00:00:00,91.00000
+34337667,0,"Diagnostische Laparoskopie, lap. Leberresektion, atpyisch links sowie rechts posterior, ggf. offen
+Eintritt: 08h00 nüchtern",Lap. Leberresektion,Operation,2017-04-06 00:00:00,234.00000
+34338471,0,"Konsultation 30'
+Visz amb
+ab",Konsultation 30',Patiententermin,2017-04-03 00:00:00,30.00000
+35139096,0,Konsultation 30',Konsultation 30',Patiententermin,2017-05-24 00:00:00,29.00000
+35139491,0,"Konsultation 30'
+Bauchzentrum
+mk",Konsultation 30',Patiententermin,2017-05-24 00:00:00,30.00000
+35416924,0,MWA,Biopsien 90',Patiententermin,2017-06-16 00:00:00,180.00000
+35417252,0,MWA,MR untere Extremitäten,Operation,2017-06-16 00:00:00,70.00000
+35626775,0,Konsultation 30',Konsultation 30',Patiententermin,2017-07-13 00:00:00,46.00000
+35630084,0,Konsultation 30',Konsultation 30',Patiententermin,2017-06-26 00:00:00,39.00000
+36160474,0,Plethy + CO-Diff + ABGA + NO + Inhalation,Plethy + CO-Diff + ABGA,Patiententermin,2017-08-11 00:00:00,60.00000
+36160483,0,Gehtest kombiniert,Gehtest kombiniert,Patiententermin,2017-08-11 00:00:00,15.00000
+37244357,0,WEISSE ZONE,WEISSE ZONE,Patiententermin,2017-10-06 00:00:00,104.00000
+37374631,0,Konsultation 30',Konsultation 30',Patiententermin,2017-10-27 00:00:00,57.00000
+38446041,0,OLT,OLT,Patiententermin,2018-01-22 00:00:00,62.00000
+38446243,0,Wundberatung,Wundberatung,Patiententermin,2018-01-18 00:00:00,45.00000
+38446523,0,Wundberatung,Wundberatung,Patiententermin,2018-01-22 00:00:00,60.00000
+38470639,0,OLT,OLT,Patiententermin,2018-01-25 00:00:00,69.00000
+39215737,0,OLT,OLT,Patiententermin,2018-04-27 00:00:00,30.00000
+39491988,0,"Konsultation 30'
+gastro amb
+ka",Konsultation 30',Patiententermin,2018-05-18 00:00:00,30.00000
+39608858,0,OLT,OLT,Patiententermin,2018-07-04 00:00:00,34.00000
+39893063,0,Blutentnahme ( 6x7.5ml EDTA f. STCS ) ,Blutentnahme,Patiententermin,2018-07-05 00:00:00,15.00000
+39893320,0,EKG,EKG,Patiententermin,2018-07-04 00:00:00,15.00000
+14091249,0,Sklerotherapie 30',Sklerotherapie 30',Patiententermin,2012-11-05 00:00:00,30.00000
+14091256,0,Sklerotherapie 30',Sklerotherapie 30',Patiententermin,2012-11-19 00:00:00,30.00000
+21130116,0,NETZHAUT ALLG. K,NETZHAUT ALLG. K,Patiententermin,2013-10-15 00:00:00,30.00000
+21131159,0,NOTFALL N,NOTFALL N,Patiententermin,2013-10-14 00:00:00,30.00000
+24171386,0,Notfall-Kons. 15',Notfall-Kons. 15',Patiententermin,2014-09-15 00:00:00,15.00000
+34482529,0,Konsultation 30',Konsultation 30',Patiententermin,2017-05-19 00:00:00,49.00000
+35200182,0,WEISSE ZONE,WEISSE ZONE,Patiententermin,2017-05-26 00:00:00,141.00000
+37554138,0,Konsultation 30' ( HCC ) + MELD BE ,Konsultation 30',Patiententermin,2017-12-08 00:00:00,52.00000
+38062724,0,"Konsultation 30'
+Bauchzentrum
+mk",Konsultation 30',Patiententermin,2017-12-08 00:00:00,30.00000
+38063644,0,MWA,Biopsien 90',Patiententermin,2017-12-29 00:00:00,210.00000
+38063650,0,MWA,MR untere Extremitäten,Operation,2017-12-29 00:00:00,118.00000
+38262758,0,WEISSE ZONE,WEISSE ZONE,Patiententermin,2017-12-29 00:00:00,179.00000
+38331618,0,Re-Lebertransplantation,Lebertransplantation,Operation,2018-01-08 00:00:00,237.00000
+38386995,0,Konsultation 15',Konsultation 15',Patiententermin,2018-02-26 00:00:00,57.00000
+38411180,0,OLT NEU,OLT NEU,Patiententermin,2018-01-18 00:00:00,81.00000
+38515699,0,OLT,OLT,Patiententermin,2018-01-29 00:00:00,80.00000
+38539785,0,OLT,OLT,Patiententermin,2018-02-01 00:00:00,39.00000
+38565198,0,OLT,OLT,Patiententermin,2018-02-09 00:00:00,52.00000
+38939623,0,OLT,OLT,Patiententermin,2018-03-23 00:00:00,30.00000
+39423020,0,OLT,OLT,Patiententermin,2018-06-01 00:00:00,51.00000
+39933520,0,EKG,EKG,Patiententermin,2018-07-09 00:00:00,15.00000
+40218521,0,Konsultation 30',Konsultation 30',Patiententermin,2018-08-17 00:00:00,66.00000
+41124954,0,Neuer Patient 30' mit Brief,Neuer Patient 30' mit Brief,Patiententermin,2018-11-21 00:00:00,30.00000
+13831398,0,Venensprechstunde 60',Venensprechstunde 90',Patiententermin,2012-06-12 00:00:00,60.00000
+24230235,0,allg. Dermatologie 15',allg. Dermatologie 15',Patiententermin,2014-09-26 00:00:00,15.00000
+24291359,0,allg. Dermatologie 15',allg. Dermatologie 15',Patiententermin,2014-10-06 00:00:00,15.00000
+35621237,0,Konsultation 30',Konsultation 30',Patiententermin,2017-06-21 00:00:00,97.00000
+36067632,0,"Konsultation 30'
+OLT stat.
+mk",Konsultation 30',Patiententermin,2017-08-11 00:00:00,60.00000
+36070942,0,Konsultation 30',Konsultation 30',Patiententermin,2017-08-11 00:00:00,65.00000
+36071093,0,Mäppli Transplant,Mäppli Transplant,Patiententermin,2017-08-11 00:00:00,60.00000
+36830543,0,MWA,Biopsien 60',Patiententermin,2017-10-06 00:00:00,120.00000
+36830574,0,MWA,RITA,Operation,2017-10-06 00:00:00,100.00000
+37232112,0,"Konsultation 30'
+VCHC amb
+ja",Konsultation 30',Patiententermin,2017-10-05 00:00:00,30.00000
+38321122,0,Lebertransplantation,Lebertransplantation,Operation,2018-01-05 00:00:00,569.00000
+38452040,0,Konsultation 30',Konsultation 30',Patiententermin,2018-01-22 00:00:00,30.00000
+38660148,0,OLT,OLT,Patiententermin,2018-02-16 00:00:00,62.00000
+38772701,0,OLT,OLT,Patiententermin,2018-03-16 00:00:00,94.00000
+39298995,0,OLT,OLT,Patiententermin,2018-05-11 00:00:00,27.00000
+39819467,0,"ACB (LIMA, Vene re, evtl. A. rad li)",ACB,Operation,2018-07-05 00:00:00,203.00000
+40766156,0,ULTRASCHALL 30',ULTRASCHALL 30',Patiententermin,2018-10-12 00:00:00,36.00000
+40766840,0,OLT + BE,OLT,Patiententermin,2019-02-01 00:00:00,30.00000
+41827160,0,Tumorsprechstunde 15',Tumorsprechstunde 15',Patiententermin,2019-04-24 00:00:00,15.00000
