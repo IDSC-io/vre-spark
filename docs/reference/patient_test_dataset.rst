@@ -1,5 +1,5 @@
 ********************
-Patient Test Data
+Patient Test Dataset
 ********************
 
 The test patient dataset for the VRE model consists of a small subset of the complete dataset. The SQL queries used to

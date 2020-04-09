@@ -1,0 +1,4 @@
+License
+=======
+
+VRE-Spark has no defined license yet.

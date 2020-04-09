@@ -1,5 +1,5 @@
 *****************************************
-``vre/src/main/python/vre`` folder
+``src/features`` folder
 *****************************************
 
 This folder contains all files relevant for building the actual VRE model.
@@ -10,27 +10,27 @@ This folder contains all files relevant for building the actual VRE model.
 File: data_compiler.py
 ===============================
 
-.. automodule:: data_compiler
+.. automodule:: src.features.data_compiler
    :members:
 
 
 File: feature_extractor.py
 ===============================
 
-.. automodule:: feature_extractor
+.. automodule:: src.features.feature_extractor
    :members:
 
 
-File: HDFS_data_loader.py
+File: hdfs_dataloader.py
 ===============================
 
-.. automodule:: HDFS_data_loader
+.. automodule:: src.features.hdfs_dataloader
    :members:
 
 
 File: networkx_graph.py
 ===============================
 
-.. automodule:: networkx_graph
+.. automodule:: src.features.networkx_graph
    :members:
 

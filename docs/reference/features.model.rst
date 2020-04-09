@@ -1,8 +1,8 @@
 *****************************************
-``vre/src/main/python/vre/model`` folder
+``src/features/model`` folder
 *****************************************
 
-This folder contains the definitions for all classes used in the VRE model.
+This folder contains the definitions for all classes used in the VRE data model.
 
 
 -----
@@ -10,56 +10,56 @@ This folder contains the definitions for all classes used in the VRE model.
 File: Appointment.py
 ===============================
 
-.. automodule:: Appointment
+.. automodule:: src.features.model.appointment.Appointment
    :members:
 
 
 File: Bed.py
 ===============================
 
-.. automodule:: Bed
+.. automodule:: src.features.model.bed
    :members:
 
 
 File: Care.py
 ===============================
 
-.. automodule:: Care
+.. automodule:: src.features.model.care
    :members:
 
 
 File: Chop.py
 ===============================
 
-.. automodule:: Chop
+.. automodule:: src.features.model.chop
    :members:
 
 
 File: Devices.py
 ===============================
 
-.. automodule:: Device
+.. automodule:: src.features.model.device
    :members:
 
 
 File: Employee.py
 ===============================
 
-.. automodule:: Employee
+.. automodule:: src.features.model.employee
    :members:
 
 
 File: ICD.py
 ===============================
 
-.. automodule:: ICD
+.. automodule:: src.features.model.icd
    :members:
 
 
 File: Medication.py
 ===============================
 
-.. automodule:: Medication
+.. automodule:: src.features.model.medication
    :members:
 
 

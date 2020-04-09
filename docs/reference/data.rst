@@ -1,5 +1,5 @@
 ************************
-``resources`` folder
+``src/data`` folder
 ************************
 
 This folder contains important functions for loading data from SQL into CSV, thereby preparing the "raw" data used for
@@ -14,15 +14,15 @@ in the VRE calculation. Since all VRE data are recalculated once per day, this i
 4) Adding new data (SQL files, CSV files, other data) to the HDFS file system
 
 
-File: Query_Atelier_Data.py
+File: pull_raw_dataset.py
 ===============================
 
-.. automodule:: Query_Atelier_Data
+.. automodule:: src.data.pull_raw_dataset
    :members:
 
    
 File: preprocesor.py
 ===============================
 
-.. automodule:: preprocessor
+.. automodule:: src.data.preprocessor
    :members:
