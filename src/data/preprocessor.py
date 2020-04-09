@@ -238,7 +238,7 @@ if __name__ == '__main__':
     # contains the directory in which this script is located, irrespective of the current working directory
 
     # Extract path to config file:
-    path_to_config_file = os.path.join(this_filepath, '../vre/src/main/python/vre/basic_config.ini')
+    path_to_config_file = os.path.join(this_filepath, '../../configuration/basic_config.ini')
 
     # #>> Preprocess data:
     print('Pre-processing data:')

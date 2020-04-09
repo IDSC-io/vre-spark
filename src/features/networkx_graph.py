@@ -29,6 +29,7 @@ import itertools
 import json
 import random
 from collections import Counter
+import pathlib
 
 
 def create_model_snapshots(orig_model, snapshot_dt_list):
@@ -689,7 +690,7 @@ class SurfaceModel:
         logging.info('------------------------------')
 
         # Graph connectivity
-        logging.info(f"--> Graph onnected: {nx.is_connected(self.S_GRAPH)}")
+        logging.info(f"--> Graph connected: {nx.is_connected(self.S_GRAPH)}")
         logging.info(f"###############################################################")
 
     def add_network_data(self, patient_dict, subset='relevant_case', snapshot=datetime.datetime.now()):
@@ -1082,6 +1083,14 @@ class SurfaceModel:
                                         files will be written to `self.data_dir`.
         """
         exact_path = self.data_dir if export_path is None else export_path
+
+        # make all folders along the path
+        # TODO: Does this also work on HDFS?
+        if isinstance(exact_path, str):
+            export_path = pathlib.Path(exact_path)
+
+        export_path.mkdir(parents=True, exist_ok=True)
+
         logging.info(f"Writing node files to {os.path.abspath(exact_path)}...")
         write_count = 0
         for node_tuple in self.S_GRAPH.nodes(data=True):

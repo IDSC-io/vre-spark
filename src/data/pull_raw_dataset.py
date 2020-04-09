@@ -55,16 +55,17 @@ def write_sql_to_csv(path_to_sql, path_to_csv, csv_sep, connection_file, trusted
 
 
 if __name__ == '__main__':
-    # Extract correct filepath
+
+    # extract correct filepath
     this_filepath = os.path.dirname(os.path.realpath(__file__))
     # contains the directory in which this script is located, irrespective of the current working directory
 
-    # Load config file:
+    # load config file:
     config_reader = configparser.ConfigParser()
-    config_reader.read(os.path.join(this_filepath, 'configuration/basic_config.ini'))
+    config_reader.read(os.path.join(this_filepath, '../../configuration/basic_config.ini'))
 
-    SQL_DIR = os.path.join(this_filepath, "../sql/tests") if config_reader['PARAMETERS']['data_basis'] == 'test' \
-        else os.path.join(this_filepath, "../sql/vre")  # absolute or relative path to directory containing SQL files
+    SQL_DIR = os.path.join(this_filepath, "./sql/tests") if config_reader['PARAMETERS']['data_basis'] == 'test' \
+        else os.path.join(this_filepath, "./sql/vre")  # absolute or relative path to directory containing SQL files
 
     CSV_DIR = config_reader['PATHS']['test_data_dir'] if config_reader['PARAMETERS']['data_basis'] == 'test' \
         else config_reader['PATHS']['model_data_dir']  # absolute or relative path to directory where data is stored
@@ -73,7 +74,7 @@ if __name__ == '__main__':
 
     print(f"data_basis set to: {config_reader['PARAMETERS']['data_basis']}\n")
 
-    # Execute all queries in SQL_DIR
+    # execute all queries in SQL_DIR
     print('Loading data from SQL server:\n')
 
     sql_files = [each_file for each_file in os.listdir(SQL_DIR) if each_file.endswith('.sql')]
@@ -84,7 +85,7 @@ if __name__ == '__main__':
         print('--> Loading file: ' + each_file + ' ... ', end='', flush=True)
         start_dt = datetime.datetime.now()
 
-        # Execute query and write results
+        # execute query and write results
         write_sql_to_csv(path_to_sql=os.path.join(SQL_DIR, each_file),
                          path_to_csv=os.path.join(CSV_DIR, each_file.replace('.sql', '.csv')),
                          csv_sep=CSV_DELIM,
@@ -94,4 +95,4 @@ if __name__ == '__main__':
         print(f'\tDone !\t Total processing time: {str(datetime.datetime.now()-start_dt).split(".")[0]}')
         # --> print timedelta without fractional seconds (original string would be printed as 0:00:13.4567)
 
-    print('\nAll files loaded successfully !')
+    print('\nAll files loaded successfully!')
