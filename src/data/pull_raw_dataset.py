@@ -64,15 +64,15 @@ def pull_raw_dataset():
     config_reader = configparser.ConfigParser()
     config_reader.read(os.path.join(this_filepath, '../../configuration/basic_config.ini'))
 
-    SQL_DIR = os.path.join(this_filepath, "./sql/tests") if config_reader['PARAMETERS']['data_basis'] == 'test' \
-        else os.path.join(this_filepath, "./sql/vre")  # absolute or relative path to directory containing SQL files
+    SQL_DIR = os.path.join(this_filepath, "./sql/test_dataset") if config_reader['PARAMETERS']['dataset'] == 'test' \
+        else os.path.join(this_filepath, "./sql/full_dataset")  # absolute or relative path to directory containing SQL files
 
-    CSV_DIR = config_reader['PATHS']['test_data_dir'] if config_reader['PARAMETERS']['data_basis'] == 'test' \
+    CSV_DIR = config_reader['PATHS']['test_data_dir'] if config_reader['PARAMETERS']['dataset'] == 'test' \
         else config_reader['PATHS']['model_data_dir']  # absolute or relative path to directory where data is stored
 
     CSV_DELIM = config_reader['DELIMITERS']['csv_sep']  # delimiter for CSV files written from SQL results
 
-    print(f"data_basis set to: {config_reader['PARAMETERS']['data_basis']}\n")
+    print(f"data_basis set to: {config_reader['PARAMETERS']['dataset']}\n")
 
     # execute all queries in SQL_DIR
     print('Loading data from SQL server:\n')

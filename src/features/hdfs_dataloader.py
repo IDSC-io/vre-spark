@@ -42,7 +42,7 @@ class HDFSDataLoader:
         config_reader = configparser.ConfigParser()
         config_reader.read(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../../configuration/basic_config.ini'))
 
-        self.load_test_data = config_reader['PARAMETERS']['data_basis'] == 'test'
+        self.load_test_data = config_reader['PARAMETERS']['dataset'] == 'test'
 
         if not self.load_test_data:
             self.base_path = config_reader['PATHS']['model_data_dir']
