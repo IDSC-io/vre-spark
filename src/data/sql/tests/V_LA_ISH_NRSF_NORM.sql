@@ -4,5 +4,5 @@ SELECT
     [KZTXT],
     [ERDAT],
     [ERTIM]
-FROM [Atelier_DataScience].[atl].[V_LA_ISH_NRSF_NORM]
+FROM [Atelier_DataScience].[dbo].[V_LA_ISH_NRSF_NORM]
 WHERE PATIENTID in ('00003067149', '00008301433', '00004348346')

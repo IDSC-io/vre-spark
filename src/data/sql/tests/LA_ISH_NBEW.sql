@@ -17,7 +17,7 @@ SELECT
     ,[BETT]
     ,[STORN]
     ,[EXTKH]
-FROM [Atelier_DataScience].[atl].[LA_ISH_NBEW]
+FROM [Atelier_DataScience].[dbo].[LA_ISH_NBEW]
 WHERE FALNR IN (
 				'0006280483',
 				'0006314210',

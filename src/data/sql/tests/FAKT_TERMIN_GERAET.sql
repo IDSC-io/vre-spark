@@ -1,12 +1,10 @@
-SELECT	[TERMINID]
-		,[IS_DELETED]
-		,[TERMINBEZEICHNUNG]
-		,[TERMINART]
-		,[TERMINTYP]
-		,[TERMINDATUM]
-		,[DAUERINMIN]
-FROM [Atelier_DataScience].[atl].[V_DH_DIM_TERMIN_CUR]
-WHERE TERMINID IN (
+SELECT	[TERMINID]          = dim_termin_bk
+		,[GERAETID]         = dim_geraet_bk
+		,[TERMINSTART_TS]   = fakt_termin_geraet_start
+		,[TERMINENDE_TS]    = fakt_termin_geraet_ende
+		,[DAUERINMIN]       = fakt_termin_geraet_dauerinmin
+FROM [Atelier_DataScience].[atl].[fakt_termin_geraet]
+WHERE dim_termin_bk IN (
 					'38515699'
 					,'38321122'
 					,'35416924'

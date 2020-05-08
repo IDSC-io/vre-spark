@@ -1,7 +1,0 @@
-md5: b4a94fadb2f08593342c92a66a8e5d4e
-outs:
-- md5: d72c3d7dded4dc44761ae876a957c42a
-  path: V_DH_DIM_PATIENT_CUR.csv
-  cache: true
-  metric: false
-  persist: false

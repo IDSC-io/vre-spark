@@ -1,7 +1,7 @@
-SELECT	[GERAETID]
-		,[GERAETNAME]
-FROM [Atelier_DataScience].[atl].[V_DH_DIM_GERAET_CUR]
-WHERE GERAETID IN (
+SELECT	[dim_geraet_bk]
+		,[dim_geraet_name]
+FROM [Atelier_DataScience].[atl].[dim_geraet]
+WHERE dim_geraet_bk IN (
 					'134074'
 					,'125922'
 					,'137160'

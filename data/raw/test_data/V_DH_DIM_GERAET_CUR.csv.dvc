@@ -1,7 +1,0 @@
-md5: 315611f668616acd7fa6172a55eb986d
-outs:
-- md5: 0b77a431c4b06201b8306d117abf749e
-  path: V_DH_DIM_GERAET_CUR.csv
-  cache: true
-  metric: false
-  persist: false

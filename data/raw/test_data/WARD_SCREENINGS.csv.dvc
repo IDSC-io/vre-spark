@@ -1,7 +1,0 @@
-md5: f0cd48aa7ca6342eabd6c5a4e7a70639
-outs:
-- md5: d41d8cd98f00b204e9800998ecf8427e
-  path: WARD_SCREENINGS.csv
-  cache: true
-  metric: false
-  persist: false

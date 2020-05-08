@@ -1,7 +1,0 @@
-md5: a602e0f4e7ca28299d5bfddd57dab4ef
-outs:
-- md5: 106afc24edcf6ec20f3f6c009917c3b8
-  path: OBSOLETE_deleted_screenings.csv
-  cache: true
-  metric: false
-  persist: false

@@ -8,5 +8,5 @@ SELECT [GPART]
 	   ,[ORT2]
 	   ,[STRAS]
 	   ,[KRKHS]
-FROM [Atelier_DataScience].[atl].[LA_ISH_NGPA]
+FROM [Atelier_DataScience].[dbo].[LA_ISH_NGPA]
 WHERE GPART IN ('0010000990')

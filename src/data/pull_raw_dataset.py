@@ -16,7 +16,7 @@ import os
 import pyodbc
 
 
-def write_sql_to_csv(path_to_sql, path_to_csv, csv_sep, connection_file, trusted_connection=True):
+def write_sql_query_results_to_csv(path_to_sql, path_to_csv, csv_sep, connection_file, trusted_connection=True):
     """Executes an SQL query and writes the results to path_to_csv.
 
     Args:
@@ -54,7 +54,7 @@ def write_sql_to_csv(path_to_sql, path_to_csv, csv_sep, connection_file, trusted
     conn.close()
 
 
-if __name__ == '__main__':
+def pull_raw_dataset():
 
     # extract correct filepath
     this_filepath = os.path.dirname(os.path.realpath(__file__))
@@ -86,13 +86,17 @@ if __name__ == '__main__':
         start_dt = datetime.datetime.now()
 
         # execute query and write results
-        write_sql_to_csv(path_to_sql=os.path.join(SQL_DIR, each_file),
-                         path_to_csv=os.path.join(CSV_DIR, each_file.replace('.sql', '.csv')),
-                         csv_sep=CSV_DELIM,
-                         connection_file=config_reader['PATHS']['odbc_file_path'],
-                         trusted_connection=False)
+        write_sql_query_results_to_csv(path_to_sql=os.path.join(SQL_DIR, each_file),
+                                       path_to_csv=os.path.join(CSV_DIR, each_file.replace('.sql', '.csv')),
+                                       csv_sep=CSV_DELIM,
+                                       connection_file=config_reader['PATHS']['odbc_file_path'],
+                                       trusted_connection=False)
 
-        print(f'\tDone !\t Total processing time: {str(datetime.datetime.now()-start_dt).split(".")[0]}')
+        print(f'\tDone!\t Total processing time: {str(datetime.datetime.now()-start_dt).split(".")[0]}')
         # --> print timedelta without fractional seconds (original string would be printed as 0:00:13.4567)
 
     print('\nAll files loaded successfully!')
+
+
+if __name__ == '__main__':
+    pull_raw_dataset()

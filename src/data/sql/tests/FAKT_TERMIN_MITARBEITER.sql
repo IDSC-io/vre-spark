@@ -1,10 +1,10 @@
-SELECT	[TERMINID]
-		,[MITARBEITERID]
-		,[TERMINSTART_TS]
-		,[TERMINENDE_TS]
-		,[DAUERINMIN]
-FROM [Atelier_DataScience].[atl].[V_DH_FACT_TERMINMITARBEITER]
-WHERE TERMINID IN (
+SELECT	[TERMINID]          = dim_termin_bk
+		,[MITARBEITERID]    = dim_mitarbeiter_bk
+		,[TERMINSTART_TS]   = fakt_termin_mitarbeiter_start
+		,[TERMINENDE_TS]    = fakt_termin_mitarbeiter_ende
+		,[DAUERINMIN]       = fakt_termin_mitarbeiter_dauerinmin
+FROM [Atelier_DataScience].[atl].[fakt_termin_mitarbeiter]
+WHERE dim_termin_bk IN (
 					'38515699'
 					,'38321122'
 					,'35416924'

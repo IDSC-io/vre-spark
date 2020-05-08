@@ -1,7 +1,0 @@
-md5: 72595e9836acb9744f9b227f26913cf5
-outs:
-- md5: 106afc24edcf6ec20f3f6c009917c3b8
-  path: deleted_screenings.csv
-  cache: true
-  metric: false
-  persist: false

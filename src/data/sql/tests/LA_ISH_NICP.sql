@@ -7,7 +7,7 @@ SELECT	[LFDBEW]
 		,[STORN]
 		,[FALNR]
 		,[ORGPF]
-FROM [Atelier_DataScience].[atl].[LA_ISH_NICP]
+FROM [Atelier_DataScience].[dbo].[LA_ISH_NICP]
 WHERE FALNR IN (
 				'0006314210'
 				,'0006336438'

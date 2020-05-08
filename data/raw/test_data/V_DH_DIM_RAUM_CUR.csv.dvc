@@ -1,7 +1,0 @@
-md5: 3e83f70d4cc60a855091d1f3a198a64e
-outs:
-- md5: 09b78101d771964c8cf5cd57047deadc
-  path: V_DH_DIM_RAUM_CUR.csv
-  cache: true
-  metric: false
-  persist: false

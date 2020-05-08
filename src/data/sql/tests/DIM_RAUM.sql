@@ -1,8 +1,8 @@
 SELECT 
-    [RAUMID],
-    [RAUMNAME]
-FROM [Atelier_DataScience].[atl].[V_DH_DIM_RAUM_CUR]
-WHERE RAUMID in (
+    [RAUMID]    = dim_raum_bk
+    ,[RAUMNAME]  = dim_raum_name
+FROM [Atelier_DataScience].[atl].[dim_raum]
+WHERE dim_raum_bk in (
 '140363',
 '142476',
 '61994',
