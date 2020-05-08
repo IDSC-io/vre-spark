@@ -16,7 +16,7 @@ import os
 import pyodbc
 
 
-def write_sql_query_results_to_csv(path_to_sql, path_to_csv, csv_sep, connection_file, trusted_connection=True):
+def write_sql_query_results_to_csv(path_to_sql, path_to_csv, csv_sep, connection_file, trusted_connection=True, force_overwrite=False):
     """Executes an SQL query and writes the results to path_to_csv.
 
     Args:
@@ -31,6 +31,13 @@ def write_sql_query_results_to_csv(path_to_sql, path_to_csv, csv_sep, connection
         trusted_connection (bool):  additional argument passed to pyodbc.connect(), converted to "yes" if ``True`` and
                                     "no" otherwise (defaults to ``True``)
     """
+    if os.path.exists(path_to_csv):
+        if force_overwrite:
+            print(f"Overwriting {path_to_csv} as force_overwrite is enabled.")
+        else:
+            print(f"{path_to_csv} exists. force_overwrite is disabled, not overwriting.")
+            return None
+
     connection_string = ';'.join([line.replace('\n', '') for line in open(connection_file, 'r')])
 
     conn = pyodbc.connect(connection_string, trusted_connection='yes' if trusted_connection else 'no')
@@ -40,7 +47,11 @@ def write_sql_query_results_to_csv(path_to_sql, path_to_csv, csv_sep, connection
     query = ' '.join([line.replace('\n', '') for line in open(path_to_sql, 'r')])
 
     # execute query
-    cursor.execute(query)
+    try:
+        cursor.execute(query)
+    except pyodbc.ProgrammingError as e:
+        print(e)
+        return e
 
     # Then write results to SQL
     # --> register special dialect to control csv delimiter and proper newline formatting
@@ -81,19 +92,26 @@ def pull_raw_dataset():
     # --> Use this line instead for loading only specific files:
     # sql_files = [each_file for each_file in os.listdir(SQL_DIR) if each_file in ['OE_PFLEGE_MAP.sql']]
 
+    exceptions = []
+
     for each_file in sql_files:
-        print('--> Loading file: ' + each_file + ' ... ', end='', flush=True)
+        print('--> Loading file: ' + each_file + '... ', end='', flush=True)
         start_dt = datetime.datetime.now()
 
         # execute query and write results
-        write_sql_query_results_to_csv(path_to_sql=os.path.join(SQL_DIR, each_file),
-                                       path_to_csv=os.path.join(CSV_DIR, each_file.replace('.sql', '.csv')),
-                                       csv_sep=CSV_DELIM,
-                                       connection_file=config_reader['PATHS']['odbc_file_path'],
-                                       trusted_connection=False)
-
-        print(f'\tDone!\t Total processing time: {str(datetime.datetime.now()-start_dt).split(".")[0]}')
+        potential_exception = write_sql_query_results_to_csv(path_to_sql=os.path.join(SQL_DIR, each_file),
+                                                             path_to_csv=os.path.join(CSV_DIR, each_file.replace('.sql', '.csv')),
+                                                             csv_sep=CSV_DELIM,
+                                                             connection_file=config_reader['PATHS']['odbc_file_path'],
+                                                             trusted_connection=False)
+        if potential_exception is not None:
+            exceptions.append(potential_exception)
+        else:
+            print(f'\tDone!\t Query execution time: {str(datetime.datetime.now()-start_dt).split(".")[0]}')
         # --> print timedelta without fractional seconds (original string would be printed as 0:00:13.4567)
+
+    if len(exceptions) != 0:
+        raise Exception("\n Not all files loaded successfully, check above.")
 
     print('\nAll files loaded successfully!')
 

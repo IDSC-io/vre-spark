@@ -23,8 +23,6 @@ def main():
     logger.info('Pulling dataset from database if not available yet...')
     pull_raw_dataset()
 
-    logger.info('Making final data set from raw data')
-
 
 if __name__ == '__main__':
     log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
