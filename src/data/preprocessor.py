@@ -16,7 +16,7 @@ import os
 import pyodbc
 
 
-def exectue_sql(sql_command, connection_file, trusted_connection=True):
+def execute_sql(sql_command, connection_file, trusted_connection=True):
     """
     Executes an arbitrary SQL command, but does **not** return any results.
 

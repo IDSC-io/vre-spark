@@ -12,8 +12,7 @@ from src.data.pull_raw_dataset import pull_raw_dataset
 #@click.argument('output_filepath', type=click.Path())
 def main():
     """
-    Pulls the data from the database and runs data processing scripts to turn raw data from (../raw) into
-    cleaned data ready to be analyzed (saved in ../processed).
+    Pulls the data from the database and stores it in data/raw.
 
     :param input_filepath:
     :param output_filepath:

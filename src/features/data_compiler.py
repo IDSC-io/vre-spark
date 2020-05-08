@@ -25,7 +25,7 @@ import configparser
 import pathlib
 
 
-if __name__ == "__main__":
+def compile_data():
     #####################################
     # Load configuration file
     this_filepath = pathlib.Path(os.path.realpath(__file__)).parent
@@ -90,6 +90,10 @@ if __name__ == "__main__":
     surface_graph.export_node_betweenness(export_path=export_path)
     #####################################
 
-    logging.info("Data processed successfully !")
+    logging.info("Data processed successfully!")
 
+
+
+if __name__ == "__main__":
+    compile_data()
 

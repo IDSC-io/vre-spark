@@ -18,7 +18,7 @@ class Appointment:
         self.termin_bezeichnung = termin_bezeichnung
         self.termin_art = termin_art
         self.termin_typ = termin_typ
-        self.termin_datum = datetime.strptime(termin_datum, "%Y-%m-%d %H:%M:%S")
+        self.termin_datum = datetime.strptime(termin_datum, "%Y-%m-%d")
         try:
             self.dauer_in_min = int(float(dauer_in_min))
         except ValueError as e:

@@ -5,7 +5,7 @@ class Risk:
     """Models a ``Risk`` (i.e. Screening) object.
     """
 
-    def __init__(self, auftrag_nr, erfassung, entnahme, vorname, nachname, gbdat, pat_nr, pruefziffer, pid,
+    def __init__(self, auftrag_nr, erfassung, entnahme, vorname, nachname, gbdat, pid,
                  auftraggeber, kostenstelle, material_type, transport, resultat, analyse_methode, screening_context):
         """Initiates a Risk (i.e. Screening) object.
         """
@@ -15,8 +15,6 @@ class Risk:
         self.vorname = vorname
         self.nachname = nachname
         self.geburtsdatum = gbdat
-        self.patient_nbr = pat_nr
-        self.pruefziffer = pruefziffer
         self.pid = pid
         self.auftraggeber = auftraggeber
         self.kostenstelle = kostenstelle
@@ -98,21 +96,19 @@ class Risk:
         This function is the core piece for adding VRE screening data to the model. It will read all screenings exported
         from the Atelier_DataScience ``V_VRE_SCREENING_DATA`` view, which is structured as follows:
 
-        ========== ========== ========== =============== ============= ============ ========== =========== =========== ============ ============ ============ ========= ======== =============== =================
-        auftrag_nr erfassung  entnahme   vorname         nachname      geburtsdatum patient_nr pruefziffer patient_id  auftraggeber kostenstelle material_typ transport resultat analyse_methode screening_context
-        ========== ========== ========== =============== ============= ============ ========== =========== =========== ============ ============ ============ ========= ======== =============== =================
-        1234567    2018-33-33 2018-33-33 Mister          X             2999-33-33   0000000000 8           00000000000 S099         sepi         are          tmpo      nn       PCR             NULL
-        1234567    2018-33-33 2018-33-33 Mister          X             2999-33-33   0000000000 8           00000000000 sepi         sepi         are          tmpo      nn       PCR             NULL
-        1234567    2018-33-33 2018-33-33 Misses          Y             2999-33-33   0000000000 9           00000000000 sepi         sepi         are          tmpo      nn       PCR             Klinisch
-        ========== ========== ========== =============== ============= ============ ========== =========== =========== ============ ============ ============ ========= ======== =============== =================
+        ========== ========== ========== =============== ============= ============ =========== ============ ============ ============ ========= ======== =============== =================
+        auftrag_nr erfassung  entnahme   vorname         nachname      geburtsdatum patient_id  auftraggeber kostenstelle material_typ transport resultat analyse_methode screening_context
+        ========== ========== ========== =============== ============= ============ =========== ============ ============ ============ ========= ======== =============== =================
+        1234567    2018-33-33 2018-33-33 Mister          X             2999-33-33   00000000000 S099         sepi         are          tmpo      nn       PCR             NULL
+        1234567    2018-33-33 2018-33-33 Mister          X             2999-33-33   00000000000 sepi         sepi         are          tmpo      nn       PCR             NULL
+        1234567    2018-33-33 2018-33-33 Misses          Y             2999-33-33   00000000000 sepi         sepi         are          tmpo      nn       PCR             Klinisch
+        ========== ========== ========== =============== ============= ============ =========== ============ ============ ============ ========= ======== =============== =================
 
         A Risk() object will be created from each line received. These risk objects have the following arguments:
 
         - auftrag_nr
         - erfassung
         - entnahme
-        - patient_nr
-        - pruefziffer
         - patient_id
         - auftraggeber
         - kostenstelle

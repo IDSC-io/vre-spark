@@ -32,7 +32,7 @@ class Move:
         self.bew_ty = bew_ty
         self.bw_art = bw_art
         self.bwi_dt = datetime.strptime(
-            bwi_dt + " " + bwi_zt, "%Y-%m-%d %H:%M:%S"
+            bwi_dt + " " + bwi_zt[:-1], "%Y-%m-%d %H:%M:%S.%f" # parsing milliseconds: https://stackoverflow.com/questions/698223/how-can-i-parse-a-time-string-containing-milliseconds-in-it-with-python
         )
         self.statu = statu
         self.bwe_dt = None

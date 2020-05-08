@@ -51,29 +51,27 @@ class HDFSDataLoader:
 
         logging.debug(f"base_path: {self.base_path}")
 
-        self.devices_path = os.path.join(self.base_path, "V_DH_DIM_GERAET_CUR.csv")
-        self.patients_path = os.path.join(self.base_path, "V_DH_DIM_PATIENT_CUR.csv")
+        self.devices_path = os.path.join(self.base_path, "DIM_GERAET.csv")
+        self.patients_path = os.path.join(self.base_path, "DIM_PATIENT.csv")
         self.cases_path = os.path.join(self.base_path, "V_LA_ISH_NFAL_NORM.csv")
         self.moves_path = os.path.join(self.base_path, "LA_ISH_NBEW.csv")
-        self.risks_path = os.path.join(self.base_path, "V_LA_ISH_NRSF_NORM.csv")
-        # self.deleted_risks_path = os.path.join(self.base_path, "deleted_screenings.csv")
-        self.appointments_path = os.path.join(self.base_path, "V_DH_DIM_TERMIN_CUR.csv")
-        self.device_appointment_path = os.path.join(self.base_path, "V_DH_FACT_TERMINGERAET.csv")
-        self.appointment_patient_path = os.path.join(self.base_path, "V_DH_FACT_TERMINPATIENT.csv")
-        self.rooms_path = os.path.join(self.base_path, "V_DH_DIM_RAUM_CUR.csv")
-        self.room_appointment_path = os.path.join(self.base_path, "V_DH_FACT_TERMINRAUM.csv")
-        self.appointment_employee_path = os.path.join(self.base_path, "V_DH_FACT_TERMINMITARBEITER.csv")
-        self.medication_path = os.path.join(self.base_path, "V_LA_IPD_DRUG_NORM.csv")
-        self.bwart_path = os.path.join(self.base_path, "BWTYP-BWART.csv")
+        self.risks_path = os.path.join(self.base_path, "DIM_FALL.csv")
+        self.appointments_path = os.path.join(self.base_path, "DIM_TERMIN.csv")
+        self.device_appointment_path = os.path.join(self.base_path, "FAKT_TERMIN_GERAET.csv")
+        self.appointment_patient_path = os.path.join(self.base_path, "FAKT_TERMIN_PATIENT.csv")
+        self.rooms_path = os.path.join(self.base_path, "DIM_RAUM.csv")
+        self.room_appointment_path = os.path.join(self.base_path, "FAKT_TERMIN_RAUM.csv")
+        self.appointment_employee_path = os.path.join(self.base_path, "FAKT_TERMIN_MITARBEITER.csv")
+        self.medication_path = os.path.join(self.base_path, "V_LA_IPD_DRUG_NORM_OLD.csv")
         self.partner_path = os.path.join(self.base_path, "LA_ISH_NGPA.csv")
         self.partner_case_path = os.path.join(self.base_path, "LA_ISH_NFPZ.csv")
-        self.chop_path = os.path.join(self.base_path, "V_DH_REF_CHOP.csv")
+        self.chop_path = os.path.join(self.base_path, "LA_CHOP_FLAT.csv")
         self.surgery_path = os.path.join(self.base_path, "LA_ISH_NICP.csv")
         self.tacs_path = os.path.join(self.base_path, "TACS_DATEN.csv")
-        self.icd_path = os.path.join(self.base_path, "LA_ISH_NDIA_NORM.csv")
-        self.VRE_screenings_path = os.path.join(self.base_path, "V_VRE_SCREENING_DATA.csv")
-        self.VRE_ward_screenings_path = os.path.join(self.base_path, "WARD_SCREENINGS.csv")
-        self.oe_pflege_map_path = os.path.join(self.base_path, "OE_PFLEGE_MAP.csv")
+        self.icd_path = os.path.join(self.base_path, "V_LA_ISH_NDIA_NORM.csv")
+        self.VRE_screenings_path = os.path.join(self.base_path, "VRE_SCREENING_DATA.csv")
+        #self.VRE_ward_screenings_path = os.path.join(self.base_path, "WARD_SCREENINGS.csv")
+        #self.oe_pflege_map_path = os.path.join(self.base_path, "OE_PFLEGE_MAP.csv")
 
         self.hdfs_pipe = hdfs_pipe  # binary attribute specifying whether to read data Hadoop (True) or CSV (False)
 
@@ -179,17 +177,19 @@ class HDFSDataLoader:
         # --> Note: Move() objects are not part of the returned dictionary, they are only used in
         #                           Case() objects --> Case().moves = [1 : Move(), 2 : Move(), ...]
 
-        # Generate ward screening overview map
-        screen_map = Risk.generate_screening_overview_map(self.get_hdfs_pipe(self.VRE_ward_screenings_path)
-                                                          if self.hdfs_pipe is True
-                                                          else self.get_csv_file(self.VRE_ward_screenings_path))
-        # --> this yields a dictionary mapping dt.date() objects to tuples of (ward_name, screening_type)
-        # i.e. of the form {'2018-10-22' : ('O SUED', 'W'), '2018-09-15' : ('IB BLAU', 'E'), ...}
+        # TODO: ward screenings and care map data is gone. Readd it.
+        # # Generate ward screening overview map
+        # screen_map = Risk.generate_screening_overview_map(self.get_hdfs_pipe(self.VRE_ward_screenings_path)
+        #                                                   if self.hdfs_pipe is True
+        #                                                   else self.get_csv_file(self.VRE_ward_screenings_path))
+        # # --> this yields a dictionary mapping dt.date() objects to tuples of (ward_name, screening_type)
+        # # i.e. of the form {'2018-10-22' : ('O SUED', 'W'), '2018-09-15' : ('IB BLAU', 'E'), ...}
+        #
+        # # Generate OE_pflege_map
+        # oe_pflege_map = Risk.generate_oe_pflege_map(self.get_hdfs_pipe(self.oe_pflege_map_path)
+        #                                             if self.hdfs_pipe is True
+        #                                             else self.get_csv_file(self.oe_pflege_map_path))
 
-        # Generate OE_pflege_map
-        oe_pflege_map = Risk.generate_oe_pflege_map(self.get_hdfs_pipe(self.oe_pflege_map_path)
-                                                    if self.hdfs_pipe is True
-                                                    else self.get_csv_file(self.oe_pflege_map_path))
         # --> yields a dictionary mapping "inofficial" ward names to official ones found in the OE_pflege_abk column
         #       of the dbo.INSEL_MAP table in the Atelier_DataScience. This name allows linkage to Waveware !
         # i.e. of the form {'BEWA' : 'C WEST', 'E 121' : 'E 120-21', ...}

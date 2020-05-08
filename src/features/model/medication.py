@@ -30,7 +30,7 @@ class Medication:
         self.drug_quantity = drug_quantity
         self.drug_unit = drug_unit
         self.drug_dispform = drug_dispform
-        self.drug_submission = datetime.strptime(drug_submission, "%Y-%m-%d %H:%M:%S")
+        self.drug_submission = datetime.strptime(drug_submission[:-1], "%Y-%m-%d %H:%M:%S.%f")
 
     def is_antibiotic(self):
         """Returns the antibiotic status of a Medication.
