@@ -1,0 +1,20 @@
+SELECT
+    CHOPCODE                = ZCODE
+    ,CHOPVERWENDUNGSJAHR    = VERWENDUNGSJAHR
+    ,CHOP                   = TEXT
+    ,CHOPCODELEVEL1         = ZCODE_LEVEL1
+    ,CHOPLEVEL1             = TEXT_LEVEL1
+    ,CHOPCODELEVEL2         = ZCODE_LEVEL2
+    ,CHOPLEVEL2             = TEXT_LEVEL2
+    ,CHOPCODELEVEL3         = ZCODE_LEVEL3
+    ,CHOPLEVEL3             = TEXT_LEVEL3
+    ,CHOPCODELEVEL4         = ZCODE_LEVEL4
+    ,CHOPLEVEL4             = TEXT_LEVEL4
+    ,CHOPCODELEVEL5         = ZCODE_LEVEL5
+    ,CHOPLEVEL5             = TEXT_LEVEL5
+    ,CHOPCODELEVEL6         = ZCODE_LEVEL6
+    ,CHOPLEVEL6             = TEXT_LEVEL6
+    ,CHOPSTATUS             = STATUS
+    ,CHOPSAPKATALOGID       = SAP_KATALOGID
+FROM [Atelier_DataScience].[dbo].[LA_CHOP_FLAT]
+

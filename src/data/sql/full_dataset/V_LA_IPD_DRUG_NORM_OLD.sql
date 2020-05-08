@@ -7,4 +7,5 @@ SELECT
     ,[DRUG_UNIT]
     ,[DRUG_DISPFORM]
     ,[DRUG_SUBMISSION]
-FROM [Atelier_DataScience].[atl].[V_LA_IPD_DRUG_NORM]
+FROM [Atelier_DataScience].[dbo].[V_LA_IPD_DRUG_NORM_OLD]
+

@@ -70,6 +70,7 @@ class HDFSDataLoader:
         self.tacs_path = os.path.join(self.base_path, "TACS_DATEN.csv")
         self.icd_path = os.path.join(self.base_path, "V_LA_ISH_NDIA_NORM.csv")
         self.VRE_screenings_path = os.path.join(self.base_path, "VRE_SCREENING_DATA.csv")
+
         #self.VRE_ward_screenings_path = os.path.join(self.base_path, "WARD_SCREENINGS.csv")
         #self.oe_pflege_map_path = os.path.join(self.base_path, "OE_PFLEGE_MAP.csv")
 

@@ -5,4 +5,4 @@ SELECT
 	,[LFDNR]
 	,[PERNR]
 	,[STORN]
-FROM [Atelier_DataScience].[atl].[LA_ISH_NFPZ]
+FROM [Atelier_DataScience].[dbo].[LA_ISH_NFPZ]

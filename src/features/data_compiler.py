@@ -58,7 +58,7 @@ def compile_data():
     #####################################
 
     #####################################
-    # Add contact patients to patient_data (CURRENTLY NOT USED, IMPLEMENTED IN NETWORK)
+    # TODO: Add contact patients to patient_data (CURRENTLY NOT USED, IMPLEMENTED IN NETWORK)
     # logging.info('Retrieving patient contacts')
     # patient_data['contact_pats'] = model_creator.get_contact_patients(patients=patient_data['patients'])
     #####################################
@@ -91,8 +91,6 @@ def compile_data():
     #####################################
 
     logging.info("Data processed successfully!")
-
-
 
 if __name__ == "__main__":
     compile_data()

@@ -17,5 +17,5 @@ SELECT
     ,[BETT]
     ,[STORN]
     ,[EXTKH]
-FROM [Atelier_DataScience].[atl].[LA_ISH_NBEW]
+FROM [Atelier_DataScience].[dbo].[LA_ISH_NBEW]
 WHERE STORN IS NULL -- Exclude stornierte Bewegungen
