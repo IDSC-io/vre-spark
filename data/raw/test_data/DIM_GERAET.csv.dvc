@@ -1,0 +1,7 @@
+md5: 444d2b171cce09973fce3ed74875db20
+outs:
+- md5: 2d6e170af710bf43a1039a7a307d2d84
+  path: DIM_GERAET.csv
+  cache: true
+  metric: false
+  persist: false

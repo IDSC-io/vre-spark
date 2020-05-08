@@ -1,0 +1,7 @@
+md5: 28f423dd3e855e2e93239602bee41b51
+outs:
+- md5: 25b842c619e36103d0d6cd4be7921846
+  path: FAKT_TERMIN_RAUM.csv
+  cache: true
+  metric: false
+  persist: false

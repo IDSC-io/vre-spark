@@ -1,0 +1,7 @@
+md5: 8f5521f1f469af97eb4ff6af25438c80
+outs:
+- md5: 1214b62e3066ff513e6d77164e2ab4b2
+  path: DIM_PATIENT.csv
+  cache: true
+  metric: false
+  persist: false

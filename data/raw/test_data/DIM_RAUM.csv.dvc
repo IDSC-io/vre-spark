@@ -1,0 +1,7 @@
+md5: 5fa65548dc4bb35b4d2238da3f390394
+outs:
+- md5: a939ba79a1ac60dc27fa1ef9324768cd
+  path: DIM_RAUM.csv
+  cache: true
+  metric: false
+  persist: false
