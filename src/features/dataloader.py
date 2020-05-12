@@ -33,8 +33,8 @@ from src.features.model import ICD
 ###############################################################################################################
 
 
-class HDFSDataLoader:
-    """Loads all the csv files from HDFS and creates the data model.
+class DataLoader:
+    """Loads all the csv files and creates the data model.
     """
 
     def __init__(self, hdfs_pipe=True):

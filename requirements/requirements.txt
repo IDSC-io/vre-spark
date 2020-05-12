@@ -26,5 +26,6 @@ scipy==1.3.0
 six==1.12.0
 sklearn==0.0
 
+
 pytest
 sphinx_rtd_theme

@@ -3,9 +3,7 @@
 objects required for the VRE model. This process has multiple steps and is structured as follows:
 
 - Reading the ``basic_config.ini`` file in this directory
-- Loading all VRE-relevant data using the ``HDFS_data_loader`` class
-- Creation of the feature vector using the ``feature_extractor`` class
-- Export of this feature vector to CSV
+- Loading all VRE-relevant data using the ``data_loader`` class
 - Creation of the surface model using the ``surface_model`` class
 - Export of various results from the surface model using its built-in functions
 
@@ -15,17 +13,20 @@ Please refer to the script code for details.
 
 -----
 """
+import click
 
-from src.features.hdfs_dataloader import HDFSDataLoader
-from src.features.feature_extractor import FeatureExtractor
-from src.features.networkx_graph import SurfaceModel
+import configparser
 import logging
 import os
-import configparser
 import pathlib
 
+from src.features.dataloader import DataLoader
+from src.models.networkx_graph import SurfaceModel
 
-def compile_data():
+@click.command()
+#@click.argument('input_filepath', type=click.Path(exists=True))
+#@click.argument('output_filepath', type=click.Path())
+def compose_model():
     #####################################
     # Load configuration file
     this_filepath = pathlib.Path(os.path.realpath(__file__)).parent
@@ -39,22 +40,11 @@ def compile_data():
 
     #####################################
     # Initiate data loader
-    logging.info("Initiating HDFS_data_loader")
+    logging.info("Initiating data_loader")
 
     # --> Load all data:
-    loader = HDFSDataLoader(hdfs_pipe=False)  # hdfs_pipe = False --> files will be loaded directly from CSV
+    loader = DataLoader(hdfs_pipe=False)  # hdfs_pipe = False --> files will be loaded directly from CSV
     patient_data = loader.patient_data()
-    #####################################
-
-    #####################################
-    # Create and export feature vector
-    logging.info("creating feature vector")
-    model_creator = FeatureExtractor()
-    (features, labels, dates, v) = model_creator.prepare_features_and_labels(patient_data["patients"])
-
-    # Export feature vector
-    logging.info("exporting feature vector")
-    model_creator.export_csv(features, labels, dates, v, config_reader['PATHS']['csv_export_path'])
     #####################################
 
     #####################################
@@ -71,13 +61,15 @@ def compile_data():
     surface_graph.add_edge_infection()
 
     # Extract positive patient nodes
-    positive_patient_nodes = [node for node, nodedata in surface_graph.S_GRAPH.nodes(data=True)
-                              if nodedata['type'] == 'Patient' and nodedata['vre_status'] == 'pos']
+    # positive_patient_nodes = [node for node, nodedata in surface_graph.S_GRAPH.nodes(data=True)
+    #                           if nodedata['type'] == 'Patient' and nodedata['vre_status'] == 'pos']
 
     # Write node files
     surface_graph.write_node_files()
 
     export_path = './data/processed'
+
+    # calculate scores
 
     # Export Patient Degree Ratio
     surface_graph.export_patient_degree_ratio(export_path=export_path)
@@ -92,6 +84,7 @@ def compile_data():
 
     logging.info("Data processed successfully!")
 
+
 if __name__ == "__main__":
-    compile_data()
+    compose_model()
 

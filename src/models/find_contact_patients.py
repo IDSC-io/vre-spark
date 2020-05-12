@@ -1,4 +1,11 @@
 import datetime
+import logging
+
+from sklearn.model_selection import cross_val_score
+from sklearn.tree import DecisionTreeClassifier, export_graphviz
+
+from src.features.dataloader import DataLoader
+from src.features.feature_extractor import FeatureExtractor
 
 
 def get_contact_patients_for_case(c, ps):
@@ -58,6 +65,18 @@ def get_contact_patients(patients):
 
 
 if __name__ == '__main__':
+
+    logger = logging.getLogger(__name__)
+
+    # --> Load all data:
+    loader = DataLoader(hdfs_pipe=False)  # hdfs_pipe = False --> files will be loaded directly from CSV
+    patient_data = loader.patient_data()
+
+    #####################################
+    # Create and export feature vector
+    logger.info("creating feature vector")
+    model_creator = FeatureExtractor()
+    (features, labels, dates, v) = model_creator.prepare_features_and_labels(patient_data["patients"])
 
     # which patients were screened positive after relevant case ends?
     for patient in patient_data["patients"].values():

@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
-import click
-import logging
-from pathlib import Path
-from dotenv import find_dotenv, load_dotenv
+import configparser
+import os
+import pathlib
 
-from src.features.data_compiler import compile_data
+import click
+
+from src.features.dataloader import DataLoader
+from src.features.feature_extractor import FeatureExtractor
+import logging
 
 
 @click.command()
@@ -16,8 +19,31 @@ def main():
         cleaned data ready to be analyzed (saved in ../processed).
     """
     logger = logging.getLogger(__name__)
-    logger.info('Compiling data into graph and returning scores..')
-    compile_data()
+
+    # Load configuration file
+    this_filepath = pathlib.Path(os.path.realpath(__file__)).parent
+
+    config_reader = configparser.ConfigParser()
+    config_reader.read(pathlib.Path(this_filepath, '../../configuration/basic_config.ini'))
+
+    #####################################
+    # Initiate data loader
+    logger.info("Initiating data_loader")
+
+    # --> Load all data:
+    loader = DataLoader(hdfs_pipe=False)  # hdfs_pipe = False --> files will be loaded directly from CSV
+    patient_data = loader.patient_data()
+    #####################################
+
+    #####################################
+    # Create and export feature vector
+    logging.info("creating feature vector")
+    model_creator = FeatureExtractor()
+    (features, labels, dates, v) = model_creator.prepare_features_and_labels(patient_data["patients"])
+
+    # Export feature vector
+    logging.info("exporting feature vector")
+    model_creator.export_csv(features, labels, dates, v, config_reader['PATHS']['csv_export_path'])
 
 
 if __name__ == '__main__':

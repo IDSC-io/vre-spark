@@ -1069,7 +1069,7 @@ class SurfaceModel:
         node_data_dict[keys], where keys are all entries in node_attributes if that key is actually found in the node
         data dictionary. The file is named [node_id].json and written to the self.data_dir directory.
 
-        This function is mainly used to "hard-store" values for highly ressource intensive calculations such as
+        This function is mainly used to "hard-store" values for highly resource intensive calculations such as
         betweenness centrality and avoid memory overflows.
 
         Note:
