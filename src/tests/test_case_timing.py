@@ -40,8 +40,8 @@ def test_case_timing(patient_data):
 
 
 def test_case_stationary(patient_data):
-    assert patient_data["cases"].get("0005976205").is_stationary()
-    assert not patient_data["cases"].get("0005965462").is_stationary()
+    assert patient_data["cases"].get("0005976205").is_inpatient_case()
+    assert not patient_data["cases"].get("0005965462").is_inpatient_case()
 
 
 def test_case_open_before(patient_data):

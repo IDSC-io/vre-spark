@@ -2,7 +2,6 @@
 """This script contains all functions for compiling data from CSV or HDFS, and controls the creation of all
 objects required for the VRE model. This process has multiple steps and is structured as follows:
 
-- Reading the ``basic_config.ini`` file in this directory
 - Loading all VRE-relevant data using the ``data_loader`` class
 - Creation of the surface model using the ``surface_model`` class
 - Export of various results from the surface model using its built-in functions
@@ -13,27 +12,19 @@ Please refer to the script code for details.
 
 -----
 """
-import click
-
-import configparser
 import logging
-import os
-import pathlib
+
+import click
 
 from src.features.dataloader import DataLoader
 from src.models.networkx_graph import SurfaceModel
+
 
 @click.command()
 #@click.argument('input_filepath', type=click.Path(exists=True))
 #@click.argument('output_filepath', type=click.Path())
 def compose_model():
     #####################################
-    # Load configuration file
-    this_filepath = pathlib.Path(os.path.realpath(__file__)).parent
-
-    config_reader = configparser.ConfigParser()
-    config_reader.read(pathlib.Path(this_filepath, '../../configuration/basic_config.ini'))
-
     logging.basicConfig(format='%(asctime)s - %(levelname)s: %(message)s', level=logging.INFO,
                         datefmt='%d.%m.%Y %H:%M:%S')
     #####################################
@@ -56,7 +47,7 @@ def compose_model():
     #####################################
     # Create graph of the CURRENT model in networkX
     surface_graph = SurfaceModel(data_dir='./data/processed/networkx')
-    surface_graph.add_network_data(patient_dict=patient_data, subset='relevant_case')
+    surface_graph.add_network_data(patient_dict=patient_data, case_subset='relevant_case')
     surface_graph.remove_isolated_nodes()
     surface_graph.add_edge_infection()
 
@@ -78,8 +69,9 @@ def compose_model():
     surface_graph.export_total_degree_ratio(export_path=export_path)
 
     # Export node betweenness
-    surface_graph.update_shortest_path_statistics()
-    surface_graph.export_node_betweenness(export_path=export_path)
+    # TODO: Reenable node betweenness statistics
+    # surface_graph.update_shortest_path_statistics()
+    # surface_graph.export_node_betweenness(export_path=export_path)
     #####################################
 
     logging.info("Data processed successfully!")

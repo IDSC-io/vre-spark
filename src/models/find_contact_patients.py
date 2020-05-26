@@ -11,15 +11,15 @@ from src.features.feature_extractor import FeatureExtractor
 def get_contact_patients_for_case(c, ps):
     for move in c.moves.values():
         # contacts in the same room
-        if move.bwe_dt is not None and move.room is not None:
-            o = move.room.get_moves_during(move.bwi_dt, move.bwe_dt)
+        if move.to_datetime is not None and move.room is not None:
+            o = move.room.get_moves_during(move.from_datetime, move.to_datetime)
             for n in o:
                 if n.case is not None and move.case is not None:
-                    if n.case.fal_ar == "1" and n.bew_ty in ["1", "2", "3"] and n.bwe_dt is not None:
+                    if n.case.case_type == "1" and n.type_id in ["1", "2", "3"] and n.to_datetime is not None:
                         # if n.case.patient_id > m.case.patient_id and n.bwe_dt is not None:
                         # if n.bwe_dt is not None:
-                        start_overlap = max(move.bwi_dt, n.bwi_dt)
-                        end_overlap = min(move.bwe_dt, n.bwe_dt)
+                        start_overlap = max(move.from_datetime, n.from_datetime)
+                        end_overlap = min(move.to_datetime, n.to_datetime)
                         ps.append(
                             (
                                 move.case.patient_id,
@@ -31,16 +31,16 @@ def get_contact_patients_for_case(c, ps):
                             )
                         )
         # contacts in the same ward (ORGPF)
-        if move.bwe_dt is not None and move.ward is not None:
-            o = move.ward.get_moves_during(move.bwi_dt, move.bwe_dt)
+        if move.to_datetime is not None and move.ward is not None:
+            o = move.ward.get_moves_during(move.from_datetime, move.to_datetime)
             for n in o:
                 if n.case is not None and move.case is not None:
-                    if n.case.fal_ar == "1" \
-                            and n.bew_ty in ["1", "2", "3"] \
-                            and n.bwe_dt is not None \
-                            and (n.zimmr is None or move.zimmr is None or n.zimmr != move.zimmr):
-                        start_overlap = max(move.bwi_dt, n.bwi_dt)
-                        end_overlap = min(move.bwe_dt, n.bwe_dt)
+                    if n.case.case_type == "1" \
+                            and n.type_id in ["1", "2", "3"] \
+                            and n.to_datetime is not None \
+                            and (n.room_id is None or move.room_id is None or n.room_id != move.room_id):
+                        start_overlap = max(move.from_datetime, n.from_datetime)
+                        end_overlap = min(move.to_datetime, n.to_datetime)
                         ps.append(
                             (
                                 move.case.patient_id,
@@ -58,7 +58,7 @@ def get_contact_patients(patients):
     for p in patients.values():
         if p.has_risk():
             for c in p.cases.values():
-                if c.fal_ar == "1":  # only stationary cases
+                if c.case_type == "1":  # only stationary cases
                     if c.moves_end is not None and c.moves_end > datetime.datetime.now() - relativedelta(years=1):
                         get_contact_patients_for_case(c, ps)
     return ps

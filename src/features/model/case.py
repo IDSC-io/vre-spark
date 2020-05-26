@@ -1,32 +1,36 @@
 import logging
 from datetime import datetime
 
+from tqdm import tqdm
+
+from src.features.model.data_model_constants import CaseEnum
+
 
 class Case:
     def __init__(
             self,
             patient_id,
             case_id,
-            case_typ,
+            case_type_nr,
             case_status,
-            fal_ar,
+            case_type,
             beg_dt,
             end_dt,
-            patient_typ,
+            patient_type,
             patient_status,
     ):
         self.patient_id = patient_id
         self.case_id = case_id
-        self.case_typ = case_typ
+        self.case_type_nr = case_type_nr
         self.case_status = case_status
-        self.fal_ar = fal_ar
+        self.case_type = case_type
         self.beg_dt = None
         if beg_dt and beg_dt != "NULL":
             self.beg_dt = datetime.strptime(beg_dt, "%Y-%m-%d")
         self.end_dt = None
         if end_dt and end_dt != "NULL":
             self.end_dt = datetime.strptime(end_dt, "%Y-%m-%d")
-        self.patient_typ = patient_typ
+        self.patient_type = patient_type
         self.patient_status = patient_status
         self.appointments = []
         self.cares = []
@@ -39,12 +43,13 @@ class Case:
         self.medications = []
         self.icd_codes = []
 
-    def is_stationary(self):
+    def is_inpatient_case(self):
         """
-        Stationary cases have "1" FALAR in SAP table NFAL
+        Is this an inpatient case?
         :return:
         """
-        return self.fal_ar == "1"
+        # TODO: Hardcoded label! Extract to config
+        return self.case_type == CaseEnum.inpatient_case
 
     def open_before_or_at_date(self, dt):
         """
@@ -101,10 +106,10 @@ class Case:
 
     def add_move(self, move):
         self.moves[move.lfd_nr] = move
-        if move.bwe_dt is not None and ((self.moves_end is None) or (move.bwe_dt > self.moves_end)):
-            self.moves_end = move.bwe_dt
-        if move.bwi_dt is not None and ((self.moves_start is None) or (move.bwi_dt < self.moves_start)):
-            self.moves_start = move.bwi_dt
+        if move.to_datetime is not None and ((self.moves_end is None) or (move.to_datetime > self.moves_end)):
+            self.moves_end = move.to_datetime
+        if move.from_datetime is not None and ((self.moves_start is None) or (move.from_datetime < self.moves_start)):
+            self.moves_start = move.from_datetime
 
     def correct_move_enddt(self):
         """
@@ -117,7 +122,7 @@ class Case:
         sorted_keys = sorted(self.moves)
         for i, lfd_nr in enumerate(sorted_keys):
             if i < (len(sorted_keys) - 1):
-                self.moves[lfd_nr].bwe_dt = self.moves[sorted_keys[i + 1]].bwi_dt
+                self.moves[lfd_nr].to_datetime = self.moves[sorted_keys[i + 1]].from_datetime
 
     def add_patient(self, p):
         self.patient = p
@@ -136,7 +141,7 @@ class Case:
         the end time of the last movement.
         :return:
         """
-        if self.fal_ar != "1":
+        if self.case_type != "1":
             return None
         if self.moves_end is None:
             return datetime.now() - self.moves_start
@@ -162,12 +167,12 @@ class Case:
         """
         moves = []
         for move in self.moves.values():
-            if move.bwi_dt < dt:
+            if move.from_datetime < dt:
                 moves.append(move)
         return moves
 
     @staticmethod
-    def create_case_map(lines, patienten, load_limit=None):
+    def create_case_map(lines, patients, load_limit=None):
         """
         Read the case csv and create Case objects from the rows. Populate a dict with cases (case_id -> case) that are not 'storniert'. Note that the function goes both ways, i.e. it adds
         Cases to Patients and vice versa. This function will be called by the HDFS_data_loader.patient_data() function. The lines argument corresponds to a csv.reader() instance
@@ -178,7 +183,7 @@ class Case:
         [ "00008769940",    "0003536421",   "Standard Fall",    "storniert",    "2",        "",         "",             "Standard Patient", "aktiv"]
         [ "00008770123",    "0003473241",   "Standard Fall",    "aktiv",        "2",        "",         "2010-12-31",   "Standard Patient", "aktiv"]
 
-        :param patienten: Dictionary mapping patient ids to Patient() objects --> {"00001383264" : Patient(), "00001383310" : Patient(), ...}
+        :param patients: Dictionary mapping patient ids to Patient() objects --> {"00001383264" : Patient(), "00001383310" : Patient(), ...}
 
         :return: Dictionary mapping case ids to Case() objects --> {"0003536421" : Case(), "0003473241" : Case(), ...}
         """
@@ -186,18 +191,20 @@ class Case:
         import_count = 0
         nr_not_found = 0
         nr_ok = 0
-        nr_not_stationary = 0
+        nr_not_inpatient_case = 0
+        nr_case_not_active = 0
         cases = dict()
-        for line in lines:
-            fall = Case(*line)
-            # if fall.fal_ar != '1': # exclude non-stationary cases (for stationary cases: Case().falar == '1' !)
+        for line in tqdm(lines):
+            case = Case(*line)
+            # if case.fal_ar != '1': # exclude non-stationary cases (for stationary cases: Case().falar == '1' !)
             #     nr_not_stationary += 1 # NOW INCLUDED DIRECTLY IN THE SQL QUERY
             #     continue
-            if fall.case_status == "aktiv":  # exclude entries where "CASESTATUS" is "storniert"
-                cases[fall.case_id] = fall
-                if patienten.get(fall.patient_id, None) is not None:
-                    patienten[fall.patient_id].add_case(fall)
-                    fall.add_patient(patienten[fall.patient_id])
+            #TODO: Hardcoded label, extract to configuration
+            if case.case_status == "Fall ist aktuell":  # exclude entries where "CASESTATUS" is "storniert"
+                cases[case.case_id] = case
+                if patients.get(case.patient_id, None) is not None:
+                    patients[case.patient_id].add_case(case)
+                    case.add_patient(patients[case.patient_id])
                     import_count += 1
                     if load_limit is not None and import_count > load_limit:
                         break
@@ -205,8 +212,9 @@ class Case:
                     nr_not_found += 1
                     continue
             else:
+                nr_case_not_active += 1
                 continue
             nr_ok += 1
 
-        logging.info(f"{nr_ok} ok, {nr_not_found} patients not found, {nr_not_stationary} cases not stationary")
+        logging.info(f"{nr_ok} cases ok, {nr_not_found} patients not found, {nr_case_not_active} cases not active, {nr_not_inpatient_case} cases not inpatient case")
         return cases

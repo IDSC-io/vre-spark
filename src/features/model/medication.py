@@ -6,6 +6,9 @@
 
 import logging
 from datetime import datetime
+import concurrent.futures
+
+from tqdm import tqdm
 
 
 class Medication:
@@ -30,7 +33,10 @@ class Medication:
         self.drug_quantity = drug_quantity
         self.drug_unit = drug_unit
         self.drug_dispform = drug_dispform
-        self.drug_submission = datetime.strptime(drug_submission[:-1], "%Y-%m-%d %H:%M:%S.%f")
+        try:
+            self.drug_submission = datetime.strptime(drug_submission[:-1], "%Y-%m-%d %H:%M:%S.%f")
+        except Exception as e:
+            raise e
 
     def is_antibiotic(self):
         """Returns the antibiotic status of a Medication.
@@ -67,14 +73,14 @@ class Medication:
         """
         logging.debug("create_drug_map")
         drugs = dict()
-        for line in lines:
+        for line in tqdm(lines):
             if drugs.get(line[3], None) is None:
                 drugs[line[3]] = line[2]
         logging.info(f"{len(drugs)} drugs created")
         return drugs
 
     @staticmethod
-    def add_medication_to_case(lines, cases):
+    def add_medications_to_case(lines, cases):
         """Adds Medication() objects to Case() objects.
 
         This function will be called by the HDFS_data_loader.patient_data() function (lines is an iterator object), and
@@ -91,14 +97,34 @@ class Medication:
         nr_cases_not_found = 0
         nr_malformed = 0
         nr_ok = 0
-        for line in lines:
+        # TODO: Parallelize processing with concurrent.Futures (https://docs.python.org/3/library/concurrent.futures.html)
+
+        def create_medication(line):
             if len(line) != 8:
+                return 1
+            try:
+                medication = Medication(*line)
+            except ValueError as e:
+                return 1
+
+            return medication
+
+        # with concurrent.futures.ThreadPoolExecutor() as executor:
+        #     medications = list(executor.map(create_medication, lines))
+        medications = [create_medication(line) for line in tqdm(lines)]
+
+        for medication in medications:
+            if not isinstance(medication, Medication):
                 nr_malformed += 1
                 continue
-            medication = Medication(*line)
-            if cases.get(medication.case_id, None) is None:
+
+            if medication.case_id not in cases:
                 nr_cases_not_found += 1
                 continue
+
             cases.get(medication.case_id).add_medication(medication)
             nr_ok += 1
-        logging.info(f"{nr_ok} ok, {nr_cases_not_found} cases not found, {nr_malformed} malformed")
+        logging.info(f"{nr_ok} drugs ok, {nr_cases_not_found} cases not found, {nr_malformed} malformed")
+
+
+

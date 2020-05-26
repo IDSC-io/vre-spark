@@ -5,7 +5,7 @@ from src.features.model.care import Care
 from src.features.model.case import Case
 from src.features.model.chop import Chop
 from src.features.model.device import Device
-from src.features.model.icd import ICD
+from src.features.model.icdcode import ICDCode
 from src.features.model.medication import Medication
 from src.features.model.room import Room
 from src.features.model.ward import Ward

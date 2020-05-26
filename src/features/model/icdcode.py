@@ -7,17 +7,19 @@
 import datetime
 import logging
 
+from tqdm import tqdm
 
-class ICD:
+
+class ICDCode:
     """Models an ``ICD`` object.
     """
 
-    def __init__(self, falnr, dkey1, dkat, diadt, drg_cat):
-        self.fall_nummer = falnr
-        self.icd_code = dkey1
-        self.catalogue_year = int(dkat)  # catalogue year of the ICD code (2-digit integer) - may or may not be relevant
-        self.diagnosis_dt = datetime.datetime.strptime(diadt, '%Y-%m-%d')  # date when ICD code was set
-        self.drg_category = drg_cat  # single character specifying the DRG category
+    def __init__(self, case_nr, icd_code, catalogue_year, diagnosis_date, drg_category):
+        self.case_nr = case_nr
+        self.icd_code = icd_code
+        self.catalogue_year = int(catalogue_year)  # catalogue year of the ICD code (2-digit integer) - may or may not be relevant
+        self.diagnosis_date = datetime.datetime.strptime(diagnosis_date, '%Y-%m-%d')  # date when ICD code was set
+        self.drg_category = drg_category  # single character specifying the DRG category
 
         self.cases = []  # List containing all cases with this particular ICD code (currently not used)
 
@@ -30,7 +32,7 @@ class ICD:
         self.cases.append(case)
 
     @staticmethod
-    def create_icd_dict(lines):
+    def create_icd_code_map(lines):
         """Creates and returns a dictionary of all icd codes.
 
         This function will be called by the HDFS_data_loader.patient_data() function (lines is an iterator object).
@@ -55,15 +57,15 @@ class ICD:
         logging.debug("Creating ICD dictionary")
         icd_dict = {}
 
-        for each_line in lines:
-            this_icd = ICD(*each_line)
+        for each_line in tqdm(lines):
+            this_icd = ICDCode(*each_line)
             icd_dict[this_icd.icd_code] = this_icd
         # Write success to log and return dictionary
         logging.info(f'Successfully created {len(icd_dict.values())} ICD entries')
         return icd_dict
 
     @staticmethod
-    def add_icd_to_case(lines, cases):
+    def add_icd_codes_to_case(lines, cases):
         """Adds ICD codes to cases based on the ICD.fall_nummer attribute.
 
         For details on how each line in the lines iterator object is formatted, please refer to the function
@@ -79,12 +81,12 @@ class ICD:
         cases_found = 0
         unique_case_ids = []  # list of unique case ids processed
 
-        for each_line in lines:
-            this_icd = ICD(*each_line)
-            if cases.get(this_icd.fall_nummer) is not None:  # default value for .get() is None
-                cases.get(this_icd.fall_nummer).add_icd_code(this_icd)
+        for each_line in tqdm(lines):
+            this_icd = ICDCode(*each_line)
+            if cases.get(this_icd.case_nr) is not None:  # default value for .get() is None
+                cases.get(this_icd.case_nr).add_icd_code(this_icd)
                 cases_found += 1
-                unique_case_ids.append(cases.get(this_icd.fall_nummer))
+                unique_case_ids.append(cases.get(this_icd.case_nr))
             else:
                 cases_not_found += 1
         logging.info(f'Added {cases_found} ICD codes to {len(set(unique_case_ids))} relevant cases,'

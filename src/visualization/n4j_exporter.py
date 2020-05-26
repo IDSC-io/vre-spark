@@ -3,6 +3,7 @@ import csv
 import datetime
 import logging
 import os
+from configuration.basic_configuration import configuration
 
 
 class Neo4JExporter:
@@ -14,8 +15,7 @@ class Neo4JExporter:
         """
         Loads the configuration file and makes its contents available via the self.config attribute (e.g. self.config['PATHS']['some_dir']
         """
-        self.config = configparser.ConfigParser()
-        self.config.read(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'basic_config.ini'))  # makes configuration file entries available as self.config['PATHS']['XXX']
+        self.config = configuration
 
         self.init_date = datetime.datetime.now().strftime('%Y%m%d%H%M%S')  # timestamp at initiation - used as a suffix for all exported files
         logging.basicConfig(format='%(asctime)s - %(levelname)s: %(message)s', level=logging.INFO, datefmt='%d.%m.%Y %H:%M:%S')
@@ -127,8 +127,8 @@ class Neo4JExporter:
                                 [
                                     patient.patient_id,
                                     move.room.name,
-                                    move.bwi_dt.strftime("%Y-%m-%dT%H:%M"),
-                                    move.bwe_dt.strftime("%Y-%m-%dT%H:%M"),
+                                    move.from_datetime.strftime("%Y-%m-%dT%H:%M"),
+                                    move.to_datetime.strftime("%Y-%m-%dT%H:%M"),
                                     "in",
                                 ])
                             room_count += 1
@@ -180,7 +180,7 @@ class Neo4JExporter:
             csvwriter = csv.writer(csvfile, delimiter=self.config['DELIMITERS']['csv_sep'], quotechar='"', quoting=csv.QUOTE_MINIMAL)
             csvwriter.writerow([":ID", "type:LABEL", "name"])
             for k, g in devices.items():
-                csvwriter.writerow([g.geraet_id, "Device", g.geraet_name])
+                csvwriter.writerow([g.id, "Device", g.name])
                 device_count += 1
         logging.info(f'Created {device_count} devices.')
 
@@ -206,9 +206,9 @@ class Neo4JExporter:
                             csvwriter.writerow(
                                 [
                                     patient.patient_id,
-                                    d.geraet_id,
+                                    d.id,
                                     "used",
-                                    t.termin_datum.strftime("%Y-%m-%dT%H:%M"),
+                                    t.date.strftime("%Y-%m-%dT%H:%M"),
                                 ])
                             device_count += 1
         logging.info(f'Added {device_count} devices for {relcase_count} cases from {pat_count} patients.')
@@ -300,13 +300,13 @@ class Neo4JExporter:
                     relcase_count += 1
                     for t in pat_rel_case.appointments:
                         for e in t.employees:
-                            if e.mitarbeiter_id != "-1":  # indicates an unknown mitarbeiter - these cases are ignored
+                            if e.id != "-1":  # indicates an unknown mitarbeiter - these cases are ignored
                                 csvwriter.writerow(
                                     [
                                         p.patient_id,
-                                        e.mitarbeiter_id,
+                                        e.id,
                                         "appointment_with",
-                                        t.termin_datum.strftime("%Y-%m-%dT%H:%M"),
+                                        t.date.strftime("%Y-%m-%dT%H:%M"),
                                     ])
                                 contact_count += 1
         logging.info(f'Created {contact_count} contacts in {relcase_count} relevant cases from {pat_count} patients.')
@@ -340,10 +340,10 @@ class Neo4JExporter:
                         partner.name1,
                         partner.name2,
                         partner.name3,
-                        partner.land,
-                        partner.pstlz,
-                        partner.ort,
-                        partner.ort2,
+                        partner.country,
+                        partner.zip_code,
+                        partner.location,
+                        partner.location2,
                     ])
                 refer_count += 1
         logging.info(f'Created {refer_count} referrers.')
@@ -447,7 +447,7 @@ class Neo4JExporter:
                                 patient.patient_id,
                                 surgery.chop.chop_code,
                                 "surgery",
-                                surgery.bgd_op.strftime("%Y-%m-%dT%H:%M"),
+                                surgery.date.strftime("%Y-%m-%dT%H:%M"),
                             ])
                         chop_count += 1
         logging.info(f'Created {chop_count} surgeries (CHOP codes) for {relcase_count} relevant cases from {pat_count} patients.')

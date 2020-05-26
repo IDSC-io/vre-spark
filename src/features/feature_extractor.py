@@ -39,10 +39,10 @@ class FeatureExtractor:
         labels = []
         dates = []
         for patient in patients.values():
-            patient_features = patient.get_features()  # Dictionary --> {"length_of_stay" : 47, "nr_cases" : 3, ... }
+            patient_features = patient.get_feature_vector()  # Dictionary --> {"length_of_stay" : 47, "nr_cases" : 3, ... }
             if patient_features is not None:
                 risk_factors.append(patient_features)
-                labels.append(patient.get_label())     # patient.get_label() will return an integer between -1 and 3
+                labels.append(patient.get_screening_label())     # patient.get_label() will return an integer between -1 and 3
                 dates.append(patient.get_risk_date())
                 # patient.get_risk_date() will return a datetime.datetime() object corresponding to the label risk date
         v = DictVectorizer(sparse=False)
@@ -200,15 +200,15 @@ class FeatureExtractor:
             ####################################################
             # --> Extract contacts in the same room
             ####################################################
-            if move.bwe_dt is not None and move.room is not None:
-                overlapping_moves = move.room.get_moves_during(move.bwi_dt, move.bwe_dt)
+            if move.to_datetime is not None and move.room is not None:
+                overlapping_moves = move.room.get_moves_during(move.from_datetime, move.to_datetime)
                 # get_moves_during() returns a list of all moves overlapping with the .bwi_dt - .bwe_dt interval
                 for overlap_move in overlapping_moves:
                     if overlap_move.case is not None and move.case is not None:
-                        if overlap_move.case.fal_ar == "1" and overlap_move.bew_ty in ["1", "2", "3"] and \
-                                overlap_move.bwe_dt is not None:
-                            start_overlap = max(move.bwi_dt, overlap_move.bwi_dt)
-                            end_overlap = min(move.bwe_dt, overlap_move.bwe_dt)
+                        if overlap_move.case.case_type == "1" and overlap_move.type_id in ["1", "2", "3"] and \
+                                overlap_move.to_datetime is not None:
+                            start_overlap = max(move.from_datetime, overlap_move.from_datetime)
+                            end_overlap = min(move.to_datetime, overlap_move.to_datetime)
                             contact_pats.append(
                                 (
                                     move.case.patient_id,
@@ -221,15 +221,15 @@ class FeatureExtractor:
             ####################################################
             # --> Extract contacts in the same ward (ORGPF)
             ####################################################
-            if move.bwe_dt is not None and move.ward is not None:
-                overlapping_moves = move.ward.get_moves_during(move.bwi_dt, move.bwe_dt)
+            if move.to_datetime is not None and move.ward is not None:
+                overlapping_moves = move.ward.get_moves_during(move.from_datetime, move.to_datetime)
                 for overlap_move in overlapping_moves:
                     if overlap_move.case is not None and move.case is not None:
-                        if overlap_move.case.fal_ar == "1" and overlap_move.bew_ty in ["1", "2", "3"] and \
-                                overlap_move.bwe_dt is not None and \
-                                (overlap_move.zimmr is None or move.zimmr is None or overlap_move.zimmr != move.zimmr):
-                            start_overlap = max(move.bwi_dt, overlap_move.bwi_dt)
-                            end_overlap = min(move.bwe_dt, overlap_move.bwe_dt)
+                        if overlap_move.case.case_type == "1" and overlap_move.type_id in ["1", "2", "3"] and \
+                                overlap_move.to_datetime is not None and \
+                                (overlap_move.room_id is None or move.room_id is None or overlap_move.room_id != move.room_id):
+                            start_overlap = max(move.from_datetime, overlap_move.from_datetime)
+                            end_overlap = min(move.to_datetime, overlap_move.to_datetime)
                             contact_pats.append(
                                 (
                                     move.case.patient_id,

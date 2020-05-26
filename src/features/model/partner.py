@@ -1,5 +1,7 @@
 import logging
 
+from tqdm import tqdm
+
 
 class Partner:
     """
@@ -8,29 +10,31 @@ class Partner:
     The cases that were referred by a physician are tracked in referred_cases.
     """
 
-    def __init__(self, gp_art, name1, name2, name3, land, pstlz, ort, ort2, stras, krkhs):
+    def __init__(self, gp_art, name1, name2, name3, country, zip_code, location, location2, street, krkhs):
         """
         Constructor. Subset of fields from IS-H table NGPA.
         :param gp_art:
         :param name1:
         :param name2:
         :param name3:
-        :param land:
-        :param pstlz:
-        :param ort:
-        :param ort2:
-        :param stras:
+        :param country:
+        :param zip_code:
+        :param location:
+        :param location2:
+        :param street:
         :param krkhs:
         """
         self.gp_art = gp_art
         self.name1 = name1
         self.name2 = name2
         self.name3 = name3
-        self.land = land
-        self.pstlz = pstlz
-        self.ort = ort
-        self.ort2 = ort2
-        self.stras = stras
+        self.country = country
+        self.zip_code = zip_code
+        self.location = location
+        self.location2 = location2
+
+        # not used fields
+        self.street = street
         self.krkhs = krkhs
 
         self.referred_cases = dict()
@@ -58,14 +62,14 @@ class Partner:
         """
         nr_malformed = 0
         partners = dict()
-        for line in lines:
+        for line in tqdm(lines):
             if len(line) != 10:
                 nr_malformed += 1
                 continue
             partner = Partner(*line)
             partners[partner.gp_art] = partner
 
-        logging.info(f"{len(partners)} created, {nr_malformed} partners malformed")
+        logging.info(f"{len(partners)} partners created, {nr_malformed} partners malformed")
         return partners
 
     @staticmethod
@@ -84,16 +88,24 @@ class Partner:
         logging.debug("add_partners_to_cases")
         nr_cases_not_found = 0
         nr_partners_not_found = 0
+        nr_not_physician = 0
+        nr_cancelled = 0
         nr_ok = 0
-        for line in lines:
-            if line[0] == 'U' and line[5] != 'X':  # line[5] corresponds to the "STORN" column ('X' --> storniert)
-                if cases.get(line[2], None) is None:
-                    nr_cases_not_found += 1
-                    continue
-                if partners.get(line[4], None) is None:
-                    nr_partners_not_found += 1
-                    continue
-                cases[line[2]].add_referrer(partners[line[4]])
-                partners[line[4]].add_case(cases[line[2]])
-                nr_ok += 1
-        logging.info(f"{nr_ok} ok, {nr_cases_not_found} cases not found, {nr_partners_not_found} partners not found")
+        for line in tqdm(lines):
+            if line[0] == 'U':  # line[5] corresponds to the "STORN" column ('X' --> cancelled)
+                if line[5] != 'X':
+                    if cases.get(line[2], None) is None:
+                        nr_cases_not_found += 1
+                        continue
+                    if partners.get(line[4], None) is None:
+                        nr_partners_not_found += 1
+                        continue
+                    cases[line[2]].add_referrer(partners[line[4]])
+                    partners[line[4]].add_case(cases[line[2]])
+                    nr_ok += 1
+                else:
+                    nr_cancelled += 1
+            else:
+                nr_not_physician +=11
+
+        logging.info(f"{nr_ok} partners ok, {nr_cases_not_found} cases not found, {nr_partners_not_found} partners not found, {nr_not_physician} not physicians, {nr_cancelled} cancelled cases")

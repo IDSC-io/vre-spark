@@ -1,6 +1,8 @@
 import logging
 from datetime import datetime
 
+from tqdm import tqdm
+
 from src.features.model import Room
 from src.features.model import Ward
 
@@ -8,55 +10,57 @@ from src.features.model import Ward
 class Move:
     def __init__(
             self,
-            fal_nr,
+            case_id,
             lfd_nr,
-            bew_ty,
-            bw_art,
-            bwi_dt,
-            bwi_zt,
-            statu,
-            bwe_dt,
-            bwe_zt,
+            type_id,
+            type,
+            from_date,
+            from_time,
+            status,
+            to_date,
+            to_time,
             lfd_ref,
-            kz_txt,
+            description,
             org_fa,
             org_pf,
             org_au,
-            zimmr,
-            bett,
-            storn,
-            ext_kh
+            room_id,
+            bed,
+            cancelled,
+            partner_id
     ):
-        self.fal_nr = fal_nr
+        self.case_id = case_id
         self.lfd_nr = int(lfd_nr)
-        self.bew_ty = bew_ty
-        self.bw_art = bw_art
-        self.bwi_dt = datetime.strptime(
-            bwi_dt + " " + bwi_zt[:-1], "%Y-%m-%d %H:%M:%S.%f" # parsing milliseconds: https://stackoverflow.com/questions/698223/how-can-i-parse-a-time-string-containing-milliseconds-in-it-with-python
+        self.type_id = type_id
+        self.type = type
+        self.from_datetime = datetime.strptime(
+            from_date + " " + from_time[:-1], "%Y-%m-%d %H:%M:%S.%f"  # parsing milliseconds: https://stackoverflow.com/questions/698223/how-can-i-parse-a-time-string-containing-milliseconds-in-it-with-python
         )
-        self.statu = statu
-        self.bwe_dt = None
+        self.status = status
+        self.to_datetime = None
         try:
-            if bwe_zt == '24:00:00.000000000':
-                bwe_zt = "23:59:59.000000000"
+            if to_time == '24:00:00.000000000':
+                to_time = "23:59:59.000000000"
 
-            self.bwe_dt = datetime.strptime(
-                bwe_dt + " " + bwe_zt, "%Y-%m-%d %H:%M:%S.000000000"
+            self.to_datetime = datetime.strptime(
+                to_date + " " + to_time, "%Y-%m-%d %H:%M:%S.000000000"
             )
         except ValueError:
             pass
-        self.ldf_ref = lfd_ref
-        self.kz_txt = kz_txt
-        self.org_fa = org_fa
-        self.org_pf = org_pf
-        self.org_au = org_au
-        self.zimmr = zimmr
-        self.bett = bett
-        self.storn = storn
-        self.ext_kh = ext_kh
+        self.description = description
+        self.ward_id = org_pf
+        self.room_id = room_id
+        self.bed = bed
+        self.cancelled = cancelled
+        self.partner_id = partner_id
         self.room = None
         self.ward = None
         self.case = None
+
+        # unused fields
+        self.lfd_ref = lfd_ref
+        self.org_fa = org_fa
+        self.org_au = org_au
 
     def add_room(self, r):
         self.room = r
@@ -68,8 +72,8 @@ class Move:
         self.case = c
 
     def get_duration(self):
-        end_dt = self.bwe_dt if self.bwe_dt is not None else datetime.now()
-        return end_dt - self.bwi_dt
+        end_dt = self.to_datetime if self.to_datetime is not None else datetime.now()
+        return end_dt - self.from_datetime
 
     @staticmethod
     def create_bwart_map(lines):
@@ -79,7 +83,7 @@ class Move:
         return bwart
 
     @staticmethod
-    def add_move_to_case(lines, faelle, rooms, wards, partners, load_limit=None):
+    def add_moves_to_case(lines, cases, rooms, wards, partners, load_limit=None):
         """
         Reads the moves csv and performs the following:
         --> creates a Move() object from the read-in line data
@@ -93,7 +97,7 @@ class Move:
         ["0004496041", "3",     "4",      "SB",         "2014-01-17",   "16:15:00", "30",    "2014-01-17",  "16:15:00.000", "0",      "",                     "DIAA",  "DIAA",  "",      "",      "",      "",     ""]
         ["0004496042", "1",     "4",      "BE",         "2014-03-10",   "08:15:00", "30",    "2014-03-10",  "08:15:00.000", "0",      "ej/ n CT um 10.30 h", "ENDA",  "ENDA",  "IICA",  "",      "",      "",     ""]
 
-        :param faelle:   Dictionary mapping case ids to Case()       --> {'0005976205' : Case(), ... }
+        :param cases:   Dictionary mapping case ids to Case()       --> {'0005976205' : Case(), ... }
         :param rooms:    Dictionary mapping room names to Room()     --> {'BH N 125' : Room(), ... }
         :param room_ids: Dictionary mapping room IDs to Room()       --> {'127803' : Room(), ... }
         :param wards:    Dictionary mapping ward names to Ward()     --> {'N NORD' : Ward(), ... }
@@ -104,7 +108,7 @@ class Move:
         nr_not_formatted = 0
         nr_ok = 0
         nr_wards_updated = 0
-        for counter, line in enumerate(lines):
+        for line in tqdm(lines):
             if len(line) != 18:
                 nr_not_formatted += 1
             else:
@@ -113,27 +117,27 @@ class Move:
                 # if move.storn == "X":  # NOW INCLUDED DIRECTLY IN THE SQL QUERY
                 #     continue
 
-                if faelle.get(move.fal_nr, None) is not None:
-                    faelle[move.fal_nr].add_move(move)
-                    move.add_case(faelle[move.fal_nr])
+                if cases.get(move.case_id, None) is not None:
+                    cases[move.case_id].add_move(move)
+                    move.add_case(cases[move.case_id])
                 else:
                     nr_not_found += 1
                     continue
                 ward = None
                 # Add ward to move and vice versa
-                if move.org_pf != "" and move.org_pf != "NULL":
-                    if wards.get(move.org_pf, None) is None:
-                        ward = Ward(move.org_pf)
-                        wards[move.org_pf] = ward
-                    wards[move.org_pf].add_move(move)
-                    move.add_ward(wards[move.org_pf])
+                if move.ward_id != "" and move.ward_id != "NULL":
+                    if wards.get(move.ward_id, None) is None:
+                        ward = Ward(move.ward_id)
+                        wards[move.ward_id] = ward
+                    wards[move.ward_id].add_move(move)
+                    move.add_ward(wards[move.ward_id])
                 # Add move to room and vice versa (including an update of the Room().ward attribute)
-                if move.zimmr != "" and move.zimmr != "NULL":
-                    if rooms.get(move.zimmr, None) is None:
+                if move.room_id != "" and move.room_id != "NULL":
+                    if rooms.get(move.room_id, None) is None:
                         # Note that the rooms are primarily identified through their name
                         # The names in this file come from SAP (without an associated ID), so they will NOT match the names already present in the rooms dictionary !
-                        this_room = Room(move.zimmr)
-                        rooms[move.zimmr] = this_room
+                        this_room = Room(move.room_id)
+                        rooms[move.room_id] = this_room
 
                         # In order to extract the Room ID, we need to 'backtrace' the key in room_ids for which room_ids[key] == move.zimmr (this will not be available for most Rooms)
                         # If a backtrace is not possible, the room object will be initiated without an ID
@@ -145,17 +149,17 @@ class Move:
                         #     r = Room(move.zimmr) # Create the Room() object without providing an ID
                         # rooms[move.zimmr] = r
                     # Then add the ward to this room, and update moves with rooms and vice versa
-                    rooms[move.zimmr].add_ward(ward)
-                    rooms[move.zimmr].add_move(move)
-                    move.add_room(rooms[move.zimmr])
+                    rooms[move.room_id].add_ward(ward)
+                    rooms[move.room_id].add_move(move)
+                    move.add_room(rooms[move.room_id])
                     nr_wards_updated += 1
                 # Parse patients from external referrers
-                if move.ext_kh != "":
-                    if move.case is not None and partners.get(move.ext_kh, None) is not None:
-                        partners[move.ext_kh].add_case(move.case)
-                        move.case.add_referrer(partners[move.ext_kh])
+                if move.partner_id != "":
+                    if move.case is not None and partners.get(move.partner_id, None) is not None:
+                        partners[move.partner_id].add_case(move.case)
+                        move.case.add_referrer(partners[move.partner_id])
                 nr_ok += 1
                 if load_limit is not None and nr_ok > load_limit:
                     break
 
-        logging.info(f"{nr_ok} ok, {nr_not_found} cases not found, {nr_not_formatted} malformed, {nr_wards_updated} wards updated")
+        logging.info(f"{nr_ok} moves ok, {nr_not_found} cases not found, {nr_not_formatted} malformed, {nr_wards_updated} wards updated")

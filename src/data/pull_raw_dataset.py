@@ -9,14 +9,16 @@ The Atelier_DataScience is queried directly via the `pyodbc` module, and require
 containing details on the ODBC connection to the Atelier (see VRE Model Overview for more information).
 """
 
-import configparser
 import csv
 import datetime
 import os
+
 import pyodbc
+from configuration.basic_configuration import configuration
 
 
-def write_sql_query_results_to_csv(path_to_sql, path_to_csv, csv_sep, connection_file, trusted_connection=True, force_overwrite=False):
+def write_sql_query_results_to_csv(path_to_sql, path_to_csv, csv_sep, connection_file, trusted_connection=True,
+                                   force_overwrite=False):
     """Executes an SQL query and writes the results to path_to_csv.
 
     Args:
@@ -66,24 +68,20 @@ def write_sql_query_results_to_csv(path_to_sql, path_to_csv, csv_sep, connection
 
 
 def pull_raw_dataset():
-
     # extract correct filepath
     this_filepath = os.path.dirname(os.path.realpath(__file__))
     # contains the directory in which this script is located, irrespective of the current working directory
 
-    # load config file:
-    config_reader = configparser.ConfigParser()
-    config_reader.read(os.path.join(this_filepath, '../../configuration/basic_config.ini'))
+    SQL_DIR = os.path.join(this_filepath, "./sql/test_dataset") if configuration['PARAMETERS']['dataset'] == 'test' \
+        else os.path.join(this_filepath,
+                          "./sql/full_dataset")  # absolute or relative path to directory containing SQL files
 
-    SQL_DIR = os.path.join(this_filepath, "./sql/test_dataset") if config_reader['PARAMETERS']['dataset'] == 'test' \
-        else os.path.join(this_filepath, "./sql/full_dataset")  # absolute or relative path to directory containing SQL files
+    CSV_DIR = configuration['PATHS']['test_data_dir'] if configuration['PARAMETERS']['dataset'] == 'test' \
+        else configuration['PATHS']['model_data_dir']  # absolute or relative path to directory where data is stored
 
-    CSV_DIR = config_reader['PATHS']['test_data_dir'] if config_reader['PARAMETERS']['dataset'] == 'test' \
-        else config_reader['PATHS']['model_data_dir']  # absolute or relative path to directory where data is stored
+    CSV_DELIM = configuration['DELIMITERS']['csv_sep']  # delimiter for CSV files written from SQL results
 
-    CSV_DELIM = config_reader['DELIMITERS']['csv_sep']  # delimiter for CSV files written from SQL results
-
-    print(f"data_basis set to: {config_reader['PARAMETERS']['dataset']}\n")
+    print(f"data_basis set to: {configuration['PARAMETERS']['dataset']}\n")
 
     # execute all queries in SQL_DIR
     print('Loading data from SQL server:\n')
@@ -102,12 +100,12 @@ def pull_raw_dataset():
         potential_exception = write_sql_query_results_to_csv(path_to_sql=os.path.join(SQL_DIR, each_file),
                                                              path_to_csv=os.path.join(CSV_DIR, each_file.replace('.sql', '.csv')),
                                                              csv_sep=CSV_DELIM,
-                                                             connection_file=config_reader['PATHS']['odbc_file_path'],
+                                                             connection_file=configuration['PATHS']['odbc_file_path'],
                                                              trusted_connection=False)
         if potential_exception is not None:
             exceptions.append(potential_exception)
         else:
-            print(f'\tDone!\t Query execution time: {str(datetime.datetime.now()-start_dt).split(".")[0]}')
+            print(f'\tDone!\t Query execution time: {str(datetime.datetime.now() - start_dt).split(".")[0]}')
         # --> print timedelta without fractional seconds (original string would be printed as 0:00:13.4567)
 
     if len(exceptions) != 0:

@@ -1,7 +1,0 @@
-md5: 961e71a276b19f01933987cfabc7b1a6
-outs:
-- md5: bc535f6a81bf60ac8f9f559b15412d10
-  path: LA_ISH_NICP.csv
-  cache: true
-  metric: false
-  persist: false

@@ -6,6 +6,8 @@
 
 import logging
 
+from tqdm import tqdm
+
 
 class Chop:
     """Models a ``CHOP`` code.
@@ -14,7 +16,7 @@ class Chop:
     def __init__(
             self,
             chop_code,
-            chop_verwendungsjahr,
+            chop_year_of_usage,
             chop,
             chop_code_level1,
             chop_level1,
@@ -29,10 +31,10 @@ class Chop:
             chop_code_level6,
             chop_level6,
             chop_status,
-            chop_sap_katalog_id,
+            chop_sap_catalog_id,
     ):
         self.chop_code = chop_code
-        self.chop_verwendungsjahr = chop_verwendungsjahr
+        self.chop_verwendungsjahr = chop_year_of_usage
         self.chop = chop
         self.chop_code_level1 = chop_code_level1
         self.chop_level1 = chop_level1
@@ -47,7 +49,7 @@ class Chop:
         self.chop_code_level6 = chop_code_level6
         self.chop_level6 = chop_level6
         self.chop_status = chop_status
-        self.chop_sap_katalog_id = chop_sap_katalog_id
+        self.chop_sap_katalog_id = chop_sap_catalog_id
 
         self.cases = []  # Keep track of all cases that have this chop code
 
@@ -89,7 +91,7 @@ class Chop:
         return self.chop_code_level2
 
     @staticmethod
-    def create_chop_dict(lines):
+    def create_chop_map(lines):
         """Creates and returns a dict of all chop codes.
 
         The key of a chop code is ``<code>_<catalog>`` - different catalogs exist for different years. This function
@@ -114,7 +116,7 @@ class Chop:
         """
         logging.debug("create_chop_dict")
         chops = dict()
-        for line in lines:
+        for line in tqdm(lines):
             chop = Chop(*line)
             chops[chop.chop_code + "_" + chop.chop_sap_katalog_id] = chop
             # based on the schema in the docstring, this would yield "Z62.99.30_16" or "Z62.99.99_10"

@@ -7,18 +7,20 @@
 import logging
 from datetime import datetime
 
+from tqdm import tqdm
+
 
 class Appointment:
     """Models an appointment from RAP.
     """
 
-    def __init__(self, termin_id, is_deleted, termin_bezeichnung, termin_art, termin_typ, termin_datum, dauer_in_min):
-        self.termin_id = termin_id
+    def __init__(self, id, is_deleted, description, type_nr, type, date, dauer_in_min):
+        self.id = id
         self.is_deleted = is_deleted
-        self.termin_bezeichnung = termin_bezeichnung
-        self.termin_art = termin_art
-        self.termin_typ = termin_typ
-        self.termin_datum = datetime.strptime(termin_datum, "%Y-%m-%d")
+        self.description = description
+        self.type_nr = type_nr
+        self.type = type
+        self.date = datetime.strptime(date, "%Y-%m-%d")
         try:
             self.dauer_in_min = int(float(dauer_in_min))
         except ValueError as e:
@@ -53,7 +55,7 @@ class Appointment:
         self.employees.append(employee)
 
     @staticmethod
-    def create_termin_map(lines):
+    def create_appointment_map(lines):
         """Loads the appointments from a csv reader instance.
 
         This function will be called by the ``HDFS_data_loader.patient_data()`` function (lines is an iterator object).
@@ -75,19 +77,19 @@ class Appointment:
 
                 --> ``{ '36830543' : Appointment(), ... }``
         """
-        logging.debug("create_termin_map")
+        logging.debug("create_appointment_map")
         nr_malformed = 0
         nr_ok = 0
         appointments = dict()
-        for line in lines:
+        for line in tqdm(lines):
             if len(line) != 7:
                 nr_malformed += 1
                 continue
             else:
                 appointment = Appointment(*line)
-                appointments[appointment.termin_id] = appointment
+                appointments[appointment.id] = appointment
             nr_ok += 1
-        logging.info(f"{nr_ok} ok, {nr_malformed} appointments malformed")
+        logging.info(f"{nr_ok} appointments ok, {nr_malformed} appointments malformed")
         return appointments
 
     @staticmethod
@@ -118,7 +120,7 @@ class Appointment:
         nr_appointment_not_found = 0
         nr_case_not_found = 0
         nr_ok = 0
-        for line in lines:
+        for line in tqdm(lines):
             appointment_id = line[0]
             case_id = line[2]
             if appointments.get(appointment_id, None) is None:
@@ -129,5 +131,5 @@ class Appointment:
                 continue
             cases[case_id].add_appointment(appointments[appointment_id])
             nr_ok += 1
-        logging.info(f"{nr_ok} ok, {nr_case_not_found} cases not found, "
+        logging.info(f"{nr_ok} appointments linked to cases, {nr_case_not_found} cases not found, "
                      f"{nr_appointment_not_found} appointments not found")

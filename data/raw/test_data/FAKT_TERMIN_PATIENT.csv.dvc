@@ -1,7 +1,0 @@
-md5: dac0dfaa22ae90149189bda9917b56fb
-outs:
-- md5: b4bb2e649bdee4dea3edc87e95bf65ef
-  path: FAKT_TERMIN_PATIENT.csv
-  cache: true
-  metric: false
-  persist: false

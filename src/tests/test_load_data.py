@@ -9,12 +9,9 @@ from src.features.model import Case
 from src.features.model import Move
 
 from src.tests.conftest import get_hdfs_pipe
+from configuration.basic_configuration import configuration
 
-# Load configuration file
-config_reader = configparser.ConfigParser()
-config_reader.read('../vre/basic_config.ini')
-
-base_path = config_reader['PATHS']['test_data_dir']
+base_path = configuration['PATHS']['test_data_dir']
 
 patients_path = os.path.join(base_path, "V_DH_DIM_PATIENT_CUR.csv")
 cases_path = os.path.join(base_path, "V_LA_ISH_NFAL_NORM.csv")
@@ -40,7 +37,7 @@ def test_load_cases():
 
 
 def test_load_moves():
-    Move.add_move_to_case(
+    Move.add_moves_to_case(
         get_hdfs_pipe(moves_path),
         pytest.cases,
         pytest.rooms,

@@ -1,7 +1,0 @@
-md5: a2df19b3c793298592579ec91e220920
-outs:
-- md5: 3e1b55c198a345469a3f16c1e7da14fe
-  path: LA_ISH_NGPA.csv
-  cache: true
-  metric: false
-  persist: false

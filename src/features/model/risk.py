@@ -1,27 +1,33 @@
 import datetime
 
+import logging
+
+from tqdm import tqdm
+
 
 class Risk:
     """Models a ``Risk`` (i.e. Screening) object.
     """
 
-    def __init__(self, auftrag_nr, erfassung, entnahme, vorname, nachname, gbdat, pid,
-                 auftraggeber, kostenstelle, material_type, transport, resultat, analyse_methode, screening_context):
+    def __init__(self, order_nr, recording_date, sampling_date, first_name, surname, birth_date, patient_id,
+                 requester, cost_center, material_type, transport, result, analysis_method, screening_context):
         """Initiates a Risk (i.e. Screening) object.
         """
-        self.auftrag_nbr = auftrag_nr
-        self.erfassung = datetime.datetime.strptime(erfassung, '%Y-%m-%d').date() if erfassung != '' else None
-        self.entnahme = datetime.datetime.strptime(entnahme, '%Y-%m-%d').date() if entnahme != '' else None
-        self.vorname = vorname
-        self.nachname = nachname
-        self.geburtsdatum = gbdat
-        self.pid = pid
-        self.auftraggeber = auftraggeber
-        self.kostenstelle = kostenstelle
+        self.order_nr = order_nr
+        self.recording_date = datetime.datetime.strptime(recording_date, '%Y-%m-%d').date() if recording_date != '' else None
+        self.patient_id = patient_id
+        self.result = result
+
+        # not used
+        self.sampling_date = datetime.datetime.strptime(sampling_date, '%Y-%m-%d').date() if sampling_date != '' else None
+        self.first_name = first_name
+        self.surname = surname
+        self.birth_date = birth_date
+        self.requester = requester
+        self.cost_center = cost_center
         self.material_type = material_type
         self.transport = transport
-        self.result = resultat
-        self.analysis_method = analyse_methode
+        self.analysis_method = analysis_method
         self.screening_context = screening_context
 
     @staticmethod
@@ -124,7 +130,7 @@ class Risk:
         The ``screening_context`` attribute will either be set to *Klinisch* or ``NULL``. If set to *Klinisch*, this
         indicates that the screening was performed as a non-ordinary VRE screening such as testing a urine sample for
         the presence of VRE bacteria. These screenings will be added to the VRE model without further processing. The
-        same is true for VRE screening entries set to *Ausland*, which refer to patients having been transpored from
+        same is true for VRE screening entries set to *Ausland*, which refer to patients having been transported from
         abroad to Switzerland and being screened here upon hospital entry.
 
         For most screenings however, the ``screening_context`` will be set to NULL. In this case, the context must be
@@ -154,49 +160,29 @@ class Risk:
             lines (iterator):       iterator object of the to-be-read file `not` containing the header line
             patient_dict (dict):    Dictionary mapping patient ids to Patient() --> {'00008301433' : Patient(), ... }
         """
-        load_count = 0
-        for each_line in lines:
-            this_risk = Risk(*each_line)
+        move_wards = []
+        screening_wards = []
+        logging.debug("adding_all_screenings_to_patients")
+        nr_pat_not_found = 0
+        nr_ok = 0
+        for each_line in tqdm(lines):
+            risk = Risk(*each_line)
+            if risk.patient_id not in patient_dict:  # Check whether or not PID exists
+                nr_pat_not_found += 1
+                continue
 
-            # Check if this patient's PID exists in patient_dict
-            if this_risk.pid in patient_dict:
-                load_count += 1
+            potential_moves = patient_dict.get(risk.patient_id).get_moves_at_date(risk.recording_date)
+            if len(potential_moves) > 0:  # indicates at least one potential match
+                move_wards.append('+'.join([each_move.org_fa for each_move in potential_moves]))
+                patient_dict[risk.patient_id].add_risk(risk)
+                # screening_wards.append(this_risk.options)
+                nr_ok += 1
+                # print results to file
+                # with open('match_results.txt', 'w') as writefile:
+                #     for i in range(len(move_wards)):
+                #         writefile.write(f"{move_wards[i]}; {screening_wards[i]}\n")
+            else:
+                nr_pat_not_found += 1
+                continue
 
-                potential_moves = patient_dict[this_risk.pid].get_moves_at_date(this_risk.erfassung)
-                print(potential_moves)
-                # if load_count > 5:
-                #     break
-
-        #
-        #
-        #
-        # move_wards = []
-        # screening_wards = []
-        # logging.debug("adding_all_screenings_to_patients")
-        # nr_pat_not_found = 0
-        # nr_ok = 0
-        # for line in lines:
-        #     this_risk = Risk(*line)
-        #     if patient_dict.get(this_risk.pid) is None:  # Check whether or not PID exists
-        #         nr_pat_not_found += 1
-        #         continue
-        #     potential_moves = patient_dict.get(this_risk.pid).get_location_info(focus_date=this_risk.erfassung)
-        #     if len(potential_moves) > 0:  # indicates at least one potential match
-        #         move_wards.append('+'.join([each_move.org_fa for each_move in potential_moves]))
-        #         screening_wards.append(this_risk.options)
-        #         nr_ok += 1
-        # # print results to file
-        # with open('match_results.txt', 'w') as writefile:
-        #     for i in range(len(move_wards)):
-        #         writefile.write(f"{move_wards[i]}; {screening_wards[i]}\n")
-        #
-        #
-        #
-        #
-        #
-        #     #     patient_dict[this_risk.patient_id].add_risk(this_risk)
-        #     #     nr_ok += 1
-        #     # else:
-        #     #     nr_pat_not_found += 1
-        #     #     continue
-        # logging.info(f"{nr_ok} screenings added, {nr_pat_not_found} patients from VRE screening data not found.")
+        logging.info(f"{nr_ok} screenings added, {nr_pat_not_found} patients from screening data not found.")

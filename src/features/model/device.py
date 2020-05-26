@@ -6,15 +6,17 @@
 
 import logging
 
+from tqdm import tqdm
+
 
 class Device:
     """
     Models a device from RAP.
     """
 
-    def __init__(self, geraet_id, geraet_name):
-        self.geraet_id = geraet_id
-        self.geraet_name = geraet_name
+    def __init__(self, id, name):
+        self.id = id
+        self.name = name
 
     @staticmethod
     def create_device_map(lines):
@@ -41,9 +43,9 @@ class Device:
         """
         logging.debug("create_device_map")
         devices = dict()
-        for line in lines:
+        for line in tqdm(lines):
             device = Device(*line)
-            devices[device.geraet_id] = device
+            devices[device.id] = device
         logging.info(f"{len(devices)} devices created")
         return devices
 
@@ -74,7 +76,7 @@ class Device:
         nr_appointment_not_found = 0
         nr_device_not_found = 0
         nr_ok = 0
-        for line in lines:
+        for line in tqdm(lines):
             appointment_id = line[0]
             if appointments.get(appointment_id, None) is None:
                 nr_appointment_not_found += 1
@@ -85,5 +87,5 @@ class Device:
                 continue
             appointments[appointment_id].add_device(devices[device_id])
             nr_ok += 1
-        logging.info(f"{nr_ok} ok, {nr_appointment_not_found} appointments not found, "
+        logging.info(f"{nr_ok} devices linked to appointments, {nr_appointment_not_found} appointments not found, "
                      f"{nr_device_not_found} devices not found")

@@ -1,7 +1,0 @@
-md5: fedfd13300a40e76d77b77349e3f46dd
-outs:
-- md5: b92110cf62b0f2885ec3b4ccf8c6cd6d
-  path: FAKT_TERMIN_MITARBEITER.csv
-  cache: true
-  metric: false
-  persist: false

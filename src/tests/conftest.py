@@ -20,13 +20,11 @@ from src.features.model import Employee
 from src.features.model import Room
 from src.features.model import Partner
 from src.features.model import Care
-from src.features.model import ICD
+from src.features.model import ICDCode
 
-# Load configuration file
-config_reader = configparser.ConfigParser()
-config_reader.read('../vre/basic_config.ini')
+from configuration.basic_configuration import configuration
 
-base_path = config_reader['PATHS']['test_data_dir']  # Must point to the directory containing all CSV testfiles - these are patient data and may NOT be in the repo !
+base_path = configuration['PATHS']['test_data_dir']  # Must point to the directory containing all CSV testfiles - these are patient data and may NOT be in the repo !
 
 patients_path = os.path.join(base_path, "V_DH_DIM_PATIENT_CUR.csv")
 cases_path = os.path.join(base_path, "V_LA_ISH_NFAL_NORM.csv")
@@ -51,7 +49,7 @@ icd_path = os.path.join(base_path, "LA_ISH_NDIA_NORM.csv")
 
 def get_hdfs_pipe(path):
     encoding = "iso-8859-1"
-    lines = csv.reader(open(path, 'r'), delimiter=config_reader['DELIMITERS']['csv_sep'])
+    lines = csv.reader(open(path, 'r'), delimiter=configuration['DELIMITERS']['csv_sep'])
     next(lines, None)  # skip header
     return lines
 
@@ -67,7 +65,7 @@ def patient_data():
     partners = Partner.create_partner_map(get_hdfs_pipe(partner_path))
     Partner.add_partners_to_cases(get_hdfs_pipe(partner_case_path), cases, partners)
 
-    Move.add_move_to_case(
+    Move.add_moves_to_case(
         get_hdfs_pipe(moves_path),
         cases,
         rooms,
@@ -78,27 +76,27 @@ def patient_data():
     Risk.add_deleted_risk_to_patient(get_hdfs_pipe(deleted_risks_path), patients)
 
     drugs = Medication.create_drug_map(get_hdfs_pipe(medication_path))
-    Medication.add_medication_to_case(get_hdfs_pipe(medication_path), cases)
+    Medication.add_medications_to_case(get_hdfs_pipe(medication_path), cases)
 
-    chops = Chop.create_chop_dict(get_hdfs_pipe(chop_path))
-    Surgery.add_surgery_to_case(get_hdfs_pipe(surgery_path), cases, chops)
+    chops = Chop.create_chop_map(get_hdfs_pipe(chop_path))
+    Surgery.add_surgeries_to_case(get_hdfs_pipe(surgery_path), cases, chops)
 
-    appointments = Appointment.create_termin_map(get_hdfs_pipe(appointments_path))
+    appointments = Appointment.create_appointment_map(get_hdfs_pipe(appointments_path))
     Appointment.add_appointment_to_case(get_hdfs_pipe(appointment_patient_path), cases, appointments)
 
     devices = Device.create_device_map(get_hdfs_pipe(devices_path))
     Device.add_device_to_appointment(get_hdfs_pipe(device_appointment_path), appointments, devices)
 
     employees = Employee.create_employee_map(get_hdfs_pipe(appointment_employee_path))
-    Employee.add_employee_to_appointment(get_hdfs_pipe(appointment_employee_path), appointments, employees)
+    Employee.add_employees_to_appointment(get_hdfs_pipe(appointment_employee_path), appointments, employees)
 
-    Care.add_care_to_case(get_hdfs_pipe(tacs_path), cases, employees)
+    Care.add_care_entries_to_case(get_hdfs_pipe(tacs_path), cases, employees)
 
     room_id_map = Room.create_room_id_map(get_hdfs_pipe(rooms_path))
-    Room.add_room_to_appointment(get_hdfs_pipe(room_appointment_path), appointments, room_id_map, rooms)
+    Room.add_rooms_to_appointment(get_hdfs_pipe(room_appointment_path), appointments, room_id_map, rooms)
 
-    icd_codes = ICD.create_icd_dict(get_hdfs_pipe(icd_path))
-    ICD.add_icd_to_case(get_hdfs_pipe(icd_path), cases)
+    icd_codes = ICDCode.create_icd_code_map(get_hdfs_pipe(icd_path))
+    ICDCode.add_icd_codes_to_case(get_hdfs_pipe(icd_path), cases)
 
     return dict(
         {

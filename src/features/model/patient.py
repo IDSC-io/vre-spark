@@ -2,19 +2,22 @@ import datetime
 import logging
 
 from dateutil.relativedelta import relativedelta
+from tqdm import tqdm
+
+from src.features.model.data_model_constants import ICUs
 
 
 class Patient:
-    def __init__(self, patient_id, geschlecht, geburtsdatum, plz, wohnort, kanton, sprache):
+    def __init__(self, patient_id, gender, birth_date, zip_code, place_of_residence, canton, language):
         self.patient_id = patient_id
-        self.geschlecht = geschlecht
-        self.geburtsdatum = None
-        if geburtsdatum:
-            self.geburtsdatum = datetime.datetime.strptime(geburtsdatum, "%Y-%m-%d")
-        self.plz = plz
-        self.wohnort = wohnort
-        self.kanton = kanton
-        self.sprache = sprache
+        self.gender = gender
+        self.birth_date = None
+        if birth_date:
+            self.birth_date = datetime.datetime.strptime(birth_date, "%Y-%m-%d")
+        self.zip_code = zip_code
+        self.place_of_residence = place_of_residence
+        self.canton = canton
+        self.language = language
         self.cases = dict()
         self.risks = dict()  # dictionary mapping dt.dt() objects to Risk() objects, indicating at which datetime a particular VRE code has been entered in one of the Insel systems
 
@@ -37,12 +40,12 @@ class Patient:
         :param risk:
         :return:
         """
-        self.risks[risk.entry_date] = risk
+        self.risks[risk.recording_date] = risk
 
     def has_risk(self, code_text_list=None):
         """
         Returns true if there if at least one of the risk_code, risk_text tuples are found in the Patient's risk dict.
-        risk_text can be none if the text does not matter. False if none of the risks is found.
+        risk_text can be none if the text does not matter. False if none of the risks are found.
         :param code_text_list:
         :return:
         """
@@ -53,7 +56,7 @@ class Patient:
             if self.risks.get(code_text[0], None) is not None:
                 if (
                         code_text[1] is None
-                        or self.risks[code_text[0]].kz_txt == code_text[1]
+                        or self.risks[code_text[0]].description == code_text[1]
                 ):
                     return True
         return False
@@ -72,7 +75,7 @@ class Patient:
 
         for code_text in code_text_list:
             if self.risks.get(code_text[0], None) is not None:
-                if code_text[1] is None or self.risks[code_text[0]].kz_txt == code_text[1]:
+                if code_text[1] is None or self.risks[code_text[0]].description == code_text[1]:
                     return self.risks[code_text[0]].er_dt
         return None
 
@@ -85,13 +88,13 @@ class Patient:
         dt = self.get_relevant_date()
         if dt is None:
             return None
-        if self.geburtsdatum is None:
+        if self.birth_date is None:
             return None
 
         return (
                 dt.year
-                - self.geburtsdatum.year
-                - ((dt.month, dt.day) < (self.geburtsdatum.month, self.geburtsdatum.day))
+                - self.birth_date.year
+                - ((dt.month, dt.day) < (self.birth_date.month, self.birth_date.day))
         )
 
     def get_relevant_date(self, dt=datetime.datetime.now().date()):
@@ -125,7 +128,7 @@ class Patient:
         relevant_case = None
         for case in self.cases.values():
             if (
-                    case.is_stationary()
+                    case.is_inpatient_case()
                     and case.open_before_or_at_date(relevant_dt)
                     and case.closed_after_or_at_date(since)
             ):
@@ -172,7 +175,7 @@ class Patient:
                 rooms.add(move.room.name)
         # appointments from RAP
         for appointment in case.appointments:
-            if appointment.termin_datum < dt:
+            if appointment.date < dt:
                 for room in appointment.rooms:
                     rooms.add(room.name)
         return rooms
@@ -188,13 +191,13 @@ class Patient:
             return False
         moves = case.get_moves_before_dt(dt)
         for move in moves:
-            if move.org_pf in orgs:
+            if move.ward in orgs:
                 return True
         return False
 
     def get_nr_cases(self, delta=relativedelta(years=1)):
         """
-        How many SAP cases (stationary and ambulatory) did the patient have in one year (or delta provided) before the relevant date.
+        How many SAP cases (inpatient and outpatient) did the patient have in one year (or delta provided) before the relevant date.
         (moves_start is before relevant_date and moves_end after relevant_date - delta
         :return: int
         """
@@ -235,7 +238,7 @@ class Patient:
 
     def get_chop_codes(self):
         """
-        Which chop codes was the patient exposed to during the relevant case, before the relevant date.
+        Which chop codes (surgeries) was the patient exposed to during the relevant case, before the relevant date.
         :return: Set of Chops, None if no relevant case
         """
         (case, dt) = self.get_relevant_case_and_date()
@@ -243,7 +246,7 @@ class Patient:
             return None
         relevant_chops = set()
         for surgery in case.surgeries:
-            if surgery.bgd_op <= dt:
+            if surgery.date <= dt:
                 relevant_chops.add(surgery.chop)
         return relevant_chops
 
@@ -269,7 +272,7 @@ class Patient:
                 dispforms.add(medication.drug_dispform)
         return dispforms
 
-    def get_employees(self):
+    def get_involved_employees(self):
         """
         employee IDS and duration of care or appointment of employees that were involved in appointments or care
         during the relevant case, before the relevant date.
@@ -280,23 +283,23 @@ class Patient:
             return None
         employees = dict()
         for appointment in case.appointments:
-            if appointment.termin_datum < dt:
+            if appointment.date < dt:
                 for employee in appointment.employees:
-                    employees[employee.mitarbeiter_id] = (
+                    employees[employee.id] = (
                         appointment.dauer_in_min
-                        if employees.get(employee.mitarbeiter_id, None) is None
-                        else employees[employee.mitarbeiter_id] + appointment.dauer_in_min
+                        if employees.get(employee.id, None) is None
+                        else employees[employee.id] + appointment.dauer_in_min
                     )
         for care in case.cares:
-            if care.dt < dt:
-                employees[care.employee.mitarbeiter_id] = (
+            if care.date < dt:
+                employees[care.employee.id] = (
                     care.duration_in_minutes
-                    if employees.get(care.employee.mitarbeiter_id, None) is None
-                    else employees[care.employee.mitarbeiter_id] + care.duration_in_minutes
+                    if employees.get(care.employee.id, None) is None
+                    else employees[care.employee.id] + care.duration_in_minutes
                 )
         return employees
 
-    def get_devices(self):
+    def get_involved_devices(self):
         """
         Names of devices that were used during the relevant case, before the relevant date.
         :return: set of device names, None if no relevant case
@@ -306,12 +309,12 @@ class Patient:
             return None
         device_names = set()
         for appointment in case.appointments:
-            if appointment.termin_datum < dt:
+            if appointment.date < dt:
                 for device in appointment.devices:
-                    device_names.add(device.geraet_name)
+                    device_names.add(device.name)
         return device_names
 
-    def get_partner(self):
+    def get_referring_partners(self):
         """
         Returns the referring partner(s) for the relevant case.
         :return: set of Partner
@@ -321,7 +324,7 @@ class Patient:
             return None
         return case.referrers
 
-    def get_label(self):
+    def get_screening_label(self):
         """
         All patients are categorized with the following labels:
         -1: no relevant case
@@ -343,7 +346,7 @@ class Patient:
                 label = 3
         return label
 
-    def get_features(self):
+    def get_feature_vector(self):
         """
         Creates the sparse feature vector for this patient.
 
@@ -360,30 +363,20 @@ class Patient:
         features["nr_cases"] = self.get_nr_cases()
 
         features["age"] = self.get_age()
-        features["gender"] = self.geschlecht
-        features["language"] = self.sprache
-        features["plz"] = self.plz
-        features["kanton"] = self.kanton
+        features["gender"] = self.gender
+        features["language"] = self.language
+        features["zip_code"] = self.zip_code
+        features["canton"] = self.canton
 
         features["surgery"] = self.has_surgery()
 
         features["icu"] = self.has_icu_stay(  # True if the patient has spent time in one of the ICU units, False otherwise
-            [
-                "IN E GR",
-                "INEBL 1",
-                "INEBL 2",
-                "INEGE 1",
-                "INEGE 2",
-                "E108-09",
-                "E116",
-                "E113-15",
-                "E120-21",
-            ]
+            ICUs
         )
 
         antibiotic_exposure = self.get_antibiotic_exposure()
-        for antibiotic_atc, days_administred in antibiotic_exposure.items():
-            features["antibiotic=" + antibiotic_atc] = len(days_administred)
+        for antibiotic_atc, days_administered in antibiotic_exposure.items():
+            features["antibiotic=" + antibiotic_atc] = len(days_administered)
 
         dispforms = self.get_dispform()
         if dispforms is not None:
@@ -399,11 +392,11 @@ class Patient:
         for room in stat_rooms:
             features["room=" + room] = True
 
-        stat_employees = self.get_employees()
+        stat_employees = self.get_involved_employees()
         for employee_id, employee_duration in stat_employees.items():
             features["employee=" + employee_id] = employee_duration
 
-        stat_devices = self.get_devices()
+        stat_devices = self.get_involved_devices()
         for device in stat_devices:
             features["device=" + device] = True
 
@@ -438,11 +431,11 @@ class Patient:
 
         for each_case in self.cases.values():
             for each_move in each_case.moves.values():
-                if comparison_type == 'exact' and (each_move.bwi_dt is None or each_move.bwe_dt is None):
+                if comparison_type == 'exact' and (each_move.from_datetime is None or each_move.to_datetime is None):
                     continue
                 # bwi_dt_date = datetime.date(each_move.bwi_dt.day, each_move.bwi_dt.month, each_move.bwi_dt.day)
                 # bwe_dt_date = datetime.date(each_move.bwe_dt.day, each_move.bwe_dt.month, each_move.bwe_dt.day)
-                if each_move.bwi_dt.date() <= focus_date <= each_move.bwe_dt.date():
+                if each_move.from_datetime.date() <= focus_date <= each_move.to_datetime.date():
                     location_moves.append(each_move)
 
         return tuple(location_moves)
@@ -467,8 +460,8 @@ class Patient:
             for each_move in each_case.moves.values():
                 # print(each_move.bwe_dt)
                 # each_move is a dictionary of the form {1: Move(), 2: Move(),...}
-                move_start = each_move.bwi_dt.date() if each_move.bwi_dt is not None else None
-                move_end = each_move.bwe_dt.date() if each_move.bwe_dt is not None else None
+                move_start = each_move.from_datetime.date() if each_move.from_datetime is not None else None
+                move_end = each_move.to_datetime.date() if each_move.to_datetime is not None else None
                 if move_start is None or move_end is None:
                     continue
                 else:
@@ -494,7 +487,7 @@ class Patient:
         logging.debug("create_patient_dict")
         import_count = 0
         patients = dict()
-        for line in lines:
+        for line in tqdm(lines):
             patient = Patient(*line)
             patients[patient.patient_id] = patient
             import_count += 1

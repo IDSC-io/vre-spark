@@ -7,4 +7,4 @@ def test_add_care_to_case(patient_data):
 def test_care_in_employees(patient_data):
     for case in patient_data["cases"].values():
         for care in case.cares:
-            assert care.employee.mitarbeiter_id in list(patient_data["employees"].keys())
+            assert care.employee.id in list(patient_data["employees"].keys())

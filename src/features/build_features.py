@@ -8,6 +8,7 @@ import click
 from src.features.dataloader import DataLoader
 from src.features.feature_extractor import FeatureExtractor
 import logging
+from configuration.basic_configuration import configuration
 
 
 @click.command()
@@ -19,12 +20,6 @@ def main():
         cleaned data ready to be analyzed (saved in ../processed).
     """
     logger = logging.getLogger(__name__)
-
-    # Load configuration file
-    this_filepath = pathlib.Path(os.path.realpath(__file__)).parent
-
-    config_reader = configparser.ConfigParser()
-    config_reader.read(pathlib.Path(this_filepath, '../../configuration/basic_config.ini'))
 
     #####################################
     # Initiate data loader
@@ -43,7 +38,7 @@ def main():
 
     # Export feature vector
     logging.info("exporting feature vector")
-    model_creator.export_csv(features, labels, dates, v, config_reader['PATHS']['csv_export_path'])
+    model_creator.export_csv(features, labels, dates, v, configuration['PATHS']['csv_export_path'])
 
 
 if __name__ == '__main__':

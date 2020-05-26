@@ -1,6 +1,8 @@
 import logging
 from datetime import datetime
 
+from tqdm import tqdm
+
 
 class Surgery:
     """
@@ -9,21 +11,23 @@ class Surgery:
     [LFDBEW],[ICPMK],[ICPML],[ANZOP],[BGDOP],[LSLOK],[STORN],[FALNR],[ORGPF]
     """
 
-    def __init__(self, LFDBEW, ICPMK, ICPML, ANZOP, BGDOP, LSLOK, STORN, FALNR, ORGPF):
-        self.bgd_op = datetime.strptime(BGDOP, "%Y-%m-%d")  # date of surgery
-        self.lfd_bew = LFDBEW
-        self.icpmk = ICPMK  # catalog ID
-        self.icpml = "Z" + ICPML  # chop code (comes without leading Z!)
-        self.anzop = ANZOP  # ??
-        self.lslok = LSLOK  # ??
-        self.fall_nr = FALNR  # case ID in SAP!
-        self.storn = STORN  # cancelled ("" or "X")?
-        self.org_pf = ORGPF  # ward
+    def __init__(self, LFDBEW, catalog_id, chop_code, ANZOP, date, LSLOK, cancelled, case_id, ward):
+        self.date = datetime.strptime(date, "%Y-%m-%d")  # date of surgery
+        self.catalog_id = catalog_id  # catalog ID
+        self.chop_code = "Z" + chop_code  # chop code (comes without leading Z!)
+        self.case_id = case_id  # case ID in SAP!
+        self.cancelled = cancelled  # cancelled ("" or "X")?
+        self.ward = ward  # ward
 
         self.chop = None
 
+        # unused fields
+        self.lfd_bew = LFDBEW
+        self.anzop = ANZOP  # ??
+        self.lslok = LSLOK  # ??
+
     @staticmethod
-    def add_surgery_to_case(lines, cases, chops):
+    def add_surgeries_to_case(lines, cases, chops):
         """
         Creates Surgery() objects from a csv reader, and performs the following:
         --> Finds the CHOP code in the chops dict (given the chop code and catalog id, which is read from the csv)
@@ -40,15 +44,15 @@ class Surgery:
         logging.debug("add_surgery_to_case")
         nr_chop_not_found = 0
         nr_case_not_found = 0
-        nr_surgery_storniert = 0
+        nr_surgery_cancelled = 0
         nr_ok = 0
-        for line in lines:
+        for line in tqdm(lines):
             surgery = Surgery(*line)
-            if surgery.storn == 'X':  # ignore 'stornierte' surgeries
-                nr_surgery_storniert += 1
+            if surgery.cancelled == 'X':  # ignore 'cancellede' surgeries
+                nr_surgery_cancelled += 1
                 continue
-            chop = chops.get(surgery.icpml + "_" + surgery.icpmk, None)
-            case = cases.get(surgery.fall_nr, None)
+            chop = chops.get(surgery.chop_code + "_" + surgery.catalog_id, None)
+            case = cases.get(surgery.case_id, None)
             if chop is not None:
                 surgery.chop = chop
             else:
@@ -61,4 +65,4 @@ class Surgery:
                 nr_case_not_found += 1
                 continue
             nr_ok += 1
-        logging.info(f"{nr_ok} ok, {nr_case_not_found} cases not found, {nr_chop_not_found} chop codes not found, {nr_surgery_storniert} surgeries storniert")
+        logging.info(f"{nr_ok} surgeries ok, {nr_case_not_found} cases not found, {nr_chop_not_found} chop codes not found, {nr_surgery_cancelled} surgeries cancelled")

@@ -7,6 +7,8 @@
 import logging
 from datetime import datetime
 
+from tqdm import tqdm
+
 from src.features.model import Employee
 
 
@@ -16,27 +18,27 @@ class Care:
 
     def __init__(
             self,
-            patient_patientid,
-            patient_typ,
+            patient_id,
+            patient_type,
             patient_status,
-            fall_nummer,
-            fall_typ,
-            fall_status,
-            datum_betreuung,
-            dauer_betreuung_in_min,
-            mitarbeiter_personalnummer,
-            mitarbeiter_anstellungsnummer,
-            mitarbeiter_login,
+            case_id,
+            case_type,
+            case_status,
+            date,
+            duration_in_minutes,
+            employee_nr,
+            employee_employment_nr,
+            employee_login,
             batch_run_id,
     ):
-        self.patient_id = patient_patientid
-        self.case_id = fall_nummer
+        self.patient_id = patient_id
+        self.case_id = case_id
         try:
-            self.dt = datetime.strptime(datum_betreuung, "%Y-%m-%d %H:%M:%S")
+            self.date = datetime.strptime(date, "%Y-%m-%d %H:%M:%S")
         except ValueError as e:
-            self.dt = datetime.strptime(datum_betreuung, "%Y-%m-%d %H:%M:%S")
-        self.duration_in_minutes = int(dauer_betreuung_in_min)
-        self.employee_nr = mitarbeiter_personalnummer
+            self.date = datetime.strptime(date, "%Y-%m-%d %H:%M:%S")
+        self.duration_in_minutes = int(duration_in_minutes)
+        self.employee_nr = employee_nr
 
         self.employee = None
 
@@ -52,7 +54,7 @@ class Care:
         self.employee = employee
 
     @staticmethod
-    def add_care_to_case(lines, cases, employees):
+    def add_care_entries_to_case(lines, cases, employees):
         """Adds the entries from TACS as instances of Care() objects to the respective Case().
 
         This function will be called by the HDFS_data_loader.patient_data() function (lines is an iterator object).
@@ -78,7 +80,7 @@ class Care:
         nr_case_not_found = 0
         nr_employee_created = 0
         nr_employee_found = 0
-        for line in lines:
+        for line in tqdm(lines):
             care = Care(*line)
 
             # discard if we don't have the case
@@ -95,7 +97,7 @@ class Care:
                 nr_employee_created += 1
             else:
                 nr_employee_found += 1
-            employees[employee.mitarbeiter_id] = employee
+            employees[employee.id] = employee
 
             care.add_employee(employee)
         logging.info(f"{nr_case_not_found} cases not found, "

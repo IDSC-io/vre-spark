@@ -1,7 +1,0 @@
-md5: cb5844cc5473e4bf8937a7c16a44f76a
-outs:
-- md5: 8a888ae04e6d7f60f408da9a7fd47fe9
-  path: LA_CHOP_FLAT.csv
-  cache: true
-  metric: false
-  persist: false

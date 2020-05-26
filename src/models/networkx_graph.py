@@ -31,6 +31,8 @@ import random
 from collections import Counter
 import pathlib
 
+from tqdm import tqdm
+
 
 def create_model_snapshots(orig_model, snapshot_dt_list):
     """Creates model snapshots based on the datetime.datetime() values provided in snapshot_dt_list.
@@ -284,9 +286,8 @@ class SurfaceModel:
                 logging.warning('Empty patient identifier - node is skipped')
             self.patient_add_warnings += 1
             return
-        risk_codes = [each_risk.screen_code for each_risk in risk_dict.values()]
-        self.S_GRAPH.add_node(str(string_id), type='Patient', risk=risk_dict, vre_status='pos'
-        if 32 in risk_codes else 'neg')
+        risk_codes = [each_risk.result for each_risk in risk_dict.values()]
+        self.S_GRAPH.add_node(str(string_id), type='Patient', risk=risk_dict, vre_status='pos' if "pos" in risk_codes else 'neg')
         self.Nodes['Patient'].add(string_id)
 
     def new_room_node(self, string_id, ward=None, room_id=None, warn_log=False):
@@ -535,7 +536,7 @@ class SurfaceModel:
         logging.info(f'--> Adding shortest path statistics considering {len(target_nodes)} nodes yielding '
                      f'{len(node_combinations)} combinations.')
         logging.info(f"Approximate set to {approximate}, maximum path length set to {max_path_length}")
-        for count, combo_tuple in enumerate(node_combinations):
+        for count, combo_tuple in enumerate(tqdm(node_combinations, total=len(node_combinations))):
             if count % 100 == 0:
                 logging.info(f" <> Processed {count} combinations")
             if nx.has_path(self.S_GRAPH, combo_tuple[0], combo_tuple[1]) is False:
@@ -690,10 +691,10 @@ class SurfaceModel:
         logging.info('------------------------------')
 
         # Graph connectivity
-        logging.info(f"--> Graph connected: {nx.is_connected(self.S_GRAPH)}")
+        #logging.info(f"--> Graph connected: {nx.is_connected(self.S_GRAPH)}")
         logging.info(f"###############################################################")
 
-    def add_network_data(self, patient_dict, subset='relevant_case', snapshot=datetime.datetime.now()):
+    def add_network_data(self, patient_dict, case_subset='relevant_case', patient_subset=None, snapshot=datetime.datetime.now()):
         """Adds nodes and edges data to the network.
 
         Nodes and edges are added based on the data in patient_dict according to the subset specified (see description
@@ -702,12 +703,14 @@ class SurfaceModel:
         Args:
             patient_dict (dict):    Dictionary containing all data required to build the graph. Please refer to
                                     "Patient_Data_Overview.dov" for details on this argument.
-            subset (str):           Subset of data to be used, can be one of:
+            case_subset (str):           Subset of data to be used, can be one of:
 
                                     - ``relevant_case`` :math:`\\longrightarrow` includes patients with a relevant case
                                       (regardless of involvement in VRE screenings) and the data of relevant cases
                                     - ``risk`` :math:`\\longrightarrow` includes patients with an associated risk (i.e.
                                       at least one VRE screening) and data of relevant cases
+
+            patient_subset (list)   A subset of patients to model in network.
 
             snapshot (dt.dt()):     datetime.datetime() object specifying to which point in time data are to be
                                     imported. Defaulting to the time of execution, this parameter can be used to create
@@ -718,7 +721,7 @@ class SurfaceModel:
                                     *remove_isolated_nodes()*, these isolated nodes will then be stripped from the
                                     network.
         """
-        logging.info(f"Filter set to: {subset}")
+        logging.info(f"Filter set to: {case_subset}")
         logging.info(f"Snapshot created at: {snapshot.strftime('%d.%m.%Y %H:%M:%S')}")
         self.snapshot_dt = snapshot
         #############################################################
@@ -739,41 +742,44 @@ class SurfaceModel:
         nbr_device_emp = 0  # number of Device-Employee edges
         nbr_emp_room = 0  # number of Employee-Room edges
 
-        for each_pat in patient_dict['patients'].values():
+        for patient in tqdm(patient_dict['patients'].values(), total=len(patient_dict['patients'].values())):
             # Apply subset filter here --> relevant_case
-            if subset == 'relevant_case':
-                pat_rel_case = each_pat.get_relevant_case()  # Returns a Case() object or None
-                if pat_rel_case is None:
+            if case_subset == 'relevant_case':
+                if patient_subset is not None and patient.patient_id not in patient_subset:
+                    continue
+
+                pat_relevant_case = patient.get_relevant_case()  # Returns a Case() object or None
+                if pat_relevant_case is None:
                     nbr_pat_no_rel_case += 1
                     continue
                 nbr_pat_rel_case += 1
-                this_pat_id = pat_rel_case.patient.patient_id
+                this_pat_id = pat_relevant_case.patient.patient_id
                 if this_pat_id == '':
                     logging.warning('Encountered empty patient ID !')
                     continue
                 # Add patient node
-                self.new_patient_node(str(this_pat_id), risk_dict=each_pat.risks)
+                self.new_patient_node(str(this_pat_id), risk_dict=patient.risks)
                 #########################################
                 # --> Step 1: Add rooms based on Move() objects to the network
                 #########################################
-                for each_move in pat_rel_case.moves.values():  # iterate over all moves in a Patient's relevant case
-                    zimmer = each_move.zimmr  # will either be the room's name or None
-                    this_ward = each_move.ward.name  # will either be the ward's name or None
-                    if zimmer is None:  # --> If room is not identified, add it to the 'generic' Room node "Room_Unknown"
+                for move in pat_relevant_case.moves.values():  # iterate over all moves in a Patient's relevant case
+                    room_id = move.room_id  # will either be the room's name or None
+                    ward_name = move.ward.name  # will either be the ward's name or None
+                    if room_id is None:  # --> If room is not identified, add it to the 'generic' Room node "Room_Unknown"
                         if "Room_Unknown" not in self.S_GRAPH.nodes:
                             self.new_room_node('Room_Unknown')
                         this_room = 'Room_Unknown'
                         nbr_room_no_id += 1
                     else:  # --> room is identified
-                        this_room = each_move.zimmr
+                        this_room = move.room_id
                         # Add room node - this will only overwrite attributes if node is already present
                         # --> does not matter since room_id and ward are the same
-                        self.new_room_node(each_move.zimmr, ward=this_ward, room_id=each_move.room.get_ids()
-                        if each_move.room is not None else None)
+                        self.new_room_node(move.room_id, ward=ward_name, room_id=move.room.get_ids()
+                        if move.room is not None else None)
                         # .get_ids() will return a '@'-delimited list of [room_id]_[system] entries, or None
                         nbr_room_id += 1
                     # Add Patient-Room edge if it's within scope of the current snapshot
-                    edge_dict = {'from': each_move.bwi_dt, 'to': each_move.bwe_dt,
+                    edge_dict = {'from': move.from_datetime, 'to': move.to_datetime,
                                  'type': 'Patient-Room', 'origin': 'Move'}
                     if edge_dict['to'] < snapshot:
                         self.new_edge(str(this_pat_id), 'Patient', this_room, 'Room', att_dict=edge_dict)
@@ -789,10 +795,10 @@ class SurfaceModel:
                 #         --> Device-Room
                 #         (Remember: nodes in edge specifications are sorted alphabetically)
                 #########################################
-                for each_app in pat_rel_case.appointments:
+                for each_app in pat_relevant_case.appointments:
                     nbr_app += 1
-                    duration_from = each_app.termin_datum
-                    duration_to = each_app.termin_datum + datetime.timedelta(hours=each_app.dauer_in_min / 60)
+                    duration_from = each_app.date
+                    duration_to = each_app.date + datetime.timedelta(hours=each_app.dauer_in_min / 60)
                     edge_attributes = {'from': duration_from, 'to': duration_to, 'origin': 'Appointment'}
                     # 'type' key will be added during the creation of edges, see below
                     device_list = []
@@ -803,12 +809,12 @@ class SurfaceModel:
                     ####################################
                     # --> Add device nodes
                     for each_device in each_app.devices:
-                        self.new_device_node(str(each_device.geraet_id), name=str(each_device.geraet_name))
-                        device_list.append(str(each_device.geraet_id))
+                        self.new_device_node(str(each_device.id), name=str(each_device.name))
+                        device_list.append(str(each_device.id))
                     # --> Add employee nodes
                     for each_emp in each_app.employees:
-                        self.new_employee_node(str(each_emp.mitarbeiter_id))
-                        employee_list.append(str(each_emp.mitarbeiter_id))
+                        self.new_employee_node(str(each_emp.id))
+                        employee_list.append(str(each_emp.id))
                     # --> Add Room nodes
                     for each_room in each_app.rooms:
                         self.new_room_node(string_id=each_room.name, ward=each_room.ward.name if each_room.ward is not None else None, room_id=each_room.get_ids())
@@ -1102,7 +1108,11 @@ class SurfaceModel:
             else:
                 write_keys = [key for key in node_tuple[1] if key in attribute_subset]
             write_dict = {node_attr: node_tuple[1][node_attr] for node_attr in write_keys}
-            json.dump(write_dict, open(os.path.join(exact_path, self.parse_filename(node_tuple[0]) + '.json'), 'w'))
+            try:
+                json.dump(write_dict, open(os.path.join(exact_path, self.parse_filename(node_tuple[0]) + '.json'), 'w'))
+            except TypeError as e:
+                print(e)
+                print(str(write_dict))  # TODO: the json dumper can not write risk objects
             write_count += 1
         # Write to log and exit
         logging.info(f"Successfully wrote all nodes to file!")

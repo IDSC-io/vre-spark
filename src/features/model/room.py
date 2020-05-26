@@ -1,6 +1,8 @@
 import logging
 from datetime import datetime
 
+from tqdm import tqdm
+
 from src.features.model import Bed
 
 
@@ -30,11 +32,11 @@ class Room:
         :return:
         """
         self.moves.append(move)
-        if move.bett is not None and move.bett is not "":
-            if self.beds.get(move.bett, None) is None:
-                b = Bed(move.bett)
-                self.beds[move.bett] = b
-            self.beds[move.bett].add_move(move)
+        if move.bed is not None and move.bed is not "":
+            if self.beds.get(move.bed, None) is None:
+                b = Bed(move.bed)
+                self.beds[move.bed] = b
+            self.beds[move.bed].add_move(move)
 
     def add_id(self, id, system):
         """
@@ -82,8 +84,8 @@ class Room:
         """
         overlapping_moves = []
         for move in self.moves:
-            e_dt = move.bwe_dt if move.bwe_dt is not None else datetime.now()
-            if e_dt >= start_dt and move.bwi_dt <= end_dt:
+            e_dt = move.to_datetime if move.to_datetime is not None else datetime.now()
+            if e_dt >= start_dt and move.from_datetime <= end_dt:
                 overlapping_moves.append(move)
         return overlapping_moves
 
@@ -119,7 +121,7 @@ class Room:
         return room_id_map
 
     @staticmethod
-    def add_room_to_appointment(lines, appointments, rooms):
+    def add_rooms_to_appointment(lines, appointments, rooms):
         """
         Reads room data from the csv file and adds the created Room() to an Appointment() in appointments and vice versa.
         This function will be called by the HDFS_data_loader.patient_data() function (lines is an iterator object). The underlying table is structured as follows:
@@ -135,7 +137,7 @@ class Room:
         nr_appointments_not_found = 0
         nr_rooms_not_found = 0
         nr_ok = 0
-        for line in lines:
+        for line in tqdm(lines):
             appointment_id = line[0]
             room_id = line[1]
             room_name = line[2]

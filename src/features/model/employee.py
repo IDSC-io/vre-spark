@@ -6,13 +6,15 @@
 
 import logging
 
+from tqdm import tqdm
+
 
 class Employee:
     """Models an employee (doctor, nurse, etc) from RAP.
     """
 
-    def __init__(self, mitarbeiter_id):
-        self.mitarbeiter_id = mitarbeiter_id
+    def __init__(self, id):
+        self.id = id
 
     @staticmethod
     def create_employee_map(lines):
@@ -40,14 +42,14 @@ class Employee:
         """
         logging.debug("create_employee_map")
         employee_dict = dict()
-        for line in lines:
+        for line in tqdm(lines):
             employee = line[1]
             employee_dict[employee] = Employee(employee)
         logging.info(f"{len(employee_dict)} employees created")
         return employee_dict
 
     @staticmethod
-    def add_employee_to_appointment(lines, appointments, employees):
+    def add_employees_to_appointment(lines, appointments, employees):
         """Adds Employee() in employees to an Appointment().
 
         This function will be called by the HDFS_data_loader.patient_data() function (lines is an iterator object).
@@ -67,7 +69,7 @@ class Employee:
         nr_employee_not_found = 0
         nr_appointment_not_found = 0
         nr_ok = 0
-        for line in lines:
+        for line in tqdm(lines):
             employee_id = line[1]
             appointment_id = line[0]
             if appointments.get(appointment_id, None) is None:
@@ -78,5 +80,5 @@ class Employee:
                 continue
             appointments[appointment_id].add_employee(employees[employee_id])
             nr_ok += 1
-        logging.info(f"{nr_ok} ok, {nr_appointment_not_found} appointments not found, "
+        logging.info(f"{nr_ok} employees linked to appointment, {nr_appointment_not_found} appointments not found, "
                      f"{nr_employee_not_found} employees not found")

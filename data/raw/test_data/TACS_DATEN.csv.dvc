@@ -1,7 +1,0 @@
-md5: 50bae757c3d250271bed987bd0d9c6b6
-outs:
-- md5: 901af339675b7cefd0744d1117a95a7d
-  path: TACS_DATEN.csv
-  cache: true
-  metric: false
-  persist: false

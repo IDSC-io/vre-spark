@@ -1,7 +1,0 @@
-md5: 14880a6fcbe3fd711aa35ad18cf74b41
-outs:
-- md5: 2347f5db2378ce868a235987cc0641e9
-  path: DIM_TERMIN.csv
-  cache: true
-  metric: false
-  persist: false

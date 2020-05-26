@@ -1,7 +1,0 @@
-md5: d28b0ca7d409285b92b7917a4bb49713
-outs:
-- md5: 8c2dcb0088331810ebc9a3ecdf6f4f96
-  path: LA_ISH_NDIA.csv
-  cache: true
-  metric: false
-  persist: false
