@@ -123,13 +123,15 @@ class DataLoader:
         next(output, None)  # ignore the header line
         return output
 
-    def patient_data(self, risk_only=False):
+    def patient_data(self, load_partners=True, load_medications=True, risk_only=False):
         """Prepares patient data based on all results obtained from the SQL queries.
 
         If self.hdfs_pipe is ``True``, this will use the :meth:`get_hdfs_pipe()` method. Otherwise, the
         :meth:`get_csv_file()` method is used.
 
         Args:
+            load_partners (bool):   Whether or not to load partners (defaults to ``True``).
+            load_medications (bool) Whether to not to load medications (defaults to ``True``).
             risk_only (bool):       Whether or not to use only risk data (defaults to ``False``).
 
         Returns:
@@ -161,13 +163,17 @@ class DataLoader:
                                      load_limit=self.load_limit)
 
         # Load Partner data from table: LA_ISH_NGPA
-        logging.info("loading partner data")
-        partners = Partner.create_partner_map(self.get_hdfs_pipe(self.partner_path) if self.hdfs_pipe is True
-                                              else self.get_csv_file(self.partner_path))
-        logging.info("adding partners to cases")
-        Partner.add_partners_to_cases(  # This will update partners from table: LA_ISH_NFPZ
-            self.get_hdfs_pipe(self.partner_case_path) if self.hdfs_pipe is True
-            else self.get_csv_file(self.partner_case_path), cases, partners)
+        partners = {}
+        if load_partners:
+            logging.info("loading partner data")
+            partners = Partner.create_partner_map(self.get_hdfs_pipe(self.partner_path) if self.hdfs_pipe is True
+                                                  else self.get_csv_file(self.partner_path))
+            logging.info("adding partners to cases")
+            Partner.add_partners_to_cases(  # This will update partners from table: LA_ISH_NFPZ
+                self.get_hdfs_pipe(self.partner_case_path) if self.hdfs_pipe is True
+                else self.get_csv_file(self.partner_case_path), cases, partners)
+        else:
+            logging.info("loading partner data omitted.")
 
         # Load Move data from table: LA_ISH_NBEW
         logging.info("loading move data")
@@ -220,14 +226,18 @@ class DataLoader:
             patients = patients_risk
         logging.info(f"{len(patients)} patients")
         # ----------------------------------------------------------------
-
         # Load Drug data from table: V_LA_IPD_DRUG_NORM
-        logging.info("loading drug data")
-        drugs = Medication.create_drug_map(self.get_hdfs_pipe(self.medication_path) if self.hdfs_pipe is True
-                                           else self.get_csv_file(self.medication_path))
-        Medication.add_medications_to_case(  # Update is based on the same table
-            self.get_hdfs_pipe(self.medication_path) if self.hdfs_pipe is True
-            else self.get_csv_file(self.medication_path), cases)
+        drugs = {}
+
+        if load_medications:
+            logging.info("loading drug data")
+            drugs = Medication.create_drug_map(self.get_hdfs_pipe(self.medication_path) if self.hdfs_pipe is True
+                                               else self.get_csv_file(self.medication_path))
+            Medication.add_medications_to_case(  # Update is based on the same table
+                self.get_hdfs_pipe(self.medication_path) if self.hdfs_pipe is True
+                else self.get_csv_file(self.medication_path), cases)
+        else:
+            logging.info("loading drug data omitted.")
 
         # Load CHOP data from table: V_DH_REF_CHOP
         logging.info("loading chop data")
