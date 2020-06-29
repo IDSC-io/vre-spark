@@ -1,5 +1,6 @@
 import ezdxf
 import pandas as pd
+import pathlib
 
 if __name__ == '__main__':
 
@@ -16,7 +17,7 @@ if __name__ == '__main__':
     #     print(e.dxf.insert)
     #     print("\n")
 
-    # TODO: Possibly normalize floor coordinates to allow positioning relatively
+    # TODO: Possibly normalize floor coordinates to allow relative positioning
 
     label_positions = []
 
@@ -31,7 +32,30 @@ if __name__ == '__main__':
         # Qualify text labels with floor name if possible (else file name)
         label_positions.append([building_id, floor_id, entity.text, entity.dxf.insert[0], entity.dxf.insert[1]])
 
-    label_positions_df = pd.DataFrame(label_positions, columns=["Building ID", "Floor ID", "Room ID", "X-coordinate", "Y-coordinate"])
+    path = pathlib.Path(f"./data/processed/cad_maps/")
+    path.mkdir(parents=True, exist_ok=True)
+
+    label_positions_df = pd.DataFrame(label_positions, columns=["Building ID", "Floor ID", "Label Text", "X-coordinate", "Y-coordinate"])
+    # label types
+    clutter_type = "Clutter"
+    room_size_type = "Room Size"
+    room_common_name_type = "Room Common Name"
+    room_id_type = "Room ID"
+
+    clutter_condition_1 = label_positions_df["Label Text"].str.len() <= 1                                                       # single letter annotations
+    clutter_condition_2 = label_positions_df["Label Text"].str.match("[A-Z]\1")                                                 # twice the same capital letter
+    label_positions_df.loc[clutter_condition_1 | clutter_condition_2, "Label Type"] = clutter_type
+
+    room_size_condition = label_positions_df["Label Text"].str.match("[0-9]+\.[0-9]+ m")                                        # room sizes in m^2
+    label_positions_df.loc[room_size_condition, "Label Type"] = room_size_type
+
+    room_common_name_condition = label_positions_df["Label Text"].str.match("[A-Za-z]+")                                        # room common name
+    room_common_name_condition_2 = label_positions_df["Label Text"].str.contains("[Zz]immer")                                   # room common name
+    label_positions_df.loc[room_common_name_condition | room_common_name_condition_2, "Label Type"] = room_common_name_type
+
+    room_id_condition = label_positions_df["Label Text"].str.match("^[0-9][0-9]?[0-9]?[A-Za-z]?$")                              # room unique IDs
+    label_positions_df.loc[room_id_condition, "Label Type"] = room_id_type
+
     label_positions_df.to_csv(f"./data/processed/cad_maps/building_{building_id}_floor_{floor_id}_labels.csv")
 
     layer_colors = dict()
