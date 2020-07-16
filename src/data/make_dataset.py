@@ -5,6 +5,7 @@ from pathlib import Path
 from dotenv import find_dotenv, load_dotenv
 
 from src.data.pull_raw_dataset import pull_raw_dataset
+from src.data.dataset_preprocessor import cleanup_dataset
 
 
 @click.command()
@@ -22,6 +23,9 @@ def main():
 
     logger.info('Pulling dataset from database if not available yet...')
     pull_raw_dataset()
+
+    logger.info('Cleaning up dataset...')
+    cleanup_dataset()
 
 
 if __name__ == '__main__':

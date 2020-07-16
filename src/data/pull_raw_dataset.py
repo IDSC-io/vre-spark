@@ -15,6 +15,8 @@ import os
 
 import pyodbc
 from configuration.basic_configuration import configuration
+import pandas as pd
+import pathlib
 
 
 def write_sql_query_results_to_csv(path_to_sql, path_to_csv, csv_sep, connection_file, trusted_connection=True,

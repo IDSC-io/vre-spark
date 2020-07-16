@@ -123,7 +123,21 @@ class DataLoader:
         next(output, None)  # ignore the header line
         return output
 
-    def patient_data(self, load_partners=True, load_medications=True, risk_only=False):
+    def patient_data(self,
+                     load_cases=True,
+                     load_partners=True,
+                     load_moves=True,
+                     load_medications=True,
+                     load_risks=True,
+                     risk_only=False,
+                     load_chop_codes=True,
+                     load_surgeries=True,
+                     load_appointments=True,
+                     load_devices=True,
+                     load_employees=True,
+                     load_care_data=True,
+                     load_rooms=True,
+                     load_icd_codes=True):
         """Prepares patient data based on all results obtained from the SQL queries.
 
         If self.hdfs_pipe is ``True``, this will use the :meth:`get_hdfs_pipe()` method. Otherwise, the
@@ -157,10 +171,13 @@ class DataLoader:
                                                load_limit=self.load_limit)
 
         # Load Case data from table: V_LA_ISH_NFAL_NORM
-        logging.info("loading case data")
-        cases = Case.create_case_map(self.get_hdfs_pipe(self.cases_path) if self.hdfs_pipe is True
-                                     else self.get_csv_file(self.cases_path), patients,
-                                     load_limit=self.load_limit)
+        if load_cases:
+            logging.info("loading case data")
+            cases = Case.create_case_map(self.get_hdfs_pipe(self.cases_path) if self.hdfs_pipe is True
+                                         else self.get_csv_file(self.cases_path), patients,
+                                         load_limit=self.load_limit)
+        else:
+            logging.info("loading cases omitted.")
 
         # Load Partner data from table: LA_ISH_NGPA
         partners = {}
@@ -176,15 +193,18 @@ class DataLoader:
             logging.info("loading partner data omitted.")
 
         # Load Move data from table: LA_ISH_NBEW
-        logging.info("loading move data")
-        Move.add_moves_to_case(self.get_hdfs_pipe(self.moves_path) if self.hdfs_pipe is True
-                               else self.get_csv_file(self.moves_path), cases, rooms, wards, partners,
-                               load_limit=self.load_limit)
-        # --> Note: Move() objects are not part of the returned dictionary, they are only used in
-        #                           Case() objects --> Case().moves = [1 : Move(), 2 : Move(), ...]
+        if load_moves:
+            logging.info("loading move data")
+            Move.add_moves_to_case(self.get_hdfs_pipe(self.moves_path) if self.hdfs_pipe is True
+                                   else self.get_csv_file(self.moves_path), cases, rooms, wards, partners,
+                                   load_limit=self.load_limit)
+            # --> Note: Move() objects are not part of the returned dictionary, they are only used in
+            #                           Case() objects --> Case().moves = [1 : Move(), 2 : Move(), ...]
+        else:
+            logging.info("loading moves omitted.")
 
         # TODO: ward screenings and care map data is gone. Readd it.
-        # # Generate ward screening overview map
+        # Generate ward screening overview map
         # screen_map = Risk.generate_screening_overview_map(self.get_hdfs_pipe(self.VRE_ward_screenings_path)
         #                                                   if self.hdfs_pipe is True
         #                                                   else self.get_csv_file(self.VRE_ward_screenings_path))
@@ -202,20 +222,23 @@ class DataLoader:
 
         # ----------------------------------------------------------------
         # Load Risk data --> ADJUST THIS SECTION !
-        logging.info("loading risk data")
-        # ## --> OLD VERSION: from table: V_LA_ISH_NRSF_NORM
-        # Risk.add_risk_to_patient( self.get_hdfs_pipe(self.risks_path) if self.hdfs_pipe is True
-        # else self.get_csv_file(self.risks_path), patients )
-        # Risk.add_deleted_risk_to_patient( # Update data from table: deleted_screenings
-        #     self.get_hdfs_pipe(self.deleted_risks_path) if self.hdfs_pipe is True
-        # else self.get_csv_file(self.deleted_risks_path), patients
-        # )
-        # ## --> NEW VERSION: from file VRE_Screenings_Final.csv
-        # TODO: Analyze how risks are added to patients to ensure VRE-positive patients are properly annotated
-        Risk.add_annotated_screening_data_to_patients(self.get_hdfs_pipe(self.VRE_screenings_path)
-                                                      if self.hdfs_pipe is True
-                                                      else self.get_csv_file(self.VRE_screenings_path),
-                                                      patient_dict=patients)
+        if load_risks:
+            logging.info("loading risk data")
+            # ## --> OLD VERSION: from table: V_LA_ISH_NRSF_NORM
+            # Risk.add_risk_to_patient( self.get_hdfs_pipe(self.risks_path) if self.hdfs_pipe is True
+            # else self.get_csv_file(self.risks_path), patients )
+            # Risk.add_deleted_risk_to_patient( # Update data from table: deleted_screenings
+            #     self.get_hdfs_pipe(self.deleted_risks_path) if self.hdfs_pipe is True
+            # else self.get_csv_file(self.deleted_risks_path), patients
+            # )
+            # ## --> NEW VERSION: from file VRE_Screenings_Final.csv
+            # TODO: Analyze how risks are added to patients to ensure VRE-positive patients are properly annotated
+            Risk.add_annotated_screening_data_to_patients(self.get_hdfs_pipe(self.VRE_screenings_path)
+                                                          if self.hdfs_pipe is True
+                                                          else self.get_csv_file(self.VRE_screenings_path),
+                                                          patient_dict=patients)
+        else:
+            logging.info("loading risks omitted.")
 
         if risk_only:
             logging.info("keeping only risk patients")
@@ -228,7 +251,6 @@ class DataLoader:
         # ----------------------------------------------------------------
         # Load Drug data from table: V_LA_IPD_DRUG_NORM
         drugs = {}
-
         if load_medications:
             logging.info("loading drug data")
             drugs = Medication.create_drug_map(self.get_hdfs_pipe(self.medication_path) if self.hdfs_pipe is True
@@ -240,67 +262,95 @@ class DataLoader:
             logging.info("loading drug data omitted.")
 
         # Load CHOP data from table: V_DH_REF_CHOP
-        logging.info("loading chop data")
-        chops = Chop.create_chop_map(self.get_hdfs_pipe(self.chop_path) if self.hdfs_pipe is True
-                                      else self.get_csv_file(self.chop_path))
+        chops = {}
+        if load_chop_codes or load_surgeries:
+            logging.info("loading chop data")
+            chops = Chop.create_chop_map(self.get_hdfs_pipe(self.chop_path) if self.hdfs_pipe is True
+                                          else self.get_csv_file(self.chop_path))
 
-        # Add Surgery data to cases from table: LA_ISH_NICP
-        Surgery.add_surgeries_to_case(self.get_hdfs_pipe(self.surgery_path) if self.hdfs_pipe is True
-                                    else self.get_csv_file(self.surgery_path), cases, chops)
-        # Surgery() objects are not part of the returned dictionary
+            # Add Surgery data to cases from table: LA_ISH_NICP
+            Surgery.add_surgeries_to_case(self.get_hdfs_pipe(self.surgery_path) if self.hdfs_pipe is True
+                                          else self.get_csv_file(self.surgery_path), cases, chops)
+            # Surgery() objects are not part of the returned dictionary
+        else:
+            logging.info("loading surgeries omitted.")
 
-        # Load Appointment data from table: V_DH_DIM_TERMIN_CUR
-        logging.info("loading appointment data")
-        appointments = Appointment.create_appointment_map(self.get_hdfs_pipe(self.appointments_path)
-                                                     if self.hdfs_pipe is True
-                                                     else self.get_csv_file(self.appointments_path))
+        appointments = {}
+        devices = {}
+        employees = {}
+        if load_appointments or load_devices or load_employees:
+            # Load Appointment data from table: V_DH_DIM_TERMIN_CUR
+            logging.info("loading appointment data")
+            appointments = Appointment.create_appointment_map(self.get_hdfs_pipe(self.appointments_path)
+                                                         if self.hdfs_pipe is True
+                                                         else self.get_csv_file(self.appointments_path))
 
-        # Add Appointments to cases from table: V_DH_FACT_TERMINPATIENT
-        logging.info('Adding appointments to cases')
-        Appointment.add_appointment_to_case(self.get_hdfs_pipe(self.appointment_patient_path) if self.hdfs_pipe is True
-                                            else self.get_csv_file(self.appointment_patient_path),
-                                            cases, appointments)
+            # Add Appointments to cases from table: V_DH_FACT_TERMINPATIENT
+            logging.info('Adding appointments to cases')
+            Appointment.add_appointment_to_case(self.get_hdfs_pipe(self.appointment_patient_path) if self.hdfs_pipe is True
+                                                else self.get_csv_file(self.appointment_patient_path),
+                                                cases, appointments)
 
-        # Load Device data from table: V_DH_DIM_GERAET_CUR
-        logging.info("loading device data")
-        devices = Device.create_device_map(self.get_hdfs_pipe(self.devices_path) if self.hdfs_pipe is True
-                                           else self.get_csv_file(self.devices_path))
+            if load_devices:
+                # Load Device data from table: V_DH_DIM_GERAET_CUR
+                logging.info("loading device data")
+                devices = Device.create_device_map(self.get_hdfs_pipe(self.devices_path) if self.hdfs_pipe is True
+                                                   else self.get_csv_file(self.devices_path))
 
-        # Add Device data to Appointments from table: V_DH_FACT_TERMINGERAET
-        Device.add_device_to_appointment(self.get_hdfs_pipe(self.device_appointment_path) if self.hdfs_pipe is True
-                                         else self.get_csv_file(self.device_appointment_path),
-                                         appointments, devices)
+                # Add Device data to Appointments from table: V_DH_FACT_TERMINGERAET
+                Device.add_device_to_appointment(self.get_hdfs_pipe(self.device_appointment_path) if self.hdfs_pipe is True
+                                                 else self.get_csv_file(self.device_appointment_path),
+                                                 appointments, devices)
+            else:
+                logging.info("loading devices omitted.")
 
-        # Load Employee data (RAP) from table: V_DH_FACT_TERMINMITARBEITER
-        logging.info("loading employee data from RAP")
-        employees = Employee.create_employee_map(self.get_hdfs_pipe(self.appointment_employee_path)
-                                                 if self.hdfs_pipe is True
-                                                 else self.get_csv_file(self.appointment_employee_path))
+            if load_care_data or load_employees:
+                # Load Employee data (RAP) from table: V_DH_FACT_TERMINMITARBEITER
+                logging.info("loading employee data from RAP")
+                employees = Employee.create_employee_map(self.get_hdfs_pipe(self.appointment_employee_path)
+                                                         if self.hdfs_pipe is True
+                                                         else self.get_csv_file(self.appointment_employee_path))
 
-        # Add Employees to Appointments using the same table
-        Employee.add_employees_to_appointment(self.get_hdfs_pipe(self.appointment_employee_path)
-                                             if self.hdfs_pipe is True
-                                             else self.get_csv_file(self.appointment_employee_path),
-                                              appointments, employees)
+                # Add Employees to Appointments using the same table
+                Employee.add_employees_to_appointment(self.get_hdfs_pipe(self.appointment_employee_path)
+                                                      if self.hdfs_pipe is True
+                                                      else self.get_csv_file(self.appointment_employee_path),
+                                                      appointments, employees)
+                if load_care_data:
+                    # Add Care data to Cases from table: TACS_DATEN
+                    logging.info("Adding Care data to Cases from TACS")
+                    Care.add_care_entries_to_case(self.get_hdfs_pipe(self.tacs_path) if self.hdfs_pipe is True
+                                                  else self.get_csv_file(self.tacs_path), cases, employees)
+                    # --> Note: Care() objects are not part of the returned dictionary, they are only used in
+                    #               Case() objects --> Case().cares = [Care(), Care(), ...] (list of all cares for each case)
+                else:
+                    logging.info("loading care data omitted.")
 
-        # Add Care data to Cases from table: TACS_DATEN
-        logging.info("Adding Care data to Cases from TACS")
-        Care.add_care_entries_to_case(self.get_hdfs_pipe(self.tacs_path) if self.hdfs_pipe is True
-                              else self.get_csv_file(self.tacs_path), cases, employees)
-        # --> Note: Care() objects are not part of the returned dictionary, they are only used in
-        #               Case() objects --> Case().cares = [Care(), Care(), ...] (list of all cares for each case)
+            else:
+                logging.info("loading employees omitted.")
 
-        # Add Room data to Appointments from table: V_DH_FACT_TERMINRAUM
-        logging.info('Adding rooms to appointments')
-        Room.add_rooms_to_appointment(self.get_hdfs_pipe(self.room_appointment_path) if self.hdfs_pipe is True
-                                     else self.get_csv_file(self.room_appointment_path), appointments, rooms)
-        logging.info(f"Dataset contains in total {len(rooms)} Rooms")
+            if load_rooms:
+                # Add Room data to Appointments from table: V_DH_FACT_TERMINRAUM
+                logging.info('Adding rooms to appointments')
+                Room.add_rooms_to_appointment(self.get_hdfs_pipe(self.room_appointment_path) if self.hdfs_pipe is True
+                                              else self.get_csv_file(self.room_appointment_path), appointments, rooms)
+                logging.info(f"Dataset contains in total {len(rooms)} Rooms")
+            else:
+                logging.info("loading rooms omitted.")
 
-        # Add ICD codes to cases from table: LA_ISH_NDIA_NORM
-        icd_codes = ICDCode.create_icd_code_map(self.get_hdfs_pipe(self.icd_path) if self.hdfs_pipe is True
-                                        else self.get_csv_file(self.icd_path))
-        ICDCode.add_icd_codes_to_case(self.get_hdfs_pipe(self.icd_path) if self.hdfs_pipe is True
-                            else self.get_csv_file(self.icd_path), cases)
+        else:
+            logging.info("loading appointments omitted.")
+
+        icd_codes = {}
+        if load_icd_codes:
+            logging.info("Adding ICD codes to cases")
+            # Add ICD codes to cases from table: LA_ISH_NDIA_NORM
+            icd_codes = ICDCode.create_icd_code_map(self.get_hdfs_pipe(self.icd_path) if self.hdfs_pipe is True
+                                            else self.get_csv_file(self.icd_path))
+            ICDCode.add_icd_codes_to_case(self.get_hdfs_pipe(self.icd_path) if self.hdfs_pipe is True
+                                else self.get_csv_file(self.icd_path), cases)
+        else:
+            logging.info("loading ICD codes omitted.")
 
         return dict(
             {
