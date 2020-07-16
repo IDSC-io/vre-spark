@@ -4,7 +4,7 @@ import logging
 from pathlib import Path
 from dotenv import find_dotenv, load_dotenv
 
-from src.data.pull_raw_dataset import pull_raw_dataset
+from src.data.dataset_queries import pull_raw_dataset
 from src.data.dataset_preprocessor import cleanup_dataset
 
 
