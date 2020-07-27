@@ -2,6 +2,8 @@ import logging
 from datetime import datetime
 
 from tqdm import tqdm
+import pandas as pd
+import re
 
 from src.features.model.data_model_constants import CaseEnum
 
@@ -9,35 +11,31 @@ from src.features.model.data_model_constants import CaseEnum
 class Case:
     def __init__(
             self,
-            patient_id,
             case_id,
-            case_type_nr,
+            patient_id,
+            case_type_id,
             case_status,
             case_type,
-            beg_dt,
-            end_dt,
+            begin_date,
+            end_date,
             patient_type,
             patient_status,
     ):
-        self.patient_id = patient_id
         self.case_id = case_id
-        self.case_type_nr = case_type_nr
+        self.patient_id = patient_id
+        self.case_type_id = case_type_id
         self.case_status = case_status
         self.case_type = case_type
-        self.beg_dt = None
-        if beg_dt and beg_dt != "NULL":
-            self.beg_dt = datetime.strptime(beg_dt, "%Y-%m-%d")
-        self.end_dt = None
-        if end_dt and end_dt != "NULL":
-            self.end_dt = datetime.strptime(end_dt, "%Y-%m-%d")
+        self.begin_date = begin_date
+        self.end_date = end_date
         self.patient_type = patient_type
         self.patient_status = patient_status
         self.appointments = []
         self.cares = []
         self.surgeries = []
-        self.moves = dict()
-        self.moves_start = None
-        self.moves_end = None
+        self.stays = dict()
+        self.stays_start = None
+        self.stays_end = None
         self.referrers = set()
         self.patient = None
         self.medications = []
@@ -53,25 +51,25 @@ class Case:
 
     def open_before_or_at_date(self, dt):
         """
-        Did the moves of this case start before or at dt?
+        Did the stays of this case start before or at dt?
         :param dt: datetime.date
         :return:
         """
-        if self.moves_start is None:
+        if self.stays_start is None:
             return False
         else:
-            return self.moves_start.date() <= dt
+            return self.stays_start.date() <= dt
 
     def closed_after_or_at_date(self, dt):
         """
-        Did the moves of this case end after or at dt?
+        Did the stays of this case end after or at dt?
         :param dt: datetime.date
         :return:
         """
-        if self.moves_end is None:
+        if self.stays_end is None:
             return False
         else:
-            return self.moves_end.date() >= dt
+            return self.stays_end.date() >= dt
 
     def add_referrer(self, partner):
         """
@@ -104,25 +102,25 @@ class Case:
     def add_care(self, care):
         self.cares.append(care)
 
-    def add_move(self, move):
-        self.moves[move.lfd_nr] = move
-        if move.to_datetime is not None and ((self.moves_end is None) or (move.to_datetime > self.moves_end)):
-            self.moves_end = move.to_datetime
-        if move.from_datetime is not None and ((self.moves_start is None) or (move.from_datetime < self.moves_start)):
-            self.moves_start = move.from_datetime
+    def add_stay(self, stay):
+        self.stays[stay.serial_number] = stay
+        if stay.to_datetime is not None and ((self.stays_end is None) or (stay.to_datetime > self.stays_end)):
+            self.stays_end = stay.to_datetime
+        if stay.from_datetime is not None and ((self.stays_start is None) or (stay.from_datetime < self.stays_start)):
+            self.stays_start = stay.from_datetime
 
-    def correct_move_enddt(self):
+    def correct_stay_enddt(self):
         """
-        This is required because we can't trust the end date of the movement data.
-        Call this only after all the movement data is loaded!
-        Helper function to fix missing movement end dates and times of this Fall:
-        Set the end date/time as the start date/time of the next move. Only use end date/time if there
-        is no next move.
+        This is required because we can't trust the end date of the stayment data.
+        Call this only after all the stayment data is loaded!
+        Helper function to fix missing stayment end dates and times of this Fall:
+        Set the end date/time as the start date/time of the next stay. Only use end date/time if there
+        is no next stay.
         """
-        sorted_keys = sorted(self.moves)
+        sorted_keys = sorted(self.stays)
         for i, lfd_nr in enumerate(sorted_keys):
             if i < (len(sorted_keys) - 1):
-                self.moves[lfd_nr].to_datetime = self.moves[sorted_keys[i + 1]].from_datetime
+                self.stays[lfd_nr].to_datetime = self.stays[sorted_keys[i + 1]].from_datetime
 
     def add_patient(self, p):
         self.patient = p
@@ -137,42 +135,42 @@ class Case:
 
     def get_length_of_stay(self):
         """
-        The length of stay is the duration between the start time of the first movement of the case and
-        the end time of the last movement.
+        The length of stay is the duration between the start time of the first stayment of the case and
+        the end time of the last stayment.
         :return:
         """
         if self.case_type != "1":
             return None
-        if self.moves_end is None:
-            return datetime.now() - self.moves_start
+        if self.stays_end is None:
+            return datetime.now() - self.stays_start
         else:
-            return self.moves_end - self.moves_start
+            return self.stays_end - self.stays_start
 
     def get_length_of_stay_until(self, dt):
         """
-        Timedelta between moves_start and moves_end or dt, whichever comes first.
+        Timedelta between stays_start and stays_end or dt, whichever comes first.
         :param dt: datetime.datetime
         :return: datetime.timedelta
         """
-        if self.moves_end is None or (self.moves_end > dt):
-            return dt - self.moves_start
+        if self.stays_end is None or (self.stays_end > dt):
+            return dt - self.stays_start
         else:
-            return self.moves_end - self.moves_start
+            return self.stays_end - self.stays_start
 
-    def get_moves_before_dt(self, dt):
+    def get_stays_before_dt(self, dt):
         """
-        The list of moves that start before a given datetime.
+        The list of stays that start before a given datetime.
         :param dt:  datetime.datetime
-        :return:    List of moves
+        :return:    List of stays
         """
-        moves = []
-        for move in self.moves.values():
-            if move.from_datetime < dt:
-                moves.append(move)
-        return moves
+        stays = []
+        for stay in self.stays.values():
+            if stay.from_datetime < dt:
+                stays.append(stay)
+        return stays
 
     @staticmethod
-    def create_case_map(lines, patients, load_limit=None):
+    def create_case_map(csv_path, encoding, patients, load_limit=None):
         """
         Read the case csv and create Case objects from the rows. Populate a dict with cases (case_id -> case) that are not 'storniert'. Note that the function goes both ways, i.e. it adds
         Cases to Patients and vice versa. This function will be called by the HDFS_data_loader.patient_data() function. The lines argument corresponds to a csv.reader() instance
@@ -188,21 +186,26 @@ class Case:
         :return: Dictionary mapping case ids to Case() objects --> {"0003536421" : Case(), "0003473241" : Case(), ...}
         """
         logging.debug("create_case_map")
+
+        case_df = pd.read_csv(csv_path, encoding=encoding, parse_dates=["Start Date", "End Date"], dtype=str)
+        # in principle they are all int, history makes them a varchar/string
+        # case_df["Patient ID"] = case_df["Patient ID"].apply(lambda id: re.sub("\D", "", id)) # remove all non-digits from id
+        # case_df["Case ID"] = case_df["Case ID"].astype(int)
+        # case_df["Patient ID"] = case_df["Patient ID"].astype(int)
+        case_objects = case_df.progress_apply(lambda row: Case(*row.to_list()), axis=1)
+
         import_count = 0
         nr_not_found = 0
         nr_ok = 0
         nr_not_inpatient_case = 0
         nr_case_not_active = 0
         cases = dict()
-        for line in tqdm(lines):
-            case = Case(*line)
-            # if case.fal_ar != '1': # exclude non-stationary cases (for stationary cases: Case().falar == '1' !)
-            #     nr_not_stationary += 1 # NOW INCLUDED DIRECTLY IN THE SQL QUERY
-            #     continue
-            #TODO: Hardcoded label, extract to configuration
-            if case.case_status == "Fall ist aktuell":  # exclude entries where "CASESTATUS" is "storniert"
+        for case in case_objects.to_list():
+            # TODO: Rewrite to pandas
+            # TODO: Hardcoded label, extract to configuration
+            if case.case_status == "open":  # exclude entries where "CASESTATUS" is "storniert"
                 cases[case.case_id] = case
-                if patients.get(case.patient_id, None) is not None:
+                if case.patient_id in patients.keys():
                     patients[case.patient_id].add_case(case)
                     case.add_patient(patients[case.patient_id])
                     import_count += 1
@@ -216,5 +219,5 @@ class Case:
                 continue
             nr_ok += 1
 
-        logging.info(f"{nr_ok} cases ok, {nr_not_found} patients not found, {nr_case_not_active} cases not active, {nr_not_inpatient_case} cases not inpatient case")
+        logging.info(f"{nr_ok} cases ok, {nr_not_found} patients not found, {nr_case_not_active} cases not active")
         return cases

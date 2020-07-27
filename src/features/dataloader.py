@@ -15,11 +15,13 @@ from configuration.basic_configuration import configuration
 # make sure to append the correct path regardless where script is called from
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'model'))
 
+from tqdm import tqdm
+
 from src.features.model import Patient
 from src.features.model import Risk
 from src.features.model import Case
 from src.features.model import Room
-from src.features.model import Move
+from src.features.model import Stay
 from src.features.model import Medication
 from src.features.model import Appointment
 from src.features.model import Device
@@ -39,19 +41,19 @@ class DataLoader:
 
     def __init__(self, hdfs_pipe=True):
 
+        tqdm.pandas()
+
         self.load_test_data = configuration['PARAMETERS']['dataset'] == 'test'
 
-        if not self.load_test_data:
-            self.base_path = configuration['PATHS']['model_data_dir']
-        else:
-            self.base_path = configuration['PATHS']['test_data_dir']
+        self.base_path = configuration['PATHS']['interim_data_dir'].format("test") if configuration['PARAMETERS']['dataset'] == 'test' \
+            else configuration['PATHS']['interim_data_dir'].format("model")  # absolute or relative path to directory where data is stored
 
         logging.debug(f"base_path: {self.base_path}")
 
         self.devices_path = os.path.join(self.base_path, "DIM_GERAET.csv")
         self.patients_path = os.path.join(self.base_path, "DIM_PATIENT.csv")
         self.cases_path = os.path.join(self.base_path, "DIM_FALL.csv")
-        self.moves_path = os.path.join(self.base_path, "LA_ISH_NBEW.csv")
+        self.stays_path = os.path.join(self.base_path, "LA_ISH_NBEW.csv")
         self.risks_path = os.path.join(self.base_path, "DIM_RISIKO.csv")
         self.appointments_path = os.path.join(self.base_path, "DIM_TERMIN.csv")
         self.device_appointment_path = os.path.join(self.base_path, "FAKT_TERMIN_GERAET.csv")
@@ -74,6 +76,8 @@ class DataLoader:
         self.hdfs_pipe = hdfs_pipe  # binary attribute specifying whether to read data Hadoop (True) or CSV (False)
 
         self.file_delim = configuration['DELIMITERS']['csv_sep']  # delimiter character for reading CSV files
+
+        self.encoding = "iso-8859-1"
 
         self.load_limit = None if configuration['PARAMETERS']['load_limit'] is None \
                                 else configuration['PARAMETERS']['load_limit']
@@ -126,7 +130,7 @@ class DataLoader:
     def patient_data(self,
                      load_cases=True,
                      load_partners=True,
-                     load_moves=True,
+                     load_stays=True,
                      load_medications=True,
                      load_risks=True,
                      risk_only=False,
@@ -166,42 +170,40 @@ class DataLoader:
 
         # Load Patient data from table: V_DH_DIM_PATIENT_CUR
         logging.info("loading patient data")
-        patients = Patient.create_patient_dict(self.get_hdfs_pipe(self.patients_path) if self.hdfs_pipe is True
-                                               else self.get_csv_file(self.patients_path),
+        patients = Patient.create_patient_dict(self.patients_path, self.encoding,
                                                load_limit=self.load_limit)
 
         # Load Case data from table: V_LA_ISH_NFAL_NORM
-        if load_cases:
+        cases = {}
+        partners = {}
+        stays = {}
+        if load_cases or load_partners or load_stays:
             logging.info("loading case data")
-            cases = Case.create_case_map(self.get_hdfs_pipe(self.cases_path) if self.hdfs_pipe is True
-                                         else self.get_csv_file(self.cases_path), patients,
+            cases = Case.create_case_map(self.cases_path, self.encoding, patients,
                                          load_limit=self.load_limit)
+
+            # Load Partner data from table: LA_ISH_NGPA
+            if load_partners:
+                logging.info("loading partner data")
+                partners = Partner.create_partner_map(self.partner_path, encoding=self.encoding)
+                logging.info("adding partners to cases")
+                Partner.add_partners_to_cases(  # This will update partners from table: LA_ISH_NFPZ
+                    self.partner_case_path, self.encoding, cases, partners)
+            else:
+                logging.info("loading partner data omitted.")
+
+            # Load Stay data from table: LA_ISH_NBEW
+            if load_stays:
+                logging.info("loading stay data")
+                Stay.add_stays_to_case(self.stays_path, self.encoding, cases, rooms, wards, partners,
+                                       load_limit=self.load_limit)
+                # --> Note: Stay() objects are not part of the returned dictionary, they are only used in
+                #                           Case() objects --> Case().stays = [1 : Stay(), 2 : Stay(), ...]
+            else:
+                logging.info("loading stays omitted.")
         else:
             logging.info("loading cases omitted.")
 
-        # Load Partner data from table: LA_ISH_NGPA
-        partners = {}
-        if load_partners:
-            logging.info("loading partner data")
-            partners = Partner.create_partner_map(self.get_hdfs_pipe(self.partner_path) if self.hdfs_pipe is True
-                                                  else self.get_csv_file(self.partner_path))
-            logging.info("adding partners to cases")
-            Partner.add_partners_to_cases(  # This will update partners from table: LA_ISH_NFPZ
-                self.get_hdfs_pipe(self.partner_case_path) if self.hdfs_pipe is True
-                else self.get_csv_file(self.partner_case_path), cases, partners)
-        else:
-            logging.info("loading partner data omitted.")
-
-        # Load Move data from table: LA_ISH_NBEW
-        if load_moves:
-            logging.info("loading move data")
-            Move.add_moves_to_case(self.get_hdfs_pipe(self.moves_path) if self.hdfs_pipe is True
-                                   else self.get_csv_file(self.moves_path), cases, rooms, wards, partners,
-                                   load_limit=self.load_limit)
-            # --> Note: Move() objects are not part of the returned dictionary, they are only used in
-            #                           Case() objects --> Case().moves = [1 : Move(), 2 : Move(), ...]
-        else:
-            logging.info("loading moves omitted.")
 
         # TODO: ward screenings and care map data is gone. Readd it.
         # Generate ward screening overview map
@@ -233,9 +235,8 @@ class DataLoader:
             # )
             # ## --> NEW VERSION: from file VRE_Screenings_Final.csv
             # TODO: Analyze how risks are added to patients to ensure VRE-positive patients are properly annotated
-            Risk.add_annotated_screening_data_to_patients(self.get_hdfs_pipe(self.VRE_screenings_path)
-                                                          if self.hdfs_pipe is True
-                                                          else self.get_csv_file(self.VRE_screenings_path),
+            Risk.add_annotated_screening_data_to_patients(self.VRE_screenings_path,
+                                                          self.encoding,
                                                           patient_dict=patients)
         else:
             logging.info("loading risks omitted.")

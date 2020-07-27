@@ -3,17 +3,17 @@ import logging
 
 from dateutil.relativedelta import relativedelta
 from tqdm import tqdm
+import pandas as pd
 
 from src.features.model.data_model_constants import ICUs
 
 
 class Patient:
+
     def __init__(self, patient_id, gender, birth_date, zip_code, place_of_residence, canton, language):
         self.patient_id = patient_id
         self.gender = gender
-        self.birth_date = None
-        if birth_date:
-            self.birth_date = datetime.datetime.strptime(birth_date, "%Y-%m-%d")
+        self.birth_date = birth_date
         self.zip_code = zip_code
         self.place_of_residence = place_of_residence
         self.canton = canton
@@ -42,24 +42,31 @@ class Patient:
         """
         self.risks[risk.recording_date] = risk
 
-    def has_risk(self, code_text_list=None):
+    def has_risk(self, risk_list=None):
         """
         Returns true if there if at least one of the risk_code, risk_text tuples are found in the Patient's risk dict.
         risk_text can be none if the text does not matter. False if none of the risks are found.
         :param code_text_list:
         :return:
         """
-        if code_text_list is None:
-            code_text_list = [(32, None), (42, None), (142, None)]
+        # TODO[BE]: Extend to any kind of risks again
+        for risk in self.risks.values():
+            if risk.result != 'nn':
+                return True
 
-        for code_text in code_text_list:
-            if self.risks.get(code_text[0], None) is not None:
-                if (
-                        code_text[1] is None
-                        or self.risks[code_text[0]].description == code_text[1]
-                ):
-                    return True
         return False
+
+        # if code_text_list is None:
+        #     code_text_list = [(32, None), (42, None), (142, None)]
+        #
+        # for code_text in code_text_list:
+        #     if self.risks.get(code_text[0], None) is not None:
+        #         if (
+        #                 code_text[1] is None
+        #                 or self.risks[code_text[0]].description == code_text[1]
+        #         ):
+        #             return True
+        # return False
 
     def get_risk_date(self, code_text_list=None):
         """
@@ -132,7 +139,7 @@ class Patient:
                     and case.open_before_or_at_date(relevant_dt)
                     and case.closed_after_or_at_date(since)
             ):
-                if relevant_case is None or case.closed_after_or_at_date(relevant_case.moves_end.date()):
+                if relevant_case is None or case.closed_after_or_at_date(relevant_case.stays_end.date()):
                     # Here we make sure to consider only the LATEST case, by comparing whether case() was closed after the closing date of the relevant case
                     #  --> update relevant case !
                     relevant_case = case
@@ -148,8 +155,8 @@ class Patient:
 
     def get_length_of_relevant_case(self):
         """
-        For the relevant case, length of stay is defined as the period between the moves_start and moves_end,
-        or between moves_start and relevant date if the case is still open at relevant date.
+        For the relevant case, length of stay is defined as the period between the stays_start and stays_end,
+        or between stays_start and relevant date if the case is still open at relevant date.
         For non-stationary cases, length of stay is not defined (None).
         :return: datetime.timedelta, None if no relevant case
         """
@@ -168,11 +175,11 @@ class Patient:
         if case is None:
             return None
         rooms = set()
-        # moves from SAP IS-H
-        moves = case.get_moves_before_dt(dt)
-        for move in moves:
-            if move.room is not None:
-                rooms.add(move.room.name)
+        # stays from SAP IS-H
+        stays = case.get_stays_before_dt(dt)
+        for stay in stays:
+            if stay.room is not None:
+                rooms.add(stay.room.name)
         # appointments from RAP
         for appointment in case.appointments:
             if appointment.date < dt:
@@ -180,25 +187,51 @@ class Patient:
                     rooms.add(room.name)
         return rooms
 
-    def has_icu_stay(self, orgs):
+    def has_icu_stay(self, icu_wards=None):
         """
-        The patient has a stay in ICU during relevant case before relevant date if there is a move to one of the organizational units provided in orgs.
-        :param orgs: list of ICU organizational unit names
+        The patient has a stay in ICU during relevant case before relevant date if there is a stay to one of the organizational units provided in orgs.
+        :param icu_wards: list of ICU organizational unit names
         :return: boolean, False if no relevant case
         """
+        if icu_wards is None:
+            icu_wards = ICUs
+
+        return self.has_stay_on_ward(icu_wards)
+
+    def has_stay_on_ward(self, wards):
+
         (case, dt) = self.get_relevant_case_and_date()
         if case is None:
             return False
-        moves = case.get_moves_before_dt(dt)
-        for move in moves:
-            if move.ward in orgs:
+        stays = case.get_stays_before_dt(dt)
+        for stay in stays:
+            if stay.ward in wards:
                 return True
         return False
+
+    def get_icu_stays(self, icu_wards=None):
+
+        if icu_wards is None:
+            icu_wards = ICUs
+
+        return self.get_ward_stays(icu_wards)
+
+    def get_ward_stays(self, wards):
+        (case, dt) = self.get_relevant_case_and_date()
+        if case is None:
+            return []
+        stays = case.get_stays_before_dt(dt)
+        ward_stays = []
+        for stay in stays:
+            if stay.ward in wards:
+                ward_stays.append(stay)
+
+        return ward_stays
 
     def get_nr_cases(self, delta=relativedelta(years=1)):
         """
         How many SAP cases (inpatient and outpatient) did the patient have in one year (or delta provided) before the relevant date.
-        (moves_start is before relevant_date and moves_end after relevant_date - delta
+        (stays_start is before relevant_date and stays_end after relevant_date - delta
         :return: int
         """
         nr_cases = 0
@@ -207,8 +240,8 @@ class Patient:
             relevant_date, datetime.datetime.min.time()
         )  # need datetime, not date
         for case in self.cases.values():
-            if case.moves_start is not None and case.moves_end is not None:
-                if case.moves_start <= dt and case.moves_end >= (dt - delta):
+            if case.stays_start is not None and case.stays_end is not None:
+                if case.stays_start <= dt and case.stays_end >= (dt - delta):
                     nr_cases += 1
         return nr_cases
 
@@ -223,7 +256,7 @@ class Patient:
         relevant_medications = dict()
         for medication in case.medications:
             if medication.is_antibiotic() and (
-                    case.moves_start <= medication.drug_submission <= dt
+                    case.stays_start <= medication.drug_submission <= dt
             ):
                 if relevant_medications.get(medication.drug_atc, None) is None:
                     date_set = set()
@@ -268,7 +301,7 @@ class Patient:
             return None
         dispforms = set()
         for medication in case.medications:
-            if case.moves_start <= medication.drug_submission <= dt:
+            if case.stays_start <= medication.drug_submission <= dt:
                 dispforms.add(medication.drug_dispform)
         return dispforms
 
@@ -410,68 +443,67 @@ class Patient:
     def get_location_info(self, focus_date, comparison_type='exact'):
         """Returns ward, room and bed information for a patient at a specific date.
 
-        This function will go through all Move() objects of each Cases() object of this patient, and return a tuple of
-        Move() objects for which
+        This function will go through all Stay() objects of each Cases() object of this patient, and return a tuple of
+        Stay() objects for which
 
-        Move().bwi_dt <= focus_date <= Move().bwe_dt
+        Stay().bwi_dt <= focus_date <= Stay().bwe_dt
 
-        The exact location of a patient at focus_date can then be extracted from the ``Move().org_fa``,
-        ``Move().org_pf``, ``Move().org_au``, ``Move().zimmr`` and ``Move().bett`` attributes.
+        The exact location of a patient at focus_date can then be extracted from the ``Stay().org_fa``,
+        ``Stay().org_pf``, ``Stay().org_au``, ``Stay().zimmr`` and ``Stay().bett`` attributes.
 
         Args:
-            focus_date (datetime.date()):   Date for which all moves are to be extracted from a patient
-            comparison_type (str):          Type of comparison between Move() objects and focus_date. If set to
-                                            ``exact`` (the default), only Move() objects with non-None Move().bwi_dt
-                                            `and` Move().bwe_dt attributes will be considered.
+            focus_date (datetime.date()):   Date for which all stays are to be extracted from a patient
+            comparison_type (str):          Type of comparison between Stay() objects and focus_date. If set to
+                                            ``exact`` (the default), only Stay() objects with non-None Stay().bwi_dt
+                                            `and` Stay().bwe_dt attributes will be considered.
 
         Returns:
-            tuple:   tuple of Move() objects for which Move().bwi_dt < focus_date < Move().bwe_dt
+            tuple:   tuple of Stay() objects for which Stay().bwi_dt < focus_date < Stay().bwe_dt
         """
-        location_moves = []
+        location_stays = []
 
         for each_case in self.cases.values():
-            for each_move in each_case.moves.values():
-                if comparison_type == 'exact' and (each_move.from_datetime is None or each_move.to_datetime is None):
+            for each_stay in each_case.stays.values():
+                if comparison_type == 'exact' and (each_stay.from_datetime is None or each_stay.to_datetime is None):
                     continue
-                # bwi_dt_date = datetime.date(each_move.bwi_dt.day, each_move.bwi_dt.month, each_move.bwi_dt.day)
-                # bwe_dt_date = datetime.date(each_move.bwe_dt.day, each_move.bwe_dt.month, each_move.bwe_dt.day)
-                if each_move.from_datetime.date() <= focus_date <= each_move.to_datetime.date():
-                    location_moves.append(each_move)
+                # bwi_dt_date = datetime.date(each_stay.bwi_dt.day, each_stay.bwi_dt.month, each_stay.bwi_dt.day)
+                # bwe_dt_date = datetime.date(each_stay.bwe_dt.day, each_stay.bwe_dt.month, each_stay.bwe_dt.day)
+                if each_stay.from_datetime.date() <= focus_date <= each_stay.to_datetime.date():
+                    location_stays.append(each_stay)
 
-        return tuple(location_moves)
+        return tuple(location_stays)
 
-    def get_moves_at_date(self, target_date):
-        """Extracts all moves from cases for this patient at ``target_date``.
+    def get_stays_at_date(self, target_date):
+        """Extracts all hospital stays from cases for this patient at ``target_date``.
 
-        This function returns a list of all moves for this patient that took place at ``target_date``. This should
+        This function returns a list of all stays for this patient that took place at ``target_date``. This should
         ideally be only a single entry, since a patient cannot be stationed in two or more places simultaneously.
         However, a situation may arise when a patient is transferred between wards, in which case there will be two
-        moves matching the criteria.
+        stays matching the criteria.
 
         Args:
-            target_date (datetime.date()):  Date for which moves will be extracted form this patient's cases.
+            target_date (datetime.date()):  Date for which stays will be extracted form this patient's cases.
 
         Returns:
-            list:   List of Move() objects which have taken place for this patient at ``target_date``.
+            list:   List of Stay() objects which have taken place for this patient at ``target_date``.
         """
-        candidate_moves = []
+        candidate_stays = []
         for each_case in self.cases.values():
-            # print(each_case.moves)
-            for each_move in each_case.moves.values():
-                # print(each_move.bwe_dt)
-                # each_move is a dictionary of the form {1: Move(), 2: Move(),...}
-                move_start = each_move.from_datetime.date() if each_move.from_datetime is not None else None
-                move_end = each_move.to_datetime.date() if each_move.to_datetime is not None else None
-                if move_start is None or move_end is None:
+            # print(each_case.stays)
+            for each_stay in each_case.stays.values():
+                stay_start = each_stay.from_datetime.date() if each_stay.from_datetime is not None else None
+                stay_end = each_stay.to_datetime.date() if each_stay.to_datetime is not None else None
+
+                if stay_start is None or stay_end is None:
                     continue
                 else:
-                    if move_start <= target_date <= move_end:
-                        candidate_moves.append(each_move)
+                    if stay_start <= target_date <= stay_end:
+                        candidate_stays.append(each_stay)
 
-        return candidate_moves
+        return candidate_stays
 
     @staticmethod
-    def create_patient_dict(lines, load_limit=None):
+    def create_patient_dict(csv_path, encoding, load_limit=None):
         """
         Read the patient csv and create Patient objects from the rows.
         Populate a dict (patient_id -> patient). This function will be called by the HDFS_data_loader.patient_data() function. The lines argument corresponds to a csv.reader() instance
@@ -487,8 +519,11 @@ class Patient:
         logging.debug("create_patient_dict")
         import_count = 0
         patients = dict()
-        for line in tqdm(lines):
-            patient = Patient(*line)
+        patient_df = pd.read_csv(csv_path, encoding=encoding, parse_dates=["Birth Date"], dtype=str)
+        # patient_df["Patient ID"] = patient_df["Patient ID"].astype(int) # in principle it should be an int, history makes it a varchar/string
+
+        patient_objects = patient_df.progress_apply(lambda row: Patient(*row.to_list()), axis=1)
+        for patient in patient_objects.to_list():
             patients[patient.patient_id] = patient
             import_count += 1
             if load_limit is not None and import_count > load_limit:
@@ -496,3 +531,82 @@ class Patient:
 
         logging.info(f"{len(patients)} patients created")
         return patients
+
+    def __repr__(self):
+        return str(dict((key, value) for key, value in self.__dict__.items()
+                    if not callable(value) and not key.startswith('__')))
+
+    def __str__(self):
+        return self.__repr__()
+
+    # patient related queries
+
+    @staticmethod
+    def get_contact_patients_for_case(c, ps):
+        # TODO: Make contact patient dependent on positive date
+        for stay in c.stays.values():
+            # contacts in the same room
+            if stay.to_datetime is not None and stay.room is not None:
+                stays_in_range = stay.room.get_stays_during(stay.from_datetime, stay.to_datetime)
+                for stay_in_range in stays_in_range:
+                    if stay_in_range.case is not None and stay.case is not None:
+                        if stay_in_range.case.case_type_id == "1" and stay_in_range.type_id in ["1", "2", "3"] and stay_in_range.to_datetime is not None:
+                            # if n.case.patient_id > m.case.patient_id and n.bwe_dt is not None:
+                            # if n.bwe_dt is not None:
+                            start_overlap = max(stay.from_datetime, stay_in_range.from_datetime)
+                            end_overlap = min(stay.to_datetime, stay_in_range.to_datetime)
+                            ps.append(
+                                (
+                                    stay.case.patient_id,  # risk patient
+                                    stay_in_range.case.patient_id,  # contact patient
+                                    start_overlap,
+                                    end_overlap,
+                                    stay.room.name,
+                                    "contact_room",
+                                )
+                            )
+            # contacts in the same ward (ORGPF)
+            if stay.to_datetime is not None and stay.ward is not None:
+                stays_in_range = stay.ward.get_stays_during(stay.from_datetime, stay.to_datetime)
+                for stay_in_range in stays_in_range:
+                    if stay_in_range.case is not None and stay.case is not None:
+                        if stay_in_range.case.case_type_id == "1" \
+                                and stay_in_range.type_id in ["1", "2", "3"] \
+                                and stay_in_range.to_datetime is not None \
+                                and (stay_in_range.room_id is None or stay.room_id is None or stay_in_range.room_id != stay.room_id):
+                            start_overlap = max(stay.from_datetime, stay_in_range.from_datetime)
+                            end_overlap = min(stay.to_datetime, stay_in_range.to_datetime)
+                            ps.append(
+                                (
+                                    stay.case.patient_id,  # risk patient
+                                    stay_in_range.case.patient_id,  # contact patient
+                                    start_overlap,
+                                    end_overlap,
+                                    stay.ward.name,
+                                    "contact_ward",
+                                )
+                            )
+
+    @staticmethod
+    def get_risk_patients(patients):
+        risk_patients = []
+        for p in patients.values():
+            if p.has_risk():
+                risk_patients.append(p)
+        return risk_patients
+
+    @staticmethod
+    def get_contact_and_risk_patient_ids(patients):
+        contact_patients = []
+        for p in patients.values():
+            if p.has_risk():
+                for c in p.cases.values():
+                    if c.case_type_id == "1":  # only stationary cases # TODO: cast to int for faster comparison
+                        if c.stays_end is not None:  # and c.stays_end > datetime.datetime.now() - relativedelta(years=1):
+                            Patient.get_contact_patients_for_case(c, contact_patients)
+        return contact_patients
+
+    @staticmethod
+    def get_patients_by_ids(all_patients: dict, patient_ids):
+        return [all_patients[patient_id] for patient_id in patient_ids if patient_id in all_patients]
+

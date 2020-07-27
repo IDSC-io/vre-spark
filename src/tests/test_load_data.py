@@ -6,7 +6,7 @@ import configparser
 
 from src.features.model import Patient
 from src.features.model import Case
-from src.features.model import Move
+from src.features.model import Stay
 
 from src.tests.conftest import get_hdfs_pipe
 from configuration.basic_configuration import configuration
@@ -15,7 +15,7 @@ base_path = configuration['PATHS']['test_data_dir']
 
 patients_path = os.path.join(base_path, "V_DH_DIM_PATIENT_CUR.csv")
 cases_path = os.path.join(base_path, "V_LA_ISH_NFAL_NORM.csv")
-moves_path = os.path.join(base_path, "LA_ISH_NBEW.csv")
+stays_path = os.path.join(base_path, "LA_ISH_NBEW.csv")
 
 
 def test_load_patients():
@@ -36,17 +36,17 @@ def test_load_cases():
     assert pytest.patients.get("00003067149", None) is not None
 
 
-def test_load_moves():
-    Move.add_moves_to_case(
-        get_hdfs_pipe(moves_path),
+def test_load_stays():
+    Stay.add_stays_to_case(
+        get_hdfs_pipe(stays_path),
         pytest.cases,
         pytest.rooms,
         pytest.wards,
         pytest.partners,
     )
-    assert len(pytest.patients.get("00003067149").cases.get("0006314210").moves) == 12
+    assert len(pytest.patients.get("00003067149").cases.get("0006314210").stays) == 12
     assert len(pytest.rooms) == 15
     assert len(pytest.wards) == 26
     assert pytest.rooms.get("BH H 116", None) is not None
     assert pytest.wards.get("INEGE 2", None) is not None
-    assert len(pytest.rooms.get("BH H 116").moves) == 3
+    assert len(pytest.rooms.get("BH H 116").stays) == 3

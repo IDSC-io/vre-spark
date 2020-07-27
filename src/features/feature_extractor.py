@@ -181,7 +181,7 @@ class FeatureExtractor:
         node_list.close()
 
     @staticmethod
-    def get_contact_patients_for_case(cases, contact_pats):
+    def get_contact_patients_for_case(case, contact_pats):
         """Extracts contact patients for specific cases.
 
         Appends tuples of length 6 (see param contact_pats) directly to contact_pats, which is a list recording all
@@ -196,47 +196,47 @@ class FeatureExtractor:
                                     start_overlap_dt, end_overlap_dt, ward_name, "kontakt_org")` in the case of a
                                     contact organization.
         """
-        for move in cases.moves.values():
+        for stay in case.stays.values():
             ####################################################
             # --> Extract contacts in the same room
             ####################################################
-            if move.to_datetime is not None and move.room is not None:
-                overlapping_moves = move.room.get_moves_during(move.from_datetime, move.to_datetime)
-                # get_moves_during() returns a list of all moves overlapping with the .bwi_dt - .bwe_dt interval
-                for overlap_move in overlapping_moves:
-                    if overlap_move.case is not None and move.case is not None:
-                        if overlap_move.case.case_type == "1" and overlap_move.type_id in ["1", "2", "3"] and \
-                                overlap_move.to_datetime is not None:
-                            start_overlap = max(move.from_datetime, overlap_move.from_datetime)
-                            end_overlap = min(move.to_datetime, overlap_move.to_datetime)
+            if stay.to_datetime is not None and stay.room is not None:
+                overlapping_stays = stay.room.get_stays_during(stay.from_datetime, stay.to_datetime)
+                # get_stays_during() returns a list of all stays overlapping with the .bwi_dt - .bwe_dt interval
+                for overlap_stay in overlapping_stays:
+                    if overlap_stay.case is not None and stay.case is not None:
+                        if overlap_stay.case.case_type == "1" and overlap_stay.type_id in ["1", "2", "3"] and \
+                                overlap_stay.to_datetime is not None:
+                            start_overlap = max(stay.from_datetime, overlap_stay.from_datetime)
+                            end_overlap = min(stay.to_datetime, overlap_stay.to_datetime)
                             contact_pats.append(
                                 (
-                                    move.case.patient_id,
-                                    overlap_move.case.patient_id,
+                                    stay.case.patient_id,
+                                    overlap_stay.case.patient_id,
                                     start_overlap.strftime("%Y-%m-%dT%H:%M"),
                                     end_overlap.strftime("%Y-%m-%dT%H:%M"),
-                                    move.room.name,
+                                    stay.room.name,
                                     "kontakt_raum",
                                 ))  # append data in the form of a tuple
             ####################################################
             # --> Extract contacts in the same ward (ORGPF)
             ####################################################
-            if move.to_datetime is not None and move.ward is not None:
-                overlapping_moves = move.ward.get_moves_during(move.from_datetime, move.to_datetime)
-                for overlap_move in overlapping_moves:
-                    if overlap_move.case is not None and move.case is not None:
-                        if overlap_move.case.case_type == "1" and overlap_move.type_id in ["1", "2", "3"] and \
-                                overlap_move.to_datetime is not None and \
-                                (overlap_move.room_id is None or move.room_id is None or overlap_move.room_id != move.room_id):
-                            start_overlap = max(move.from_datetime, overlap_move.from_datetime)
-                            end_overlap = min(move.to_datetime, overlap_move.to_datetime)
+            if stay.to_datetime is not None and stay.ward is not None:
+                overlapping_stays = stay.ward.get_stays_during(stay.from_datetime, stay.to_datetime)
+                for overlap_stay in overlapping_stays:
+                    if overlap_stay.case is not None and stay.case is not None:
+                        if overlap_stay.case.case_type == "1" and overlap_stay.type_id in ["1", "2", "3"] and \
+                                overlap_stay.to_datetime is not None and \
+                                (overlap_stay.room_id is None or stay.room_id is None or overlap_stay.room_id != stay.room_id):
+                            start_overlap = max(stay.from_datetime, overlap_stay.from_datetime)
+                            end_overlap = min(stay.to_datetime, overlap_stay.to_datetime)
                             contact_pats.append(
                                 (
-                                    move.case.patient_id,
-                                    overlap_move.case.patient_id,
+                                    stay.case.patient_id,
+                                    overlap_stay.case.patient_id,
                                     start_overlap.strftime("%Y-%m-%dT%H:%M"),
                                     end_overlap.strftime("%Y-%m-%dT%H:%M"),
-                                    move.ward.name,
+                                    stay.ward.name,
                                     "kontakt_org",
                                 ))
 
@@ -263,7 +263,7 @@ class FeatureExtractor:
             if pat.has_risk():
                 for case in pat.cases.values():
                     # if case.fal_ar == "1": # only stationary cases
-                    if case.moves_end is not None and case.moves_end > \
+                    if case.stays_end is not None and case.stays_end > \
                             datetime.datetime.now() - relativedelta.relativedelta(years=1):
                         self.get_contact_patients_for_case(case, contact_pats)
         return contact_pats

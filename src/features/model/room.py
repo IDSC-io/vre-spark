@@ -8,7 +8,7 @@ from src.features.model import Bed
 
 class Room:
     """
-    Models a room in the hospital and contains lists of moves and appointments that happened in this room.
+    Models a room in the hospital and contains lists of stays and appointments that happened in this room.
     """
 
     def __init__(self, name):
@@ -20,23 +20,23 @@ class Room:
         self.name = name
         self.ids = []
         self.ward = None
-        self.moves = []
+        self.stays = []
         self.appointments = []
         self.beds = dict()
 
-    def add_move(self, move):
+    def add_stay(self, stay):
         """
-        Add a Move from SAP IS-H to this room.
-        In case the Move has information about the bed, the Bed is added to the room (if not yet exists).
-        :param move: Move
+        Add a Stay from SAP IS-H to this room.
+        In case the Stay has information about the bed, the Bed is added to the room (if not yet exists).
+        :param stay: Stay
         :return:
         """
-        self.moves.append(move)
-        if move.bed is not None and move.bed is not "":
-            if self.beds.get(move.bed, None) is None:
-                b = Bed(move.bed)
-                self.beds[move.bed] = b
-            self.beds[move.bed].add_move(move)
+        self.stays.append(stay)
+        if stay.bed is not None and stay.bed is not "":
+            if self.beds.get(stay.bed, None) is None:
+                b = Bed(stay.bed)
+                self.beds[stay.bed] = b
+            self.beds[stay.bed].add_stay(stay)
 
     def add_id(self, id, system):
         """
@@ -75,19 +75,19 @@ class Room:
         else:
             return '@'.join([each_tuple[0] + '_' + each_tuple[1] for each_tuple in self.ids])
 
-    def get_moves_during(self, start_dt, end_dt):
+    def get_stays_during(self, start_dt, end_dt):
         """
-        List of moves that overlap with the start_dt, end_dt time interval.
+        List of stays that overlap with the start_dt, end_dt time interval.
         :param start_dt: datetime.datetime
         :param end_dt: datetime.datetime
-        :return: List of Move
+        :return: List of Stay
         """
-        overlapping_moves = []
-        for move in self.moves:
-            e_dt = move.to_datetime if move.to_datetime is not None else datetime.now()
-            if e_dt >= start_dt and move.from_datetime <= end_dt:
-                overlapping_moves.append(move)
-        return overlapping_moves
+        overlapping_stays = []
+        for stay in self.stays:
+            e_dt = stay.to_datetime if stay.to_datetime is not None else datetime.now()
+            if e_dt >= start_dt and stay.from_datetime <= end_dt:
+                overlapping_stays.append(stay)
+        return overlapping_stays
 
     @staticmethod
     def create_room_id_map(lines, rooms):

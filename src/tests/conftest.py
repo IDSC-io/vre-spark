@@ -9,7 +9,7 @@ sys.path.append("../vre/model")
 
 from src.features.model import Patient
 from src.features.model import Case
-from src.features.model import Move
+from src.features.model import Stay
 from src.features.model import Risk
 from src.features.model import Medication
 from src.features.model import Chop
@@ -28,7 +28,7 @@ base_path = configuration['PATHS']['test_data_dir']  # Must point to the directo
 
 patients_path = os.path.join(base_path, "V_DH_DIM_PATIENT_CUR.csv")
 cases_path = os.path.join(base_path, "V_LA_ISH_NFAL_NORM.csv")
-moves_path = os.path.join(base_path, "LA_ISH_NBEW.csv")
+stays_path = os.path.join(base_path, "LA_ISH_NBEW.csv")
 risks_path = os.path.join(base_path, "V_LA_ISH_NRSF_NORM.csv")
 deleted_risks_path = os.path.join(base_path, "deleted_screenings.csv")
 medication_path = os.path.join(base_path, "V_LA_IPD_DRUG_NORM.csv")
@@ -65,8 +65,8 @@ def patient_data():
     partners = Partner.create_partner_map(get_hdfs_pipe(partner_path))
     Partner.add_partners_to_cases(get_hdfs_pipe(partner_case_path), cases, partners)
 
-    Move.add_moves_to_case(
-        get_hdfs_pipe(moves_path),
+    Stay.add_stays_to_case(
+        get_hdfs_pipe(stays_path),
         cases,
         rooms,
         wards,

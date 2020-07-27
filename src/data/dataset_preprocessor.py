@@ -7,21 +7,24 @@ from configuration.basic_configuration import configuration
 
 def cleanup_dataset():
     """
-    Remove all the horribleness from the dataset.
+    Restay all the horribleness from the dataset.
 
     - Column names are weirdly shortened and partly english and german.
-    - States of everything are horrible string.
+    - States of everything are horrible strings.
     :return:
     """
-    CSV_DIR = configuration['PATHS']['test_data_dir'] if configuration['PARAMETERS']['dataset'] == 'test' \
-        else configuration['PATHS']['model_data_dir']  # absolute or relative path to directory where data is stored
+    raw_data_path = configuration['PATHS']['raw_data_dir'].format("test") if configuration['PARAMETERS']['dataset'] == 'test' \
+        else configuration['PATHS']['raw_data_dir'].format("model")  # absolute or relative path to directory where data is stored
 
-    csv_files = [each_file for each_file in os.listdir(CSV_DIR) if each_file.endswith('.csv')]
+    interim_data_path = configuration['PATHS']['interim_data_dir'].format("test") if configuration['PARAMETERS']['dataset'] == 'test' \
+        else configuration['PATHS']['interim_data_dir'].format("model")  # absolute or relative path to directory where data is stored
+
+    csv_files = [each_file for each_file in os.listdir(raw_data_path) if each_file.endswith('.csv')]
 
     for each_file in csv_files:
         print(f"--> Fixing modelling in file {each_file} ...")
 
-        path = pathlib.Path(CSV_DIR + "/" + each_file)
+        path = pathlib.Path(raw_data_path + "/" + each_file)
 
         if path.name == "DIM_FALL.csv":
             df = pd.read_csv(path, encoding="ISO-8859-1", dtype=str)
@@ -33,26 +36,30 @@ def cleanup_dataset():
 
             df.loc[df["Case Type"] == "ambulanter Fall", "Case Type"] = "ambulatory"
             df.loc[df["Case Type"] == "stationärer Fall", "Case Type"] = "in-patient"
+            df.loc[df["Case Type"] == "teilstationärer Fall", "Case Type"] = "partially in-patient"
 
             df.loc[df["Patient Status"] == "aktiv", "Patient Status"] = "active"
             df.loc[df["Patient Status"] == "storniert", "Patient Status"] = "cancelled"
-
+            df = df.set_index("Case ID")
         elif path.name == "DIM_GERAET.csv":
             df = pd.read_csv(path, encoding="ISO-8859-1", dtype=str)
             df.columns = ["Device ID", "Device Name"]
-
+            df = df.set_index("Device ID")
         elif path.name == "DIM_PATIENT.csv":
             df = pd.read_csv(path, encoding="ISO-8859-1", dtype=str)
             df.columns = ["Patient ID", "Gender", "Birth Date", "Zip Code", "Place of Residence", "Canton", "Language"]
             df.loc[df["Gender"] == "männlich", "Gender"] = "male"
             df.loc[df["Gender"] == "weiblich", "Gender"] = "female"
+            df = df.set_index("Patient ID")
         elif path.name == "DIM_RAUM.csv":
             df = pd.read_csv(path, encoding="ISO-8859-1", dtype=str)
             df.columns = ["Room ID", "Room Common Name"]
+            df = df.set_index("Room ID")
         elif path.name == "DIM_TERMIN.csv":
             df = pd.read_csv(path, encoding="ISO-8859-1", dtype=str)
-            df.columns = ["Appoinment ID", "Deleted On Source", "Description", "Type", "Type 2", "Date", "Duration in Minutes"]
-        elif path.name == "FAKT_MEDIKAMENT.csv":
+            df.columns = ["Appointment ID", "Deleted On Source", "Description", "Type", "Type 2", "Date", "Duration in Minutes"]
+            df = df.set_index("Appointment ID")
+        elif path.name == "FAKT_MEDIKAMENTE.csv":
             df = pd.read_csv(path, encoding="ISO-8859-1", dtype=str)
             df.columns = ["Patient ID", "Case ID", "Drug Name",
                           "Drug ATC ID",  # Anatomical Therapeutic Chemical Classification Syname ID
@@ -60,18 +67,23 @@ def cleanup_dataset():
                           "Unit",
                           "Disposition Form",
                           "Submission Date"]
+            df = df.set_index(["Patient ID", "Case ID", "Submission Date"])
         elif path.name == "FAKT_TERMIN_GERAET.csv":
             df = pd.read_csv(path, encoding="ISO-8859-1", dtype=str)
-            df.columns = ["Appoinment ID", "Device ID", "Begin", "End", "Duration in Minutes"]
+            df.columns = ["Appointment ID", "Device ID", "Begin", "End", "Duration in Minutes"]
+            df = df.set_index(["Appointment ID", "Device ID", "Begin"])
         elif path.name == "FAKT_TERMIN_MITARBEITER.csv":
             df = pd.read_csv(path, encoding="ISO-8859-1", dtype=str)
-            df.columns = ["Appoinment ID", "Employee ID", "Begin", "End", "Duration in Minutes"]
+            df.columns = ["Appointment ID", "Employee ID", "Begin", "End", "Duration in Minutes"]
+            df = df.set_index(["Appointment ID", "Employee ID", "Begin"])
         elif path.name == "FAKT_TERMIN_PATIENT.csv":
             df = pd.read_csv(path, encoding="ISO-8859-1", dtype=str)
             df.columns = ["Appointment ID", "Patient ID", "Case ID"]
+            df = df.set_index(["Appointment ID", "Patient ID", "Case ID"])
         elif path.name == "FAKT_TERMIN_RAUM.csv":
             df = pd.read_csv(path, encoding="ISO-8859-1", dtype=str)
-            df.columns = ["Appoinment ID", "Room ID", "Room Common Name", "Begin", "End", "Duration in Minutes"]
+            df.columns = ["Appointment ID", "Room ID", "Room Common Name", "Begin", "End", "Duration in Minutes"]
+            df = df.set_index(["Appointment ID", "Room ID", "Begin"])
         elif path.name == "LA_CHOP_FLAT.csv":
             df = pd.read_csv(path, encoding="ISO-8859-1", dtype=str)
             df.columns = ["Chop Code", "Usage Year", "Chop Description",
@@ -93,10 +105,12 @@ def cleanup_dataset():
             df["Code Level 5 Description"] = df["Code Level 5 Description"].str.replace("\\x96", "-")
             df["Code Level 6 Description"] = df["Code Level 6 Description"].str.replace("\\x96", "-")
 
+            df = df.set_index(["Chop Catalog ID"])
+
         elif path.name == "LA_ISH_NBEW.csv":
             df = pd.read_csv(path, encoding="ISO-8859-1", dtype=str)
             # the db designer of that source syname was just a troll
-            df.columns = ["Case ID", "Serial Number", "Movement Type ID", "Movement Type", "Begin Date", "Begin Time", "Status", "End Date", "End Time", "Serial Reference", "Description",
+            df.columns = ["Case ID", "Serial Number", "Stay Type ID", "Stay Type", "Begin Date", "Begin Time", "Status", "End Date", "End Time", "Serial Reference", "Description",
                           "Department",  # "fachliche Organisationseinheit" (https://help.sap.com/saphelp_ewm70/helpdata/de/40/f39a3916f07e00e10000000a11402f/frameset.htm)
                           "Ward",  #  Nursing Organisational Unit/ "pflegerische Organisationseinheit = Abteilungen/Station"
                           "Organisational Unit of Entry",  # "Aufnahme-Organisationseinheit"
@@ -111,43 +125,57 @@ def cleanup_dataset():
 
             df["Begin Datetime"] = pd.to_datetime(df["Begin Datetime"], format="%Y-%m-%d %H:%M:%S", errors='coerce')
             df["End Datetime"] = pd.to_datetime(df["End Datetime"], format="%Y-%m-%d %H:%M:%S", errors='coerce')
+            df = df.set_index(["Serial Number"])
 
         elif path.name == "LA_ISH_NDIA.csv":
             df = pd.read_csv(path, encoding="ISO-8859-1", dtype=str)
             df.columns = ["Case ID", "Diagnosis Key 1", "Diagnosis Category 1", "Date of Diagnosis", "DRG Category"] # FALNR,DKEY1,DKAT1,DIADT,DRG_CATEGORY
+            df = df.set_index("Case ID", "Diagnosis Key 1")
+
         elif path.name == "LA_ISH_NDRG.csv":
             df = pd.read_csv(path, encoding="ISO-8859-1", dtype=str)
             df.columns = ["Case ID", "Cost Weight"]
+            df = df.set_index("Case ID")
+
         elif path.name == "LA_ISH_NFPZ.csv":  # https://www.se80.co.uk/saptables/n/nfpz/nfpz.htm
             df = pd.read_csv(path, encoding="ISO-8859-1", dtype=str)
             df.columns = ["EARZT", "FARZT", "Case ID", "Serial Number", "Partner ID", "Cancelled"] # EARZT,FARZT,FALNR,LFDNR,PERNR,STORN]
+            df = df.set_index("Serial Number")
+
         elif path.name == "LA_ISH_NGPA.csv":
             df = pd.read_csv(path, encoding="ISO-8859-1", dtype=str)
             df.columns = ["Partner ID", "Name 1", "Name 2", "Name 3", "Country", "Zip Code", "Place of Residence", "Place of Residence", "Street", "Hospital"]
+            df = df.set_index("Partner ID")
+
         elif path.name == "LA_ISH_NICP.csv":  # https://help.sap.com/doc/saphelp_crm60/6.0.0.14/en-US/d9/6f2fcf772644fe8e10cc3c3cca6039/frameset.htm
             df = pd.read_csv(path, encoding="ISO-8859-1", dtype=str)
-            df.columns = ["Movement ID", "Catalog ID", "Chop Code", "Surgeries Quantity", "Beginning", "Location Surgery Information", "Cancelled", "Case ID", "Ward"]
+            df.columns = ["Stay ID", "Catalog ID", "Chop Code", "Surgeries Quantity", "Beginning", "Location Surgery Information", "Cancelled", "Case ID", "Ward"]
+            df = df.set_index(["Stay ID", "Catalog ID", "Case ID"])
+
         elif path.name == "TACS_DATEN.csv":
             df = pd.read_csv(path, encoding="ISO-8859-1", dtype=str)
-            df.columns = ["Patient ID", "Patient Type", "Patient Status", "Case ID", "Case Type", "Case Status", "Date of Care", "Duration of Care in Mins", "Employee staff Number", "Employee Employment Number", "Employee Login", "Batch Run ID"]
+            df.columns = ["Patient ID", "Patient Type", "Patient Status", "Case ID", "Case Type", "Case Status", "Date of Care", "Duration of Care in Mins", "Employee Staff Number", "Employee Employment Number", "Employee Login", "Batch Run ID"]
+            df = df.set_index(["Patient ID", "Employee Staff Number", "Date of Care"])
+
         elif path.name == "V_LA_ISH_NDIA_NORM.csv":
             df = pd.read_csv(path, encoding="ISO-8859-1", dtype=str)
             df.columns = ["Case ID", "Diagnosis Key 1", "Diagnosis Category 1", "Date of Diagnosis", "DRG Category"]
+            df = df.set_index(["Case ID", "Diagnosis Key 1"])
 
         elif path.name == "V_LA_ISH_NRSF_NORM.csv":  # https://www.se80.co.uk/saptables/n/nrsf/nrsf.htm
             df = pd.read_csv(path, encoding="ISO-8859-1", dtype=str)
             df.columns = ["Patient ID", "Risk Factor ID", "Description", "Creation Date", "Creation Time"]
+            df = df.set_index(["Patient ID", "Risk Factor ID", "Creation Time"])
 
         elif path.name == "VRE_SCREENING_DATA.csv":
             df = pd.read_csv(path, encoding="ISO-8859-1", dtype=str)
-            df.columns = ["Order ID", "Record Date", "Measurement Date", "First Name", "Last Name", "Birthdate", "Patient ID", "Requester", "Cost Unit", "Material Type", "Transport", "Result", "Analysis Method", "Screening Context"]
-
+            df.columns = ["Order ID", "Record Date", "Measurement Date", "First Name", "Last Name", "Birth Date", "Patient ID", "Requester", "Cost Unit", "Material Type", "Transport", "Result", "Analysis Method", "Screening Context"]
+            df = df.set_index(["Order ID"])
         else:
             print(f"No fix proposed for {each_file}")
             continue
 
-        interim_path = "./data/interim/"
-        df.to_csv(interim_path + path.name)
+        df.to_csv(interim_data_path + path.name)
 
 
 if __name__ == '__main__':

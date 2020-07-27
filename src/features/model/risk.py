@@ -3,25 +3,26 @@ import datetime
 import logging
 
 from tqdm import tqdm
+import pandas as pd
 
 
 class Risk:
     """Models a ``Risk`` (i.e. Screening) object.
     """
 
-    def __init__(self, order_nr, recording_date, sampling_date, first_name, surname, birth_date, patient_id,
+    def __init__(self, order_nr, recording_date, sampling_date, first_name, last_name, birth_date, patient_id,
                  requester, cost_center, material_type, transport, result, analysis_method, screening_context):
         """Initiates a Risk (i.e. Screening) object.
         """
         self.order_nr = order_nr
-        self.recording_date = datetime.datetime.strptime(recording_date, '%Y-%m-%d').date() if recording_date != '' else None
+        self.recording_date = recording_date.date()
         self.patient_id = patient_id
         self.result = result
 
         # not used
-        self.sampling_date = datetime.datetime.strptime(sampling_date, '%Y-%m-%d').date() if sampling_date != '' else None
+        self.sampling_date = sampling_date
         self.first_name = first_name
-        self.surname = surname
+        self.last_name = last_name
         self.birth_date = birth_date
         self.requester = requester
         self.cost_center = cost_center
@@ -96,7 +97,7 @@ class Risk:
         return oe_pflege_dict
 
     @staticmethod
-    def add_annotated_screening_data_to_patients(lines, patient_dict):
+    def add_annotated_screening_data_to_patients(csv_path, encoding, patient_dict):
         """Annotates and adds screening data to all patients in the model.
 
         This function is the core piece for adding VRE screening data to the model. It will read all screenings exported
@@ -136,13 +137,13 @@ class Risk:
         For most screenings however, the ``screening_context`` will be set to NULL. In this case, the context must be
         **extracted** from the data available in the model. This process is tedious and involves the following steps:
 
-        1) Extract Move() (in german: *Aufenthalt*) objects for screening which were available to the patient at the
-            time of ``erfassung``. This **must** be a single move, as a patient cannot be stationed in two different
+        1) Extract Stay() (in german: *Aufenthalt*) objects for screening which were available to the patient at the
+            time of ``erfassung``. This **must** be a single stay, as a patient cannot be stationed in two different
             wards simultaneously.
-        2) Extract the Ward() for the Move() extracted in step 1, and add the ward name to the ``self.ward_name``
+        2) Extract the Ward() for the Stay() extracted in step 1, and add the ward name to the ``self.ward_name``
             attribute.
-        3) Extract the exact Room() name where the patient was located from the Move(), and add it to the
-            ``self.room_name`` attribute. This room name is sometimes indicated for Moves(), but will not be available
+        3) Extract the exact Room() name where the patient was located from the Stay(), and add it to the
+            ``self.room_name`` attribute. This room name is sometimes indicated for Stays(), but will not be available
             for the vast majority of data. In that case, room_name will be set to ``None`` instead.
         4) Map the extracted Ward() name to an official *Pflegerische OE* using the ``oe_pflege_map`` dictionary. This
             dictionary maps "inofficial" ward names to an official name of a *pflegerische OE*. This step is very
@@ -160,29 +161,35 @@ class Risk:
             lines (iterator):       iterator object of the to-be-read file `not` containing the header line
             patient_dict (dict):    Dictionary mapping patient ids to Patient() --> {'00008301433' : Patient(), ... }
         """
-        move_wards = []
+        risk_df = pd.read_csv(csv_path, encoding=encoding, parse_dates=["Record Date"], dtype=str)
+        # in principle they are all int, history makes them a varchar/string
+        # risk_df["Patient ID"] = risk_df["Patient ID"].astype(int)
+        risk_objects = risk_df.progress_apply(lambda row: Risk(*row.to_list()), axis=1)
+        stay_wards = []
         screening_wards = []
         logging.debug("adding_all_screenings_to_patients")
         nr_pat_not_found = 0
+        nr_pat_no_relevant_stays_found = 0
         nr_ok = 0
-        for each_line in tqdm(lines):
-            risk = Risk(*each_line)
-            if risk.patient_id not in patient_dict:  # Check whether or not PID exists
+        for risk in tqdm(risk_objects.to_list()):
+            if risk.patient_id not in patient_dict.keys():  # Check whether or not PID exists
                 nr_pat_not_found += 1
                 continue
 
-            potential_moves = patient_dict.get(risk.patient_id).get_moves_at_date(risk.recording_date)
-            if len(potential_moves) > 0:  # indicates at least one potential match
-                move_wards.append('+'.join([each_move.org_fa for each_move in potential_moves]))
-                patient_dict[risk.patient_id].add_risk(risk)
+            # check if patient had an official stay at the hospital during the risk
+            #potential_stays = patient_dict.get(risk.patient_id).get_stays_at_date(risk.recording_date)
+            #if True: # len(potential_stays) > 0:  # indicates at least one potential match
+            patient_dict[risk.patient_id].add_risk(risk)
+            nr_ok += 1
+
+                # stay_wards.append('+'.join([each_stay.department for each_stay in potential_stays]))
                 # screening_wards.append(this_risk.options)
-                nr_ok += 1
                 # print results to file
                 # with open('match_results.txt', 'w') as writefile:
-                #     for i in range(len(move_wards)):
-                #         writefile.write(f"{move_wards[i]}; {screening_wards[i]}\n")
-            else:
-                nr_pat_not_found += 1
-                continue
+                #     for i in range(len(stay_wards)):
+                #         writefile.write(f"{stay_wards[i]}; {screening_wards[i]}\n")
+            #else:
+            #    nr_pat_no_relevant_stays_found += 1
+            #    continue
 
-        logging.info(f"{nr_ok} screenings added, {nr_pat_not_found} patients from screening data not found.")
+        logging.info(f"{nr_ok} screenings added, {nr_pat_not_found} patients from screening data not found, {nr_pat_no_relevant_stays_found} patients with no relevant stays found.")

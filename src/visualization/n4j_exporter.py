@@ -121,18 +121,18 @@ class Neo4JExporter:
                 pat_rel_case = patient.get_relevant_case()
                 if pat_rel_case is not None:
                     relcase_count += 1
-                    for move in pat_rel_case.moves.values():  # the Case().moves attribute is a dictionary mapping the order of moves to Moves() objects
-                        if move.room is not None:
+                    for stay in pat_rel_case.stays.values():  # the Case().stays attribute is a dictionary mapping the order of stays to Stays() objects
+                        if stay.room is not None:
                             csvwriter.writerow(
                                 [
                                     patient.patient_id,
-                                    move.room.name,
-                                    move.from_datetime.strftime("%Y-%m-%dT%H:%M"),
-                                    move.to_datetime.strftime("%Y-%m-%dT%H:%M"),
+                                    stay.room.name,
+                                    stay.from_datetime.strftime("%Y-%m-%dT%H:%M"),
+                                    stay.to_datetime.strftime("%Y-%m-%dT%H:%M"),
                                     "in",
                                 ])
                             room_count += 1
-        logging.info(f'Wrote {room_count} rooms (based on moves) for {relcase_count} patients with relevant cases out of {patient_count} patients.')
+        logging.info(f'Wrote {room_count} rooms (based on stays) for {relcase_count} patients with relevant cases out of {patient_count} patients.')
 
     def write_bed(self, rooms):
         """
@@ -335,7 +335,7 @@ class Neo4JExporter:
             for partner in partners.values():
                 csvwriter.writerow(
                     [
-                        partner.gp_art,
+                        partner.partner_id,
                         "Referrer",
                         partner.name1,
                         partner.name2,
@@ -363,14 +363,14 @@ class Neo4JExporter:
                 patient_count += 1
                 patient_relcase = patient.get_relevant_case()
                 if patient_relcase is not None:
-                    if patient_relcase.moves_start is not None:
+                    if patient_relcase.stays_start is not None:
                         for referrer in patient_relcase.referrers:
                             csvwriter.writerow(
                                 [
                                     patient.patient_id,
-                                    referrer.gp_art,
+                                    referrer.partner_id,
                                     "referring",
-                                    patient_relcase.moves_start.strftime("%Y-%m-%dT%H:%M"),
+                                    patient_relcase.stays_start.strftime("%Y-%m-%dT%H:%M"),
                                 ])
                             referrer_count += 1
         logging.info(f'Created {referrer_count} referrals from {patient_count} patients.')

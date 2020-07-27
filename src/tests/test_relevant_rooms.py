@@ -1,11 +1,11 @@
 import datetime
 
-def test_moves_before_dt(patient_data):
+def test_stays_before_dt(patient_data):
     assert (
         len(
             patient_data["cases"]
             .get("0006594482")
-            .get_moves_before_dt(datetime.datetime(2018, 7, 6, 0, 0))
+            .get_stays_before_dt(datetime.datetime(2018, 7, 6, 0, 0))
         )
         == 3
     )

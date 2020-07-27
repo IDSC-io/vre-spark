@@ -9,7 +9,7 @@ from src.features.model.icdcode import ICDCode
 from src.features.model.medication import Medication
 from src.features.model.room import Room
 from src.features.model.ward import Ward
-from src.features.model.move import Move
+from src.features.model.stay import Stay
 from src.features.model.partner import Partner
 from src.features.model.patient import Patient
 from src.features.model.risk import Risk

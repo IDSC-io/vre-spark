@@ -103,7 +103,7 @@ class SurfaceModel:
         - ``to`` :math:`\\longrightarrow` indicates end of the interaction (a dt.dt() object)
         - ``type`` :math:`\\longrightarrow` indicates what node types are linked by this edge, e.g. "Patient-Room",
           "Patient-Employee", etc.
-        - ``origin`` :math:`\\longrightarrow` indicates the source that was used to add this edge (e.g. "Move",
+        - ``origin`` :math:`\\longrightarrow` indicates the source that was used to add this edge (e.g. "Stay",
           'Appointment", etc.)
 
     - Edge descriptions always contain the nodes in alphabetical order, i.e. Device-Room (NOT Room-Device),
@@ -378,7 +378,7 @@ class SurfaceModel:
         self.S_GRAPH.add_edge(source_id, target_id, **att_dict)
 
     def remove_isolated_nodes(self, silent=False):
-        """Removes all isolated nodes from the network.
+        """Restays all isolated nodes from the network.
 
         Isolated nodes are identified as having degree 0.
 
@@ -407,7 +407,7 @@ class SurfaceModel:
     def trim_model(self, snapshot_dt):
         """Trims the current model.
 
-        Removes all edges for which the ``to`` attribute is larger than snapshot_dt, and updates the self.snapshot_dt
+        Restays all edges for which the ``to`` attribute is larger than snapshot_dt, and updates the self.snapshot_dt
         attribute. However, this function does NOT remove isolated nodes.
 
         Args:
@@ -547,7 +547,7 @@ class SurfaceModel:
                     raise self.NodeBetweennessException('Missing a required call to self.write_node_files() !')
                 all_shortest_paths = list(nx.all_shortest_paths(self.S_GRAPH, source=combo_tuple[0],
                                                                 target=combo_tuple[1]))
-                # Remove the first and last node (i.e. source and target) of all shortest paths
+                # Restay the first and last node (i.e. source and target) of all shortest paths
                 trim_short_paths = [path_list[1:(len(path_list) - 1)] for path_list in all_shortest_paths]
                 involved_nodes = [node for sublist in trim_short_paths for node in sublist]
                 node_counts = Counter(involved_nodes)
@@ -567,7 +567,7 @@ class SurfaceModel:
                 # If shortest paths are "short enough", calculate the exact measure
                 all_shortest_paths = list(nx.all_shortest_paths(self.S_GRAPH, source=combo_tuple[0],
                                                                 target=combo_tuple[1]))
-                # Remove the first and last node (i.e. source and target) of all shortest paths
+                # Restay the first and last node (i.e. source and target) of all shortest paths
                 trim_short_paths = [path_list[1:(len(path_list) - 1)] for path_list in all_shortest_paths]
                 involved_nodes = [node for sublist in trim_short_paths for node in sublist]
                 node_counts = Counter(involved_nodes)
@@ -760,27 +760,27 @@ class SurfaceModel:
                 # Add patient node
                 self.new_patient_node(str(this_pat_id), risk_dict=patient.risks)
                 #########################################
-                # --> Step 1: Add rooms based on Move() objects to the network
+                # --> Step 1: Add rooms based on Stay() objects to the network
                 #########################################
-                for move in pat_relevant_case.moves.values():  # iterate over all moves in a Patient's relevant case
-                    room_id = move.room_id  # will either be the room's name or None
-                    ward_name = move.ward.name  # will either be the ward's name or None
+                for stay in pat_relevant_case.stays.values():  # iterate over all stays in a Patient's relevant case
+                    room_id = stay.room_id  # will either be the room's name or None
+                    ward_name = stay.ward.name  # will either be the ward's name or None
                     if room_id is None:  # --> If room is not identified, add it to the 'generic' Room node "Room_Unknown"
                         if "Room_Unknown" not in self.S_GRAPH.nodes:
                             self.new_room_node('Room_Unknown')
                         this_room = 'Room_Unknown'
                         nbr_room_no_id += 1
                     else:  # --> room is identified
-                        this_room = move.room_id
+                        this_room = stay.room_id
                         # Add room node - this will only overwrite attributes if node is already present
                         # --> does not matter since room_id and ward are the same
-                        self.new_room_node(move.room_id, ward=ward_name, room_id=move.room.get_ids()
-                        if move.room is not None else None)
+                        self.new_room_node(stay.room_id, ward=ward_name, room_id=stay.room.get_ids()
+                        if stay.room is not None else None)
                         # .get_ids() will return a '@'-delimited list of [room_id]_[system] entries, or None
                         nbr_room_id += 1
                     # Add Patient-Room edge if it's within scope of the current snapshot
-                    edge_dict = {'from': move.from_datetime, 'to': move.to_datetime,
-                                 'type': 'Patient-Room', 'origin': 'Move'}
+                    edge_dict = {'from': stay.from_datetime, 'to': stay.to_datetime,
+                                 'type': 'Patient-Room', 'origin': 'Stay'}
                     if edge_dict['to'] < snapshot:
                         self.new_edge(str(this_pat_id), 'Patient', this_room, 'Room', att_dict=edge_dict)
                 #########################################
@@ -869,7 +869,7 @@ class SurfaceModel:
                                     nbr_room_device += 1
         #########################################
         logging.info(f"##################################################################################")
-        logging.info(f"Encountered {nbr_room_no_id} moves without associated room, {nbr_room_id} rooms identified.")
+        logging.info(f"Encountered {nbr_room_no_id} stays without associated room, {nbr_room_id} rooms identified.")
         logging.info('------------------------------------------------------------------')
         total_warnings = self.room_add_warnings + self.employee_add_warnings + self.device_add_warnings + \
                          self.patient_add_warnings

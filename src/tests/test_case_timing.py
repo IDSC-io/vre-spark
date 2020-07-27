@@ -3,27 +3,27 @@ import datetime
 
 def test_case_timing(patient_data):
     # beg_dt and end_dt are not set in the source data
-    assert patient_data["cases"].get("0006314210").beg_dt is None
-    assert patient_data["cases"].get("0006314210").end_dt is None
+    assert patient_data["cases"].get("0006314210").begin_date is None
+    assert patient_data["cases"].get("0006314210").end_date is None
 
-    # moves_start and moves_end are set to the beginning of the first move and end of the last move respectively
-    assert patient_data["cases"].get("0006314210").moves_start == datetime.datetime(
+    # stays_start and stays_end are set to the beginning of the first stay and end of the last stay respectively
+    assert patient_data["cases"].get("0006314210").stays_start == datetime.datetime(
         2018, 1, 5, 11, 0
     )
-    assert patient_data["cases"].get("0006314210").moves_end == datetime.datetime(
+    assert patient_data["cases"].get("0006314210").stays_end == datetime.datetime(
         2018, 1, 16, 13, 0
     )
 
-    # length of stay is the timedelta between first and last move
+    # length of stay is the timedelta between first and last stay
     assert patient_data["cases"].get(
         "0006314210"
     ).get_length_of_stay() == datetime.timedelta(11, 7200)
 
     # length of stay for non-stationary cases must be None
-    assert patient_data["cases"].get("0006334066").moves_start == datetime.datetime(
+    assert patient_data["cases"].get("0006334066").stays_start == datetime.datetime(
         2018, 4, 9, 11, 7
     )
-    assert patient_data["cases"].get("0006334066").moves_end == datetime.datetime(
+    assert patient_data["cases"].get("0006334066").stays_end == datetime.datetime(
         2018, 8, 17, 10, 56
     )
     assert patient_data["cases"].get("0006334066").get_length_of_stay() is None

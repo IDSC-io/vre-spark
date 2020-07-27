@@ -11,12 +11,12 @@ class Bed:
 
     def __init__(self, name):
         self.name = name
-        self.moves = []
+        self.stays = []
 
-    def add_move(self, move):
-        """Adds a move to the self.moves() list of this bed.
+    def add_stay(self, stay):
+        """Adds a stay to the self.stays() list of this bed.
 
         Args:
-            move (Move() Object):   Move() object to append.
+            stay (Stay() Object):   Stay() object to append.
         """
-        self.moves.append(move)
+        self.stays.append(stay)

@@ -7,11 +7,11 @@ configuration["PATHS"] = {
     # Path to the "vre_output" folder
     "output_dir": "./data/processed",
 
-    # Path to directory containing test csv files
-    "test_data_dir": "./data/raw/test_data",
+    # Path to interim directory
+    "raw_data_dir": "./data/raw/{0}_data/",
 
-    # Path to directory containing complete csv data files for model
-    "model_data_dir": "./data/raw/model_data",
+    # Path to interim directory
+    "interim_data_dir": "./data/interim/{0}_data/",
 
     # absolute file path for the exported feature vector CSV file
     "csv_export_path": "./data/processed/feature_vector/feature_vector.csv",
