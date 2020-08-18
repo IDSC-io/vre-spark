@@ -16,7 +16,7 @@ class Risk:
         """
         self.order_nr = order_nr
         self.recording_date = recording_date.date()
-        self.patient_id = patient_id
+        self.patient_id = patient_id.zfill(11)  # extend the patient id to length 11 to get a standardized representation
         self.result = result
 
         # not used
