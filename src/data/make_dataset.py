@@ -5,6 +5,7 @@ from pathlib import Path
 from dotenv import find_dotenv, load_dotenv
 
 from src.data.dataset_queries import pull_raw_dataset
+from src.data.merge_data import merge_data
 from src.data.dataset_preprocessor import cleanup_dataset
 
 
@@ -23,6 +24,9 @@ def main():
 
     logger.info('Pulling dataset from database if not available yet...')
     pull_raw_dataset()
+
+    logger.info('Merge data together from multiple sources...')
+    merge_data()
 
     logger.info('Cleaning up dataset...')
     cleanup_dataset()

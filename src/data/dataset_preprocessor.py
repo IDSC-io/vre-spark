@@ -7,7 +7,7 @@ from configuration.basic_configuration import configuration
 
 def cleanup_dataset():
     """
-    Restay all the horribleness from the dataset.
+    Remove all the horribleness from the dataset.
 
     - Column names are weirdly shortened and partly english and german.
     - States of everything are horrible strings.
@@ -18,6 +18,9 @@ def cleanup_dataset():
 
     interim_data_path = configuration['PATHS']['interim_data_dir'].format("test") if configuration['PARAMETERS']['dataset'] == 'test' \
         else configuration['PATHS']['interim_data_dir'].format("model")  # absolute or relative path to directory where data is stored
+
+    # make the interim path if not available
+    pathlib.Path(interim_data_path).mkdir(parents=True, exist_ok=True)
 
     csv_files = [each_file for each_file in os.listdir(raw_data_path) if each_file.endswith('.csv')]
 
@@ -168,9 +171,39 @@ def cleanup_dataset():
             df = df.set_index(["Patient ID", "Risk Factor ID", "Creation Time"])
 
         elif path.name == "VRE_SCREENING_DATA.csv":
-            df = pd.read_csv(path, encoding="ISO-8859-1", dtype=str)
-            df.columns = ["Order ID", "Record Date", "Measurement Date", "First Name", "Last Name", "Birth Date", "Patient ID", "Requester", "Cost Unit", "Material Type", "Transport", "Result", "Analysis Method", "Screening Context"]
+            df = pd.read_csv(path, encoding="ISO-8859-1", parse_dates=["Birth Date"], dtype=str)
+            df.columns = ['Order ID', 'Record Date', 'Measurement Date', 'Patient Number', 'Last Name',
+                          'First Name', 'Birth Date', 'Gender', 'Zip Code', 'Place of Residence',
+                          'Canton', 'Patient ID', 'Requester', 'Cost Unit', 'Material Type',
+                          'Transport', 'Result', 'Analysis Method', 'Screening Context']
             df = df.set_index(["Order ID"])
+
+            df.loc[df["Gender"] == "M", "Gender"] = "male"
+            df.loc[df["Gender"] == "F", "Gender"] = "female"
+
+            patient_df = pd.read_csv(interim_data_path + "DIM_PATIENT.csv", encoding="iso-8859-1", parse_dates=["Birth Date"], dtype="str")
+
+            def find_patient_id(row, patient_df):
+                if pd.isna(row["Patient ID"]):
+                    patient_query = None
+                    if not pd.isna(row["Birth Date"]):
+                        patient_query = patient_df["Birth Date"] == row["Birth Date"]
+
+                    if not pd.isna(row["Gender"]):
+                        patient_query = patient_query & patient_df["Gender"] == row["Gender"]
+
+                    if not pd.isna(row["Zip Code"]):
+                        patient_query = patient_query & patient_df["Zip Code"] == row["Zip Code"]
+
+                    if patient_query is not None:
+                        patient_row = patient_df[patient_query]
+                        if patient_row.shape[0] == 1:
+                            row["Patient ID"] = patient_row["Patient ID"].iloc[0]
+                return row
+
+            # print(df[df["Patient ID"].isnull()].shape[0])
+            df.apply(find_patient_id, args=[patient_df], axis=1)
+            # print(df[df["Patient ID"].isnull()].shape[0])
         else:
             print(f"No fix proposed for {each_file}")
             continue
