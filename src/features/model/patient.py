@@ -217,14 +217,16 @@ class Patient:
         return self.get_ward_stays(icu_wards)
 
     def get_ward_stays(self, wards):
-        (case, dt) = self.get_relevant_case_and_date()
-        if case is None:
-            return []
-        stays = case.get_stays_before_dt(dt)
+        # (case, dt) = self.get_relevant_case_and_date()
+        # if case is None:
+        #     return []
+        # TODO: Rethink ward stays
+        # stays = case.get_stays_before_dt(dt)
         ward_stays = []
-        for stay in stays:
-            if stay.ward in wards:
-                ward_stays.append(stay)
+        for case in self.cases.values():
+            for stay in case.stays.values():
+                if stay.ward.name in wards:
+                    ward_stays.append(stay)
 
         return ward_stays
 

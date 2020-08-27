@@ -1,10 +1,13 @@
 import logging
+import os
+import pathlib
 import sys
 import pandas as pd
 
 from src.features.dataloader import DataLoader
 from src.features.model import Patient
 from datetime import datetime
+from configuration.basic_configuration import configuration
 
 
 def get_general_patient_data(patients):
@@ -35,9 +38,17 @@ def get_patient_antibiotics_data(patients):
     :param patients:
     :return:
     """
-    # TODO: Fill with data from sql
-    df = pd.DataFrame()
-    return df
+    base_path = configuration['PATHS']['interim_data_dir'].format("test") if configuration['PARAMETERS']['dataset'] == 'test' \
+        else configuration['PATHS']['interim_data_dir'].format("model")  # absolute or relative path to directory where data is stored
+
+    antibiotics_prescriptions_path = os.path.join(base_path, "ANTIBIOTICS_PRESCRIPTIONS.csv")
+    # antibiotics_intake_path = os.path.join(base_path, "ANTIBIOTICS_INTAKE.csv")
+    df = pd.read_csv(antibiotics_prescriptions_path, parse_dates=["verordnung_datum", "aktion_zeitpunkt"], dtype=str, encoding="ISO-8859-1")
+    df.columns = ["Patient ID", "Prescription ID", "Prescription Date", "Medication Name", "Medication ATC", "Action Type", "Action Datetime"]
+    # TODO: PIDs are not numbers...
+    df["Patient ID"] = pd.to_numeric(df["Patient ID"])
+    patient_ids = set([int(patient.patient_id) for patient in patients])
+    return df[df["Patient ID"].isin(patient_ids)]
 
 
 if __name__ == '__main__':
@@ -71,16 +82,17 @@ if __name__ == '__main__':
         load_rooms=False,
         load_icd_codes=False)
 
-
     risk_patients = Patient.get_risk_patients(patient_data["patients"])
 
-    # print(risk_patients)
+    print(len(risk_patients))
+    print(risk_patients)
 
     contact_risk_patient_tuple = Patient.get_contact_and_risk_patient_ids(patient_data["patients"])
 
     contact_patients = Patient.get_patients_by_ids(patient_data["patients"], [contact_patient[1] for contact_patient in contact_risk_patient_tuple])
 
-    # print(contact_patients)
+    print(len(contact_patients))
+    print(contact_patients)
 
     # get general data dataframes
     risk_patient_general_data = get_general_patient_data(risk_patients)
@@ -93,6 +105,9 @@ if __name__ == '__main__':
     # get antibiotics data dataframes
     risk_patient_antibiotics_data = get_patient_antibiotics_data(risk_patients)
     contact_patient_antibiotics_data = get_patient_antibiotics_data(contact_patients)
+
+    # make the interim path if not available
+    pathlib.Path("./data/processed/delivery/").mkdir(parents=True, exist_ok=True)
 
     risk_patient_general_data.to_csv(f"./data/processed/delivery/{now_str}_risk_patient_general.csv")
     contact_patient_general_data.to_csv(f"./data/processed/delivery/{now_str}_contact_patient_general.csv")

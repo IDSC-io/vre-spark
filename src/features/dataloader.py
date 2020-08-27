@@ -176,7 +176,6 @@ class DataLoader:
         # Load Case data from table: V_LA_ISH_NFAL_NORM
         cases = {}
         partners = {}
-        stays = {}
         if load_cases or load_partners or load_stays:
             logging.info("loading case data")
             cases = Case.create_case_map(self.cases_path, self.encoding, patients,
@@ -203,7 +202,6 @@ class DataLoader:
                 logging.info("loading stays omitted.")
         else:
             logging.info("loading cases omitted.")
-
 
         # TODO: ward screenings and care map data is gone. Readd it.
         # Generate ward screening overview map
