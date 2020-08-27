@@ -11,7 +11,7 @@ from src.features.model.data_model_constants import ICUs
 class Patient:
 
     def __init__(self, patient_id, gender, birth_date, zip_code, place_of_residence, canton, language):
-        self.patient_id = patient_id
+        self.patient_id = patient_id.zfill(11)  # extend the patient id to length 11 to get a standardized representation
         self.gender = gender
         self.birth_date = birth_date
         self.zip_code = zip_code

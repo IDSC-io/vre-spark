@@ -26,7 +26,7 @@ class Medication:
             drug_dispform,
             drug_submission,
     ):
-        self.patient_id = patient_id
+        self.patient_id = patient_id.zfill(11)  # extend the patient id to length 11 to get a standardized representation
         self.case_id = case_id
         self.drug_text = drug_text
         self.drug_atc = drug_atc

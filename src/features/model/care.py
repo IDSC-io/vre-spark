@@ -31,7 +31,7 @@ class Care:
             employee_login,
             batch_run_id,
     ):
-        self.patient_id = patient_id
+        self.patient_id = patient_id.zfill(11)  # extend the patient id to length 11 to get a standardized representation
         self.case_id = case_id
         try:
             self.date = datetime.strptime(date, "%Y-%m-%d %H:%M:%S")
