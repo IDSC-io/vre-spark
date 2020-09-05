@@ -198,6 +198,17 @@ class Patient:
 
         return self.has_stay_on_ward(icu_wards)
 
+    def get_stays(self):
+        """
+        Get all stays of a patient.
+        :return:
+        """
+        stays = []
+        for case in self.cases:
+            stays.extend(case.stays)
+
+        return stays
+
     def has_stay_on_ward(self, wards):
 
         (case, dt) = self.get_relevant_case_and_date()
@@ -503,6 +514,17 @@ class Patient:
                         candidate_stays.append(each_stay)
 
         return candidate_stays
+
+    def get_appointments(self):
+        """
+        Get all appointments of this patient
+        :return:
+        """
+        appointments = []
+        for each_case in self.cases.values():
+            appointments.extend(each_case.appointments)
+
+        return appointments
 
     @staticmethod
     def create_patient_dict(csv_path, encoding, load_limit=None):
