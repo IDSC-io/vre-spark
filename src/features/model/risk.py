@@ -10,7 +10,7 @@ class Risk:
     """Models a ``Risk`` (i.e. Screening) object.
     """
 
-    def __init__(self, order_nr, recording_date, sampling_date, patient_nr, last_name, first_name, birth_date, gender, zip_code, place_of_residence, canton,
+    def __init__(self, order_nr, recording_date, sampling_date, first_name, last_name, birth_date,
                  patient_id, requester, cost_center, material_type, transport, result, analysis_method, screening_context):
         """Initiates a Risk (i.e. Screening) object.
         """
@@ -24,10 +24,10 @@ class Risk:
         self.first_name = first_name
         self.last_name = last_name
         self.birth_date = birth_date
-        self.gender = gender
-        self.zip_code = zip_code
-        self.place_of_residence = place_of_residence
-        self.canton = canton
+        # self.gender = gender
+        # self.zip_code = zip_code
+        # self.place_of_residence = place_of_residence
+        # self.canton = canton
         self.requester = requester
         self.cost_center = cost_center
         self.material_type = material_type

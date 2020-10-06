@@ -798,7 +798,7 @@ class SurfaceModel:
                 for each_app in pat_relevant_case.appointments:
                     nbr_app += 1
                     duration_from = each_app.date
-                    duration_to = each_app.date + datetime.timedelta(hours=each_app.dauer_in_min / 60)
+                    duration_to = each_app.date + datetime.timedelta(hours=each_app.duration_in_mins / 60)
                     edge_attributes = {'from': duration_from, 'to': duration_to, 'origin': 'Appointment'}
                     # 'type' key will be added during the creation of edges, see below
                     device_list = []

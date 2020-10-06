@@ -204,8 +204,8 @@ class Patient:
         :return:
         """
         stays = []
-        for case in self.cases:
-            stays.extend(case.stays)
+        for case in self.cases.values():
+            stays.extend(case.stays.values())
 
         return stays
 
@@ -332,9 +332,9 @@ class Patient:
             if appointment.date < dt:
                 for employee in appointment.employees:
                     employees[employee.id] = (
-                        appointment.dauer_in_min
+                        appointment.duration_in_mins
                         if employees.get(employee.id, None) is None
-                        else employees[employee.id] + appointment.dauer_in_min
+                        else employees[employee.id] + appointment.duration_in_mins
                     )
         for care in case.cares:
             if care.date < dt:

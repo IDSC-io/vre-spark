@@ -140,7 +140,9 @@ class Room:
         for line in tqdm(lines):
             appointment_id = line[0]
             room_id = line[1]
-            room_name = line[2]
+            appointment_start = line[2]
+            room_name = line[3]
+            appointment_end = line[4]
             if appointments.get(appointment_id, None) is None:
                 nr_appointments_not_found += 1
                 continue
@@ -154,5 +156,13 @@ class Room:
                 rooms[room_name] = new_room
             rooms[room_name].add_appointment(appointments[appointment_id])
             appointments[appointment_id].add_room(rooms[room_name])
+
+            # TODO: Fix date parsing and store start and end for multiple rooms
+            if appointment_start != '':
+                appointments[appointment_id].start_datetime = datetime.strptime(appointment_start[:-1], "%Y-%m-%d %H:%M:%S.%f")
+
+            if appointment_end != '':
+                appointments[appointment_id].end_datetime = datetime.strptime(appointment_end[:-1], "%Y-%m-%d %H:%M:%S.%f")
+
             nr_ok += 1
         logging.info(f"{nr_ok} rooms added to appointments, {nr_appointments_not_found} appointments not found, {nr_rooms_not_found} rooms not found")

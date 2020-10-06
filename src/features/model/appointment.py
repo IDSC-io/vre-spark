@@ -14,17 +14,20 @@ class Appointment:
     """Models an appointment from RAP.
     """
 
-    def __init__(self, id, is_deleted, description, type_nr, type, date, dauer_in_min):
+    def __init__(self, id, is_deleted, description, type_nr, type, date, duration_in_mins):
         self.id = id
         self.is_deleted = is_deleted
         self.description = description
         self.type_nr = type_nr
         self.type = type
         self.date = datetime.strptime(date, "%Y-%m-%d")
+        self.start_datetime = None
+        self.end_datetime = None
+
         try:
-            self.dauer_in_min = int(float(dauer_in_min))
+            self.duration_in_mins = int(float(duration_in_mins))
         except ValueError as e:
-            self.dauer_in_min = 0
+            self.duration_in_mins = 0
 
         self.devices = []
         self.employees = []

@@ -94,7 +94,7 @@ def collect_patient_info(pat_dict, file_path, write_mode='w', csv_sep=';'):
         for each_case in pat_tuple[1].cases:
             apmnt_count += len(each_case.appointments)
             for each_apmnt in each_case.appointments:
-                apmnt_duration += each_apmnt.dauer_in_min
+                apmnt_duration += each_apmnt.duration_in_mins
             stay_count += len(list(each_case.stays.keys()))
             surgery_count += len(each_case.surgeries)
             medication_count += len(each_case.medications)

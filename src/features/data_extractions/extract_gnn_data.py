@@ -18,13 +18,13 @@ def get_patient_risks(patients):
     patient_ids = []
     patient_risks = []
     patient_risk_timestamps = []
-    for patient in patients:
-        for risk in patient:
-            patient_ids.append(patient.patient_id)
+    for patient in patients.values():
+        for risk in patient.risks.values():
+            patient_ids.append("PATIENT_" + str(patient.patient_id))
             patient_risks.append(risk.result)
             patient_risk_timestamps.append(risk.recording_date)
 
-    df = pd.DataFrame({"Patient ID": patient_ids,
+    df = pd.DataFrame({"Node ID": patient_ids,
                        "Risk": patient_risks,
                        "Timestamp": patient_risk_timestamps})
     return df
@@ -39,34 +39,36 @@ def get_entity_interactions(patients):
 
     # patient-device-employee interactions
     appointments_per_patient = {}
-    for patient in patients:
+    for patient in patients.values():
         appointments_per_patient[patient.patient_id] = patient.get_appointments()
 
-    for patient_id, patient_appointments in appointments_per_patient:
+    for (patient_id, patient_appointments) in appointments_per_patient.items():
         for patient_appointment in patient_appointments:
             for device in patient_appointment.devices:
                 interactions.append({"node_0": "PATIENT_" + str(patient_id), "node_1": "DEVICE_" + str(device.id),
-                                     "timestamp_begin": patient_appointment.date, "timestamp_end": patient_appointment.date})
+                                     "timestamp_begin": patient_appointment.start_datetime, "timestamp_end": patient_appointment.end_datetime})
+
                 for employee in patient_appointment.employees:
                     interactions.append({"node_0": "EMPLOYEE_" + str(employee.id), "node_1": "DEVICE_" + str(device.id),
-                                         "timestamp_begin": patient_appointment.date, "timestamp_end": patient_appointment.date})
+                                         "timestamp_begin": patient_appointment.start_datetime, "timestamp_end": patient_appointment.end_datetime})
+
                 for room in patient_appointment.rooms:
                     interactions.append({"node_0": "ROOM_" + str(room.name), "node_1": "DEVICE_" + str(device.id),
-                                         "timestamp_begin": patient_appointment.date, "timestamp_end": patient_appointment.date})
+                                         "timestamp_begin": patient_appointment.start_datetime, "timestamp_end": patient_appointment.end_datetime})
 
             for employee in patient_appointment.employees:
                 for room in patient_appointment.rooms:
                     interactions.append({"node_0": "ROOM_" + str(room.name), "node_1": "EMPLOYEE_" + str(employee.id),
-                                         "timestamp_begin": patient_appointment.date, "timestamp_end": patient_appointment.date})
+                                         "timestamp_begin": patient_appointment.start_datetime, "timestamp_end": patient_appointment.end_datetime})
 
     # patient-room interactions
     stays_per_patient = {}
-    for patient in patients:
+    for patient in patients.values():
         stays_per_patient[patient.patient_id] = patient.get_stays()
 
-    for patient_id, patient_stays in stays_per_patient:
+    for (patient_id, patient_stays) in stays_per_patient.items():
         for patient_stay in patient_stays:
-            interactions.append({"node_0": "PATIENT_" + str(patient_id), "node_1": "ROOM_" + str(patient_stay.room_id), "timestamp_begin": patient_stay.from_datetime, "timestamp_end" :patient_stay.to_datetime})
+            interactions.append({"node_0": "PATIENT_" + str(patient_id), "node_1": "ROOM_" + str(patient_stay.room.name), "timestamp_begin": patient_stay.from_datetime, "timestamp_end" :patient_stay.to_datetime})
 
     df = pd.DataFrame.from_records(interactions)
     return df
@@ -96,11 +98,11 @@ if __name__ == '__main__':
         load_risks=True,
         load_chop_codes=False,
         load_surgeries=False,
-        load_appointments=False,
-        load_devices=False,
-        load_employees=False,
+        load_appointments=True,
+        load_devices=True,
+        load_employees=True,
         load_care_data=False,
-        load_rooms=False,
+        load_rooms=True,
         load_icd_codes=False)
 
     node_interactions_df = get_entity_interactions(patient_data["patients"])
