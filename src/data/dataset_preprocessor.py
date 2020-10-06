@@ -185,6 +185,8 @@ def cleanup_dataset():
 
             def find_patient_id(row, patient_df):
                 if pd.isna(row["Patient ID"]):
+
+                    # try to find the patient id in the patient table via other properties
                     patient_query = None
                     if not pd.isna(row["Birth Date"]):
                         patient_query = patient_df["Birth Date"] == row["Birth Date"]
@@ -195,7 +197,7 @@ def cleanup_dataset():
                     if not pd.isna(row["Zip Code"]):
                         patient_query = patient_query & patient_df["Zip Code"] == row["Zip Code"]
 
-                    if patient_query is not None:
+                    if patient_query is not None:  # if we found a single match, set patient id
                         patient_row = patient_df[patient_query]
                         if patient_row.shape[0] == 1:
                             row["Patient ID"] = patient_row["Patient ID"].iloc[0]
