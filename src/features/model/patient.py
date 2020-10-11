@@ -566,8 +566,8 @@ class Patient:
     # patient related queries
 
     @staticmethod
-    def get_contact_patients_for_case(c, ps):
-        # TODO: Make contact patient dependent on positive date
+    def get_contact_patients_for_case(c, contact_patients):
+        # TODO: Make contact patient dependent on VRE positive date
         for stay in c.stays.values():
             # contacts in the same room
             if stay.to_datetime is not None and stay.room is not None:
@@ -579,10 +579,14 @@ class Patient:
                             # if n.bwe_dt is not None:
                             start_overlap = max(stay.from_datetime, stay_in_range.from_datetime)
                             end_overlap = min(stay.to_datetime, stay_in_range.to_datetime)
-                            ps.append(
+
+                            if stay_in_range.case.patient_id not in contact_patients:
+                                contact_patients[stay_in_range.case.patient_id] = []
+
+                            contact_patients[stay_in_range.case.patient_id].append(
                                 (
                                     stay.case.patient_id,  # risk patient
-                                    stay_in_range.case.patient_id,  # contact patient
+                                    # stay_in_range.case.patient_id,  # contact patient
                                     start_overlap,
                                     end_overlap,
                                     stay.room.name,
@@ -600,10 +604,14 @@ class Patient:
                                 and (stay_in_range.room_id is None or stay.room_id is None or stay_in_range.room_id != stay.room_id):
                             start_overlap = max(stay.from_datetime, stay_in_range.from_datetime)
                             end_overlap = min(stay.to_datetime, stay_in_range.to_datetime)
-                            ps.append(
+
+                            if stay_in_range.case.patient_id not in contact_patients:
+                                contact_patients[stay_in_range.case.patient_id] = []
+
+                            contact_patients[stay_in_range.case.patient_id].append(
                                 (
                                     stay.case.patient_id,  # risk patient
-                                    stay_in_range.case.patient_id,  # contact patient
+                                    # stay_in_range.case.patient_id,  # contact patient
                                     start_overlap,
                                     end_overlap,
                                     stay.ward.name,
@@ -613,24 +621,24 @@ class Patient:
 
     @staticmethod
     def get_risk_patients(patients):
-        risk_patients = []
+        risk_patients = {}
         for p in patients.values():
             if p.has_risk():
-                risk_patients.append(p)
+                risk_patients[p.patient_id] = p
         return risk_patients
 
     @staticmethod
-    def get_contact_and_risk_patient_ids(patients):
-        contact_patients = []
-        for p in patients.values():
+    def get_contact_patients(patients):
+        contact_patients = {}
+        for p in tqdm(patients.values()):
             if p.has_risk():
                 for c in p.cases.values():
                     if c.case_type_id == "1":  # only stationary cases # TODO: cast to int for faster comparison
-                        if c.stays_end is not None:  # and c.stays_end > datetime.datetime.now() - relativedelta(years=1):
+                        if c.stays_end is not None:  # and c.stays_end > datetime.datetime.now() - relativedelta(years=1): # TODO: Think again about this
                             Patient.get_contact_patients_for_case(c, contact_patients)
         return contact_patients
 
     @staticmethod
     def get_patients_by_ids(all_patients: dict, patient_ids):
-        return [all_patients[patient_id] for patient_id in patient_ids if patient_id in all_patients]
+        return {patient_id: all_patients[patient_id] for patient_id in tqdm(patient_ids) if patient_id in all_patients}
 

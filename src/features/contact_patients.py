@@ -59,7 +59,7 @@ if __name__ == '__main__':
 
     print(risk_patients)
 
-    contact_patients = Patient.get_contact_and_risk_patient_ids(patient_data["patients"])
+    contact_patients = Patient.get_contact_patients(patient_data["patients"])
 
     print(contact_patients)
 

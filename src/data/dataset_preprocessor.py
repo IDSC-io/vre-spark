@@ -181,6 +181,7 @@ def cleanup_dataset():
             df.loc[df["Gender"] == "M", "Gender"] = "male"
             df.loc[df["Gender"] == "F", "Gender"] = "female"
 
+            # try to fix patient ids from screening data using the patient data
             patient_df = pd.read_csv(interim_data_path + "DIM_PATIENT.csv", encoding="iso-8859-1", parse_dates=["Birth Date"], dtype="str")
 
             def find_patient_id(row, patient_df):

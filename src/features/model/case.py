@@ -203,7 +203,8 @@ class Case:
         for case in case_objects.to_list():
             # TODO: Rewrite to pandas
             # TODO: Hardcoded label, extract to configuration
-            if case.case_status == "open":  # exclude entries where "CASESTATUS" is "storniert"
+            # TODO: Look into the consequences of adding closed cases
+            if case.case_status == "open" or case.case_status == "closed":  # exclude entries where "CASESTATUS" is "storniert"
                 cases[case.case_id] = case
                 if case.patient_id in patients.keys():
                     patients[case.patient_id].add_case(case)

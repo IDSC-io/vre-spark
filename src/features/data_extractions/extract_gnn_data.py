@@ -63,12 +63,20 @@ def get_entity_interactions(patients):
 
     # patient-room interactions
     stays_per_patient = {}
+    patients_without_stays = 0
     for patient in patients.values():
         stays_per_patient[patient.patient_id] = patient.get_stays()
 
     for (patient_id, patient_stays) in stays_per_patient.items():
+        patient_stays_count = 0
         for patient_stay in patient_stays:
             interactions.append({"node_0": "PATIENT_" + str(patient_id), "node_1": "ROOM_" + str(patient_stay.room.name), "timestamp_begin": patient_stay.from_datetime, "timestamp_end" :patient_stay.to_datetime})
+            patient_stays_count += 1
+
+        if patient_stays_count == 0:
+            patients_without_stays += 1
+
+    logging.info(f"Exported {len(interactions)} GNN interactions for {len(patients.values())} patients, {patients_without_stays} without stays")
 
     df = pd.DataFrame.from_records(interactions)
     return df
@@ -116,9 +124,9 @@ if __name__ == '__main__':
     node_features_df = get_patient_risks(patient_data["patients"])
 
     # make the interim path if not available
-    pathlib.Path("./data/processed/delivery/").mkdir(parents=True, exist_ok=True)
+    pathlib.Path("./data/processed/delivery/gnn/").mkdir(parents=True, exist_ok=True)
 
-    node_interactions_df.to_csv(f"./data/processed/delivery/{now_str}_node_interactions.csv")
+    node_interactions_df.to_csv(f"./data/processed/delivery/gnn/{now_str}_node_interactions.csv")
 
-    node_features_df.to_csv(f"./data/processed/delivery/{now_str}_node_features.csv")
+    node_features_df.to_csv(f"./data/processed/delivery/gnn/{now_str}_node_features.csv")
 
