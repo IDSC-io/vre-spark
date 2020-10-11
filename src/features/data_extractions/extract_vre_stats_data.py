@@ -99,7 +99,7 @@ if __name__ == '__main__':
 
     # contact_risk_patient_dict = Patient.get_contact_patients(patient_data["patients"])
 
-    contact_patients = {} # DEBUG Patient.get_patients_by_ids(patient_data["patients"], contact_risk_patient_dict.keys())
+    contact_patients = Patient.get_patients_by_ids(patient_data["patients"], contact_risk_patient_dict.keys())
 
     print(f"Number of contact patients found: {len(contact_patients)}")
     # print(contact_patients)
@@ -114,6 +114,7 @@ if __name__ == '__main__':
 
     assert(len(risk_patients.keys()) + len(contact_patients.keys()) + len(remaining_patients.keys()) == len(patient_data["patients"]))
     # get general data dataframes
+    patient_ids_data = get_general_patient_data(list(patient_data["patients"].values()))
     risk_patient_general_data = get_general_patient_data(list(risk_patients.values()))
     contact_patient_general_data = get_general_patient_data(list(contact_patients.values()))
     remaining_patient_general_data = get_general_patient_data(list(remaining_patients.values()))
@@ -131,6 +132,7 @@ if __name__ == '__main__':
     # make the interim path if not available
     pathlib.Path("./data/processed/delivery/stats/").mkdir(parents=True, exist_ok=True)
 
+    patient_ids_data.to_csv(f"./data/processed/delivery/stats/{now_str}_patient_ids.csv")
     risk_patient_general_data.to_csv(f"./data/processed/delivery/stats/{now_str}_risk_patient_general.csv")
     contact_patient_general_data.to_csv(f"./data/processed/delivery/stats/{now_str}_contact_patient_general.csv")
     remaining_patient_general_data.to_csv(f"./data/processed/delivery/stats/{now_str}_remaining_patient_general.csv")
