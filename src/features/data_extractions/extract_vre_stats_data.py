@@ -42,23 +42,17 @@ def get_patient_antibiotics_data(patients: list):
     :param patients:
     :return:
     """
-    base_path = configuration['PATHS']['interim_data_dir'].format("test") if configuration['PARAMETERS']['dataset'] == 'test' \
-        else configuration['PATHS']['interim_data_dir'].format("model")  # absolute or relative path to directory where data is stored
+    base_path = configuration['PATHS']['raw_data_dir'].format("test") if configuration['PARAMETERS']['dataset'] == 'test' \
+        else configuration['PATHS']['raw_data_dir'].format("model")  # absolute or relative path to directory where data is stored
 
-    antibiotics_prescriptions_path = os.path.join(base_path, "ANTIBIOTICS_PRESCRIPTIONS.csv")
+    antibiotics_prescriptions_path = os.path.join(base_path, "DIM_ANTIBIOTICS_prescription_start_end.csv")
     # antibiotics_intake_path = os.path.join(base_path, "ANTIBIOTICS_INTAKE.csv")
-    df = pd.read_csv(antibiotics_prescriptions_path, parse_dates=["verordnung_datum", "aktion_zeitpunkt"], dtype=str, encoding="ISO-8859-1")
+    df = pd.read_csv(antibiotics_prescriptions_path, dtype=str, encoding="ISO-8859-1")
     df.columns = ["Patient ID", "Prescription ID", "Prescription Date", "Medication Name", "Medication ATC", "Action Type", "Action Datetime"]
     # TODO: PIDs are not numbers...
     df["Patient ID"] = pd.to_numeric(df["Patient ID"])
     patient_ids = set([int(patient.patient_id) for patient in patients])
     return df[df["Patient ID"].isin(patient_ids)]
-
-
-
-
-
-
 
 
 if __name__ == '__main__':
@@ -76,6 +70,7 @@ if __name__ == '__main__':
     logger.info(f"Processing data delivery of date {now_str}")
 
     # --> Load all data:
+    logger.info("Loading data for data delivery...")
     loader = DataLoader(hdfs_pipe=False)  # hdfs_pipe = False --> files will be loaded directly from CSV
     patient_data = loader.patient_data(
         load_cases=True,
@@ -92,56 +87,71 @@ if __name__ == '__main__':
         load_rooms=False,
         load_icd_codes=False)
 
+    logger.info("...Done.\nGetting risk patients...")
+
     risk_patients = Patient.get_risk_patients(patient_data["patients"])
 
     print(f"Number of risk patients: {len(risk_patients)}")
     # print(risk_patients)
 
+    logger.info("...Done.\nGetting contact patients...")
+
     # contact_risk_patient_dict = Patient.get_contact_patients(patient_data["patients"])
 
-    contact_patients = Patient.get_patients_by_ids(patient_data["patients"], contact_risk_patient_dict.keys())
+    contact_patients = {}  # Patient.get_patients_by_ids(patient_data["patients"], contact_risk_patient_dict.keys())
 
     print(f"Number of contact patients found: {len(contact_patients)}")
     # print(contact_patients)
+
+    logger.info("...Done.\nGetting remaining patients...")
 
     # pick up patients that are neither risk nor contact patients
     remaining_patients = {patient_id: patient_data["patients"][patient_id] for patient_id in patient_data["patients"].keys() if patient_id not in contact_patients and patient_id not in risk_patients}
 
     print(f"Number of remaining patients found: {len(remaining_patients)}")
     # print(remaining_patients)
-
     assert(len(dict(risk_patients.keys() & contact_patients.keys())) == 0 and len(dict(contact_patients.keys() & remaining_patients.keys())) == 0 and len(dict(remaining_patients.keys() & risk_patients.keys())) == 0)
-
     assert(len(risk_patients.keys()) + len(contact_patients.keys()) + len(remaining_patients.keys()) == len(patient_data["patients"]))
+
+    logger.info("...Done.\nExtracting general patient data...")
+
     # get general data dataframes
     patient_ids_data = get_general_patient_data(list(patient_data["patients"].values()))
     risk_patient_general_data = get_general_patient_data(list(risk_patients.values()))
-    contact_patient_general_data = get_general_patient_data(list(contact_patients.values()))
+    # contact_patient_general_data = get_general_patient_data(list(contact_patients.values()))
     remaining_patient_general_data = get_general_patient_data(list(remaining_patients.values()))
+
+    logger.info("...Done.\nExtracting patient ICU data...")
 
     # get ICU data dataframes
     risk_patient_icu_data = get_patient_icu_data(list(risk_patients.values()))
-    contact_patient_icu_data = get_patient_icu_data(list(contact_patients.values()))
+    # contact_patient_icu_data = get_patient_icu_data(list(contact_patients.values()))
     remaining_patient_icu_data = get_patient_icu_data(list(remaining_patients.values()))
 
-    # get antibiotics data dataframes
-    # risk_patient_antibiotics_data = get_patient_antibiotics_data(list(risk_patients.values()))
-    # contact_patient_antibiotics_data = get_patient_antibiotics_data(list(contact_patients.values()))
-    # remaining_patient_antibiotics_data = get_patient_antibiotics_data(list(remaining_patients.values()))
+    logger.info("...Done.\nExtracting patient antibiotics data...")
 
-    # make the interim path if not available
+    # get antibiotics data dataframes
+    risk_patient_antibiotics_data = get_patient_antibiotics_data(list(risk_patients.values()))
+    # contact_patient_antibiotics_data = get_patient_antibiotics_data(list(contact_patients.values()))
+    remaining_patient_antibiotics_data = get_patient_antibiotics_data(list(remaining_patients.values()))
+
+    logger.info("...Done.\nSaving data to files...")
+
+    # make the delivery/stats path if not available
     pathlib.Path("./data/processed/delivery/stats/").mkdir(parents=True, exist_ok=True)
 
     patient_ids_data.to_csv(f"./data/processed/delivery/stats/{now_str}_patient_ids.csv")
     risk_patient_general_data.to_csv(f"./data/processed/delivery/stats/{now_str}_risk_patient_general.csv")
-    contact_patient_general_data.to_csv(f"./data/processed/delivery/stats/{now_str}_contact_patient_general.csv")
+    # contact_patient_general_data.to_csv(f"./data/processed/delivery/stats/{now_str}_contact_patient_general.csv")
     remaining_patient_general_data.to_csv(f"./data/processed/delivery/stats/{now_str}_remaining_patient_general.csv")
 
     risk_patient_icu_data.to_csv(f"./data/processed/delivery/stats/{now_str}_risk_patient_icu.csv")
-    contact_patient_icu_data.to_csv(f"./data/processed/delivery/stats/{now_str}_contact_patient_icu.csv")
-    remaining_patient_icu_data.to_csv(f"./data/processed/delivery/stats/{now_str}_icu_patient_general.csv")
+    # contact_patient_icu_data.to_csv(f"./data/processed/delivery/stats/{now_str}_contact_patient_icu.csv")
+    remaining_patient_icu_data.to_csv(f"./data/processed/delivery/stats/{now_str}_remaining_patient_icu.csv")
 
-    # risk_patient_antibiotics_data.to_csv(f"./data/processed/delivery/stats/{now_str}_risk_patient_antibiotics.csv")
+    risk_patient_antibiotics_data.to_csv(f"./data/processed/delivery/stats/{now_str}_risk_patient_antibiotics.csv")
     # contact_patient_antibiotics_data.to_csv(f"./data/processed/delivery/stats/{now_str}_contact_patient_antibiotics.csv")
-    # remaining_patient_antibiotics_data.to_csv(f"./data/processed/delivery/stats/{now_str}_antibiotics_patient_general.csv")
+    remaining_patient_antibiotics_data.to_csv(f"./data/processed/delivery/stats/{now_str}_remaining_patient_antibiotics.csv")
+
+    logger.info("...Done.")
 

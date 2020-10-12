@@ -70,8 +70,9 @@ def get_patient_stays(patients):
     for (patient_id, patient_stays) in stays_per_patient.items():
         patient_stays_count = 0
         for patient_stay in patient_stays:
-            stays.append({"patient_id": str(patient_id), "room_id": str(patient_stay.room.name), "timestamp_begin": patient_stay.from_datetime, "timestamp_end" :patient_stay.to_datetime})
-            patient_stays_count += 1
+            if not pd.isna(patient_stay.room.name):
+                stays.append({"patient_id": str(patient_id), "room_id": str(patient_stay.room.name), "timestamp_begin": patient_stay.from_datetime, "timestamp_end" :patient_stay.to_datetime})
+                patient_stays_count += 1
 
         if patient_stays_count == 0:
             patients_without_stays += 1
@@ -103,12 +104,12 @@ if __name__ == '__main__':
         load_partners=False,
         load_stays=True,
         load_medications=False,
-        load_risks=True,
+        load_risks=False,
         load_chop_codes=False,
         load_surgeries=False,
-        load_appointments=True,
+        load_appointments=False,
         load_devices=True,
-        load_employees=True,
+        load_employees=False,
         load_care_data=False,
         load_rooms=True,
         load_icd_codes=False)
