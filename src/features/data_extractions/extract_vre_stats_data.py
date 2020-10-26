@@ -55,6 +55,59 @@ def get_patient_antibiotics_data(patients: list):
     return df[df["Patient ID"].isin(patient_ids)]
 
 
+def get_patient_stays(patients):
+    """Return patient stays.
+    :param patients:
+    :return:
+    """
+    stays = []
+
+    # # patient-device-employee interactions
+    # appointments_per_patient = {}
+    # for patient in patients.values():
+    #     appointments_per_patient[patient.patient_id] = patient.get_appointments()
+
+    # for (patient_id, patient_appointments) in appointments_per_patient.items():
+    #     for patient_appointment in patient_appointments:
+    #         for device in patient_appointment.devices:
+    #             interactions.append({"node_0": "PATIENT_" + str(patient_id), "node_1": "DEVICE_" + str(device.id),
+    #                                  "timestamp_begin": patient_appointment.start_datetime, "timestamp_end": patient_appointment.end_datetime})
+    #
+    #             for employee in patient_appointment.employees:
+    #                 interactions.append({"node_0": "EMPLOYEE_" + str(employee.id), "node_1": "DEVICE_" + str(device.id),
+    #                                      "timestamp_begin": patient_appointment.start_datetime, "timestamp_end": patient_appointment.end_datetime})
+    #
+    #             for room in patient_appointment.rooms:
+    #                 interactions.append({"node_0": "ROOM_" + str(room.name), "node_1": "DEVICE_" + str(device.id),
+    #                                      "timestamp_begin": patient_appointment.start_datetime, "timestamp_end": patient_appointment.end_datetime})
+    #
+    #         for employee in patient_appointment.employees:
+    #             for room in patient_appointment.rooms:
+    #                 interactions.append({"node_0": "ROOM_" + str(room.name), "node_1": "EMPLOYEE_" + str(employee.id),
+    #                                      "timestamp_begin": patient_appointment.start_datetime, "timestamp_end": patient_appointment.end_datetime})
+
+    # patient-room interactions
+    stays_per_patient = {}
+    patients_without_stays = 0
+    for patient in patients.values():
+        stays_per_patient[patient.patient_id] = patient.get_stays()
+
+    for (patient_id, patient_stays) in stays_per_patient.items():
+        patient_stays_count = 0
+        for patient_stay in patient_stays:
+            if not pd.isna(patient_stay.room.name):
+                stays.append({"patient_id": str(patient_id), "room_id": str(patient_stay.room.name), "timestamp_begin": patient_stay.from_datetime, "timestamp_end" :patient_stay.to_datetime})
+                patient_stays_count += 1
+
+        if patient_stays_count == 0:
+            patients_without_stays += 1
+
+    logging.info(f"Exported {len(stays)} Patient stays for {len(patients.values())} patients, {patients_without_stays} without stays")
+
+    df = pd.DataFrame.from_records(stays)
+    return df
+
+
 if __name__ == '__main__':
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
@@ -96,7 +149,7 @@ if __name__ == '__main__':
 
     logger.info("...Done.\nGetting contact patients...")
 
-    # contact_risk_patient_dict = Patient.get_contact_patients(patient_data["patients"])
+    contact_risk_patient_dict = Patient.get_contact_patients(patient_data["patients"])
 
     contact_patients = {}  # Patient.get_patients_by_ids(patient_data["patients"], contact_risk_patient_dict.keys())
 
@@ -135,6 +188,10 @@ if __name__ == '__main__':
     # contact_patient_antibiotics_data = get_patient_antibiotics_data(list(contact_patients.values()))
     remaining_patient_antibiotics_data = get_patient_antibiotics_data(list(remaining_patients.values()))
 
+    logger.info("...Done.\nExtracting patient stays...")
+
+    patient_stays_df = get_patient_stays(patient_data["patients"])
+
     logger.info("...Done.\nSaving data to files...")
 
     # make the delivery/stats path if not available
@@ -152,6 +209,8 @@ if __name__ == '__main__':
     risk_patient_antibiotics_data.to_csv(f"./data/processed/delivery/stats/{now_str}_risk_patient_antibiotics.csv")
     # contact_patient_antibiotics_data.to_csv(f"./data/processed/delivery/stats/{now_str}_contact_patient_antibiotics.csv")
     remaining_patient_antibiotics_data.to_csv(f"./data/processed/delivery/stats/{now_str}_remaining_patient_antibiotics.csv")
+
+    patient_stays_df.to_csv(f"./data/processed/delivery/stats/{now_str}_patient_stays.csv")
 
     logger.info("...Done.")
 
