@@ -207,6 +207,8 @@ def cleanup_dataset():
             # print(df[df["Patient ID"].isnull()].shape[0])
             df.apply(find_patient_id, args=[patient_df], axis=1)
             # print(df[df["Patient ID"].isnull()].shape[0])
+
+            df = df.drop(labels=["Gender", "Zip Code", "Place of Residence", "Canton", "Patient Number"], axis=1)
         else:
             print(f"No fix proposed for {each_file}")
             continue

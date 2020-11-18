@@ -10,26 +10,26 @@ class Risk:
     """Models a ``Risk`` (i.e. Screening) object.
     """
 
-    def __init__(self, order_nr, recording_date, sampling_date, first_name, last_name, birth_date,
-                 patient_id, requester, cost_center, material_type, transport, result, analysis_method, screening_context):
+    def __init__(self, order_id, recording_date, measurement_date, last_name, first_name, birth_date,
+                 patient_id, requester, cost_unit, material_type, transport, result, analysis_method, screening_context):
         """Initiates a Risk (i.e. Screening) object.
         """
-        self.order_nr = order_nr
+        self.order_id = order_id
         self.recording_date = recording_date.date()
         self.patient_id = patient_id.zfill(11) if not pd.isna(patient_id) else ""  # extend the patient id to length 11 to get a standardized representation
         self.result = result
 
         # not used
-        self.sampling_date = sampling_date
-        self.first_name = first_name
+        self.measurement_date = measurement_date
         self.last_name = last_name
+        self.first_name = first_name
         self.birth_date = birth_date
         # self.gender = gender
         # self.zip_code = zip_code
         # self.place_of_residence = place_of_residence
         # self.canton = canton
         self.requester = requester
-        self.cost_center = cost_center
+        self.cost_unit = cost_unit
         self.material_type = material_type
         self.transport = transport
         self.analysis_method = analysis_method
