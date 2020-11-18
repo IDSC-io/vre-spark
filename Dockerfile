@@ -17,7 +17,13 @@ COPY requirements/production.txt .
 RUN pip install -r production.txt
 
 # copy the local src directory to the working directory
-COPY src/ src/.
+COPY src/ src/
+
+COPY configuration/ configuration/
+
+COPY update_hotspot_list.sh .
+
+RUN chmod a+x update_hotspot_list.sh
 
 # command to run on container start
-CMD [ "python", "./server.py" ]
+CMD ["./update_hotspot_list.sh" ]
