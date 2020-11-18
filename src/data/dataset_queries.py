@@ -44,6 +44,7 @@ def write_sql_query_results_to_csv(path_to_sql, path_to_csv, csv_sep, connection
 
     connection_string = ';'.join([line.replace('\n', '') for line in open(connection_file, 'r')])
 
+    print(connection_string)
     conn = pyodbc.connect(connection_string, trusted_connection='yes' if trusted_connection else 'no')
     cursor = conn.cursor()
 
@@ -74,9 +75,9 @@ def pull_raw_dataset():
     this_filepath = os.path.dirname(os.path.realpath(__file__))
     # contains the directory in which this script is located, irrespective of the current working directory
 
-    SQL_DIR = os.path.join(this_filepath, "./src/data/sql/test_dataset") if configuration['PARAMETERS']['dataset'] == 'test' \
+    SQL_DIR = os.path.join(this_filepath, "./sql/test_dataset") if configuration['PARAMETERS']['dataset'] == 'test' \
         else os.path.join(this_filepath,
-                          "./src/data/sql/full_dataset")  # absolute or relative path to directory containing SQL files
+                          "./sql/full_dataset")  # absolute or relative path to directory containing SQL files
 
     CSV_DIR = configuration['PATHS']['raw_data_dir'].format("test") if configuration['PARAMETERS']['dataset'] == 'test' \
         else configuration['PATHS']['raw_data_dir'].format("model")  # absolute or relative path to directory where data is stored

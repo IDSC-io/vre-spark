@@ -1,8 +1,13 @@
 # -*- coding: utf-8 -*-
+import sys
+
+sys.path.append(".")
+sys.path.append("../..")
+
 import click
 import logging
 from pathlib import Path
-from dotenv import find_dotenv, load_dotenv
+#from dotenv import find_dotenv, load_dotenv
 
 from src.data.dataset_queries import pull_raw_dataset
 from src.data.merge_data import merge_data
@@ -41,6 +46,6 @@ if __name__ == '__main__':
 
     # find .env automagically by walking up directories until it's found, then
     # load up the .env entries as environment variables
-    load_dotenv(find_dotenv())
+    #load_dotenv(find_dotenv())
 
     main()
