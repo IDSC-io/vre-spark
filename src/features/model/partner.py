@@ -96,17 +96,19 @@ class Partner:
         nr_not_physician = 0
         nr_cancelled = 0
         nr_ok = 0
+        # TODO: Rewrite loop to pandas
         for i, row in tqdm(case_partners_df.iterrows(), total=len(case_partners_df)):
             if row["EARZT"] == 'U':
-                if row["Cancelled"] != 'X':  # line[5] corresponds to the "STORN" column ('X' --> cancelled)
+                if row["Cancelled"] != 'X':  # corresponds to the "Cancelled" column ('X' --> cancelled)
                     if cases.get(row["Case ID"], None) is None:
                         nr_cases_not_found += 1
                         continue
-                    if partners.get(row["Partner ID"], None) is None:
+                    partner_id = int(row["Partner ID"])
+                    if partners.get(partner_id, None) is None:
                         nr_partners_not_found += 1
                         continue
-                    cases[row["Case ID"]].add_referrer(partners[row["Partner ID"]])
-                    partners[row["Partner ID"]].add_case(cases[row["Case ID"]])
+                    cases[row["Case ID"]].add_referrer(partners[partner_id])
+                    partners[partner_id].add_case(cases[row["Case ID"]])
                     nr_ok += 1
                 else:
                     nr_cancelled += 1

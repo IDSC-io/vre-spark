@@ -35,6 +35,10 @@ def write_sql_query_results_to_csv(path_to_sql, path_to_csv, csv_sep, connection
         trusted_connection (bool):  additional argument passed to pyodbc.connect(), converted to "yes" if ``True`` and
                                     "no" otherwise (defaults to ``True``)
     """
+    # create path to store the csvs
+    path = pathlib.Path(path_to_csv)
+    path.parent.mkdir(parents=True, exist_ok=True)
+
     if os.path.exists(path_to_csv):
         if force_overwrite:
             print(f"Overwriting {path_to_csv} as force_overwrite is enabled.")
@@ -44,6 +48,7 @@ def write_sql_query_results_to_csv(path_to_sql, path_to_csv, csv_sep, connection
 
     connection_string = ';'.join([line.replace('\n', '') for line in open(connection_file, 'r')])
 
+    print(connection_string)
     conn = pyodbc.connect(connection_string, trusted_connection='yes' if trusted_connection else 'no')
     cursor = conn.cursor()
 
@@ -78,8 +83,8 @@ def pull_raw_dataset():
         else os.path.join(this_filepath,
                           "./sql/full_dataset")  # absolute or relative path to directory containing SQL files
 
-    CSV_DIR = configuration['PATHS']['test_data_dir'] if configuration['PARAMETERS']['dataset'] == 'test' \
-        else configuration['PATHS']['model_data_dir']  # absolute or relative path to directory where data is stored
+    CSV_DIR = configuration['PATHS']['raw_data_dir'].format("test") if configuration['PARAMETERS']['dataset'] == 'test' \
+        else configuration['PATHS']['raw_data_dir'].format("model")  # absolute or relative path to directory where data is stored
 
     CSV_DELIM = configuration['DELIMITERS']['csv_sep']  # delimiter for CSV files written from SQL results
 

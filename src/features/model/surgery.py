@@ -11,7 +11,7 @@ class Surgery:
     [LFDBEW],[ICPMK],[ICPML],[ANZOP],[BGDOP],[LSLOK],[STORN],[FALNR],[ORGPF]
     """
 
-    def __init__(self, LFDBEW, catalog_id, chop_code, ANZOP, date, LSLOK, cancelled, case_id, ward):
+    def __init__(self, stay_id, catalog_id, case_id, chop_code, surgeries_qty, date, location_surgery_info, cancelled, ward):
         self.date = datetime.strptime(date, "%Y-%m-%d")  # date of surgery
         self.catalog_id = catalog_id  # catalog ID
         self.chop_code = "Z" + chop_code  # chop code (comes without leading Z!)
@@ -22,9 +22,9 @@ class Surgery:
         self.chop = None
 
         # unused fields
-        self.lfd_bew = LFDBEW
-        self.anzop = ANZOP  # ??
-        self.lslok = LSLOK  # ??
+        self.stay_id = stay_id
+        self.surgeries_qty = surgeries_qty
+        self.location_surgery_info = location_surgery_info
 
     @staticmethod
     def add_surgeries_to_case(lines, cases, chops):
@@ -48,9 +48,10 @@ class Surgery:
         nr_ok = 0
         for line in tqdm(lines):
             surgery = Surgery(*line)
-            if surgery.cancelled == 'X':  # ignore 'cancellede' surgeries
+            if surgery.cancelled == 'X':  # ignore 'cancelled' surgeries
                 nr_surgery_cancelled += 1
                 continue
+            # TODO: Find out why chop codes are not found
             chop = chops.get(surgery.chop_code + "_" + surgery.catalog_id, None)
             case = cases.get(surgery.case_id, None)
             if chop is not None:

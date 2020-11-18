@@ -19,7 +19,7 @@ from src.features.model import Device
 from src.features.model import Employee
 from src.features.model import Room
 from src.features.model import Partner
-from src.features.model import Care
+from src.features.model import Treatment
 from src.features.model import ICDCode
 
 from configuration.basic_configuration import configuration
@@ -90,7 +90,7 @@ def patient_data():
     employees = Employee.create_employee_map(get_hdfs_pipe(appointment_employee_path))
     Employee.add_employees_to_appointment(get_hdfs_pipe(appointment_employee_path), appointments, employees)
 
-    Care.add_care_entries_to_case(get_hdfs_pipe(tacs_path), cases, employees)
+    Treatment.add_care_entries_to_case(get_hdfs_pipe(tacs_path), cases, employees)
 
     room_id_map = Room.create_room_id_map(get_hdfs_pipe(rooms_path))
     Room.add_rooms_to_appointment(get_hdfs_pipe(room_appointment_path), appointments, room_id_map, rooms)

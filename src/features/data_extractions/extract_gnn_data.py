@@ -45,6 +45,8 @@ def get_entity_interactions(patients):
     for (patient_id, patient_appointments) in appointments_per_patient.items():
         for patient_appointment in patient_appointments:
             for device in patient_appointment.devices:
+
+                # TODO: Patient-Employee interactions missing (check vre stats data script)
                 interactions.append({"node_0": "PATIENT_" + str(patient_id), "node_1": "DEVICE_" + str(device.id),
                                      "timestamp_begin": patient_appointment.start_datetime, "timestamp_end": patient_appointment.end_datetime})
 

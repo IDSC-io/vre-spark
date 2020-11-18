@@ -55,37 +55,111 @@ def get_patient_antibiotics_data(patients: list):
     return df[df["Patient ID"].isin(patient_ids)]
 
 
-def get_patient_stays(patients):
-    """Return patient stays.
+def get_patient_icd10_data(patients):
+    """Get ICD10 codes of each patient.
+
     :param patients:
     :return:
     """
+
+    patient_icd10_codes = []
+    patients_without_icd10_codes = 0
+    patients_icd10_codes_qty = 0
+    for patient in patients.values():
+        patient_codes = []
+        for case in patient.cases.values():
+            patient_codes.extend(case.icd_codes)
+
+        if len(patient_codes) == 0:
+            patients_without_icd10_codes += 1
+        else:
+            patients_icd10_codes_qty += len(patient_codes)
+        patient_icd10_codes.append({"patient_id": str(patient.patient_id), "patient_icd_10_codes": [code.icd_code for code in patient_codes]})
+
+    logger.info(f"Exported {patients_icd10_codes_qty} ICD10 codes for {len(patients.values())} patients, {patients_without_icd10_codes} patients without ICD10 codes.")
+
+    patient_icd10_codes_df = pd.DataFrame.from_records(patient_icd10_codes)
+    return patient_icd10_codes_df
+
+
+def get_patient_surgery_qty_data(patients):
+    """Get number of surgeries of each patient.
+
+    :param patients:
+    :return:
+    """
+
+    patient_surgeries = []
+    patients_without_surgeries = 0
+    patients_surgery_qty = 0
+    for patient in patients.values():
+        if len(patient.get_chop_codes()) == 0:
+            patients_without_surgeries += 1
+        else:
+            patients_surgery_qty += len(patient.get_chop_codes())
+        patient_surgeries.append({"patient_id": str(patient.patient_id), "surgery quantity": str(len(patient.get_chop_codes()))})
+
+    patient_surgeries_df = pd.DataFrame.from_records(patient_surgeries)
+
+    logger.info(f"Exported {patients_surgery_qty} surgeries for {len(patients.values())} patients, {patients_without_surgeries} patients without surgeries.")
+
+    return patient_surgeries_df
+
+
+def get_patient_interactions(patients):
+    """Return patient interactions (room stays, employee treatments, device interactions).
+    :param patients:
+    :return:
+    """
+
+    employee_interations = []
+    device_interactions = []
+
+    # patient-device-employee interactions
+    appointments_per_patient = {}
+    for patient in patients.values():
+        appointments_per_patient[patient.patient_id] = patient.get_appointments()
+
+    patients_without_employees = 0
+    patients_without_devices = 0
+    for (patient_id, patient_appointments) in appointments_per_patient.items():
+        patient_employees = 0
+        patient_devices = 0
+        for patient_appointment in patient_appointments:
+            for device in patient_appointment.devices:
+                device_interactions.append({"patient_id": str(patient_id), "device_id": str(device.id),
+                                     "timestamp_begin": patient_appointment.start_datetime, "timestamp_end": patient_appointment.end_datetime})
+                patient_devices += 1
+
+            for employee in patient_appointment.employees:
+                employee_interations.append({"patient_id": str(patient_id), "employee_id": str(employee.id),
+                                     "timestamp_begin": patient_appointment.start_datetime, "timestamp_end": patient_appointment.end_datetime})
+                patient_employees += 1
+
+            if patient_devices == 0:
+                patients_without_devices += 1
+
+            if patient_employees == 0:
+                patients_without_employees += 1
+
+                # for employee in patient_appointment.employees:
+                #     interactions.append({"node_0": "EMPLOYEE_" + str(employee.id), "node_1": "DEVICE_" + str(device.id),
+                #                          "timestamp_begin": patient_appointment.start_datetime, "timestamp_end": patient_appointment.end_datetime})
+
+                # for room in patient_appointment.rooms:
+                #     interactions.append({"node_0": "ROOM_" + str(room.name), "node_1": "DEVICE_" + str(device.id),
+                #                          "timestamp_begin": patient_appointment.start_datetime, "timestamp_end": patient_appointment.end_datetime})
+
+            # for employee in patient_appointment.employees:
+            #     for room in patient_appointment.rooms:
+            #         employee_interactions.append({"node_0": "ROOM_" + str(room.name), "node_1": "EMPLOYEE_" + str(employee.id),
+            #                              "timestamp_begin": patient_appointment.start_datetime, "timestamp_end": patient_appointment.end_datetime})
+
+    employee_interations_df = pd.DataFrame.from_records(employee_interations)
+
+    device_interactions_df = pd.DataFrame.from_records(device_interactions)
+
     stays = []
-
-    # # patient-device-employee interactions
-    # appointments_per_patient = {}
-    # for patient in patients.values():
-    #     appointments_per_patient[patient.patient_id] = patient.get_appointments()
-
-    # for (patient_id, patient_appointments) in appointments_per_patient.items():
-    #     for patient_appointment in patient_appointments:
-    #         for device in patient_appointment.devices:
-    #             interactions.append({"node_0": "PATIENT_" + str(patient_id), "node_1": "DEVICE_" + str(device.id),
-    #                                  "timestamp_begin": patient_appointment.start_datetime, "timestamp_end": patient_appointment.end_datetime})
-    #
-    #             for employee in patient_appointment.employees:
-    #                 interactions.append({"node_0": "EMPLOYEE_" + str(employee.id), "node_1": "DEVICE_" + str(device.id),
-    #                                      "timestamp_begin": patient_appointment.start_datetime, "timestamp_end": patient_appointment.end_datetime})
-    #
-    #             for room in patient_appointment.rooms:
-    #                 interactions.append({"node_0": "ROOM_" + str(room.name), "node_1": "DEVICE_" + str(device.id),
-    #                                      "timestamp_begin": patient_appointment.start_datetime, "timestamp_end": patient_appointment.end_datetime})
-    #
-    #         for employee in patient_appointment.employees:
-    #             for room in patient_appointment.rooms:
-    #                 interactions.append({"node_0": "ROOM_" + str(room.name), "node_1": "EMPLOYEE_" + str(employee.id),
-    #                                      "timestamp_begin": patient_appointment.start_datetime, "timestamp_end": patient_appointment.end_datetime})
-
     # patient-room interactions
     stays_per_patient = {}
     patients_without_stays = 0
@@ -102,10 +176,13 @@ def get_patient_stays(patients):
         if patient_stays_count == 0:
             patients_without_stays += 1
 
-    logging.info(f"Exported {len(stays)} Patient stays for {len(patients.values())} patients, {patients_without_stays} without stays")
+    stay_df = pd.DataFrame.from_records(stays)
 
-    df = pd.DataFrame.from_records(stays)
-    return df
+    logging.info(f"Exported {len(stays)} Patient stays for {len(patients.values())} patients, {patients_without_stays} without stays")
+    logging.info(f"Exported {len(employee_interations)} Patient-Employee interactions for {len(patients.values())} patients, {patients_without_employees} without employees")
+    logging.info(f"Exported {len(device_interactions)} Patient-Device interactions for {len(patients.values())} patients, {patients_without_devices} without devices")
+
+    return employee_interations_df, device_interactions_df, stay_df
 
 
 if __name__ == '__main__':
@@ -132,13 +209,13 @@ if __name__ == '__main__':
         load_medications=False,
         load_risks=True,
         load_chop_codes=False,
-        load_surgeries=False,
-        load_appointments=False,
-        load_devices=False,
-        load_employees=False,
+        load_surgeries=True,
+        load_appointments=True,
+        load_devices=True,
+        load_employees=True,
         load_care_data=False,
         load_rooms=False,
-        load_icd_codes=False)
+        load_icd_codes=True)
 
     logger.info("...Done.\nGetting risk patients...")
 
@@ -147,13 +224,13 @@ if __name__ == '__main__':
     print(f"Number of risk patients: {len(risk_patients)}")
     # print(risk_patients)
 
-    logger.info("...Done.\nGetting contact patients...")
+    # logger.info("...Done.\nGetting contact patients...")
 
-    contact_risk_patient_dict = Patient.get_contact_patients(patient_data["patients"])
+    # contact_risk_patient_dict = Patient.get_contact_patients(patient_data["patients"])
 
     contact_patients = {}  # Patient.get_patients_by_ids(patient_data["patients"], contact_risk_patient_dict.keys())
 
-    print(f"Number of contact patients found: {len(contact_patients)}")
+    # print(f"Number of contact patients found: {len(contact_patients)}")
     # print(contact_patients)
 
     logger.info("...Done.\nGetting remaining patients...")
@@ -188,9 +265,15 @@ if __name__ == '__main__':
     # contact_patient_antibiotics_data = get_patient_antibiotics_data(list(contact_patients.values()))
     remaining_patient_antibiotics_data = get_patient_antibiotics_data(list(remaining_patients.values()))
 
-    logger.info("...Done.\nExtracting patient stays...")
+    # get ICD10 data dataframes
+    patient_icd10_df = get_patient_icd10_data(patient_data["patients"])
 
-    patient_stays_df = get_patient_stays(patient_data["patients"])
+    # get surgery data dataframes
+    patient_surgery_qty_df = get_patient_surgery_qty_data(patient_data["patients"])
+
+    logger.info("...Done.\nExtracting patient interactions...")
+
+    employee_interactions_df, device_interactions_df, patient_stays_df = get_patient_interactions(patient_data["patients"])
 
     logger.info("...Done.\nSaving data to files...")
 
@@ -210,7 +293,12 @@ if __name__ == '__main__':
     # contact_patient_antibiotics_data.to_csv(f"./data/processed/delivery/stats/{now_str}_contact_patient_antibiotics.csv")
     remaining_patient_antibiotics_data.to_csv(f"./data/processed/delivery/stats/{now_str}_remaining_patient_antibiotics.csv")
 
+    employee_interactions_df.to_csv(f"./data/processed/delivery/stats/{now_str}_employee_interactions.csv")
+    device_interactions_df.to_csv(f"./data/processed/delivery/stats/{now_str}_device_interactions.csv")
     patient_stays_df.to_csv(f"./data/processed/delivery/stats/{now_str}_patient_stays.csv")
+
+    patient_icd10_df.to_csv(f"./data/processed/delivery/stats/{now_str}_patient_icd10_codes.csv")
+    patient_surgery_qty_df.to_csv(f"./data/processed/delivery/stats/{now_str}_patient_surgery_qty.csv")
 
     logger.info("...Done.")
 

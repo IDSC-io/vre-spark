@@ -15,41 +15,41 @@ class Chop:
 
     def __init__(
             self,
+            chop_sap_catalog_id,
             chop_code,
             chop_year_of_usage,
-            chop,
+            chop_description,
             chop_code_level1,
-            chop_level1,
+            chop_level1_description,
             chop_code_level2,
-            chop_level2,
+            chop_level2_description,
             chop_code_level3,
-            chop_level3,
+            chop_level3_description,
             chop_code_level4,
-            chop_level4,
+            chop_level4_description,
             chop_code_level5,
-            chop_level5,
+            chop_level5_description,
             chop_code_level6,
-            chop_level6,
-            chop_status,
-            chop_sap_catalog_id,
+            chop_level6_description,
+            chop_status
     ):
+        self.chop_sap_catalog_id = chop_sap_catalog_id
         self.chop_code = chop_code
-        self.chop_verwendungsjahr = chop_year_of_usage
-        self.chop = chop
+        self.chop_year_of_usage = chop_year_of_usage
+        self.chop_description = chop_description
         self.chop_code_level1 = chop_code_level1
-        self.chop_level1 = chop_level1
+        self.chop_level1_description = chop_level1_description
         self.chop_code_level2 = chop_code_level2
-        self.chop_level2 = chop_level2
+        self.chop_level2_description = chop_level2_description
         self.chop_code_level3 = chop_code_level3
-        self.chop_level3 = chop_level3
+        self.chop_level3_description = chop_level3_description
         self.chop_code_level4 = chop_code_level4
-        self.chop_level4 = chop_level4
+        self.chop_level4_description = chop_level4_description
         self.chop_code_level5 = chop_code_level5
-        self.chop_level5 = chop_level5
+        self.chop_level5_description = chop_level5_description
         self.chop_code_level6 = chop_code_level6
-        self.chop_level6 = chop_level6
+        self.chop_level6_description = chop_level6_description
         self.chop_status = chop_status
-        self.chop_sap_katalog_id = chop_sap_catalog_id
 
         self.cases = []  # Keep track of all cases that have this chop code
 
@@ -68,12 +68,12 @@ class Chop:
             str:    Highest available level for this CHOP code.
         """
         for field in [
-            self.chop_level6,
-            self.chop_level5,
-            self.chop_level4,
-            self.chop_level3,
-            self.chop_level2,
-            self.chop_level1,
+            self.chop_level6_description,
+            self.chop_level5_description,
+            self.chop_level4_description,
+            self.chop_level3_description,
+            self.chop_level2_description,
+            self.chop_level1_description,
         ]:
             if field is not None and len(field) > 0 and field != "NULL":
                 return field
@@ -118,7 +118,7 @@ class Chop:
         chops = dict()
         for line in tqdm(lines):
             chop = Chop(*line)
-            chops[chop.chop_code + "_" + chop.chop_sap_katalog_id] = chop
+            chops[chop.chop_code + "_" + chop.chop_sap_catalog_id] = chop
             # based on the schema in the docstring, this would yield "Z62.99.30_16" or "Z62.99.99_10"
         logging.info(f"{len(chops)} chops created")
         return chops

@@ -5,6 +5,7 @@
 """
 
 import logging
+import itertools
 from datetime import datetime
 
 from tqdm import tqdm
@@ -12,21 +13,24 @@ from tqdm import tqdm
 from src.features.model import Employee
 
 
-class Care:
-    """Models an entry in TACS.
+class Treatment:
+    """A treatment (formerly called Care) models a treatment (interaction between employee and patient) of a patient which is not an appointment.
+
+
+    The source system for this information is WiCare/TACS.
     """
 
     def __init__(
             self,
             patient_id,
+            employee_nr,
+            date,
             patient_type,
             patient_status,
             case_id,
             case_type,
             case_status,
-            date,
             duration_in_minutes,
-            employee_nr,
             employee_employment_nr,
             employee_login,
             batch_run_id,
@@ -80,8 +84,9 @@ class Care:
         nr_case_not_found = 0
         nr_employee_created = 0
         nr_employee_found = 0
-        for line in tqdm(lines):
-            care = Care(*line)
+        lines_iters = itertools.tee(lines, 2)
+        for line in tqdm(lines_iters[1], total=sum(1 for _ in lines_iters[0])):
+            care = Treatment(*line)
 
             # discard if we don't have the case
             case = cases.get(care.case_id, None)

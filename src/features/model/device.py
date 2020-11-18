@@ -5,6 +5,7 @@
 """
 
 import logging
+import itertools
 
 from tqdm import tqdm
 
@@ -43,7 +44,8 @@ class Device:
         """
         logging.debug("create_device_map")
         devices = dict()
-        for line in tqdm(lines):
+        lines_iters = itertools.tee(lines, 2)
+        for line in tqdm(lines_iters[1], total=sum(1 for _ in lines_iters[0])):
             device = Device(*line)
             devices[device.id] = device
         logging.info(f"{len(devices)} devices created")

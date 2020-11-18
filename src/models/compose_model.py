@@ -12,6 +12,10 @@ Please refer to the script code for details.
 
 -----
 """
+import sys
+
+sys.path.append("../..")
+
 import logging
 
 import click
@@ -35,7 +39,11 @@ def compose_model():
 
     # --> Load all data:
     loader = DataLoader(hdfs_pipe=False)  # hdfs_pipe = False --> files will be loaded directly from CSV
-    patient_data = loader.patient_data()
+    patient_data = loader.patient_data(load_medications=False,
+                                       load_icd_codes=False,
+                                       load_chop_codes=False,
+                                       load_surgeries=False,
+                                       load_care_data=False) # TODO: Check if care data is used as a link between employees and patients
     #####################################
 
     #####################################
@@ -51,27 +59,30 @@ def compose_model():
     surface_graph.remove_isolated_nodes()
     surface_graph.add_edge_infection()
 
+    patient_data = None  # free up memory before graph processing!
+
     # Extract positive patient nodes
     # positive_patient_nodes = [node for node, nodedata in surface_graph.S_GRAPH.nodes(data=True)
     #                           if nodedata['type'] == 'Patient' and nodedata['vre_status'] == 'pos']
 
     # Write node files
-    surface_graph.write_node_files()
-
-    export_path = './data/processed'
+    # surface_graph.write_node_files()
+    #
+    # export_path = './data/processed'
 
     # calculate scores
 
-    # Export Patient Degree Ratio
-    surface_graph.export_patient_degree_ratio(export_path=export_path)
+    patient_degree_ratio_df = surface_graph.calculate_patient_degree_ratio()
 
-    # Export Total Degree Ratio
-    surface_graph.export_total_degree_ratio(export_path=export_path)
+    print(patient_degree_ratio_df.head(50))
 
-    # Export node betweenness
-    # TODO: Reenable node betweenness statistics
-    # surface_graph.update_shortest_path_statistics()
-    # surface_graph.export_node_betweenness(export_path=export_path)
+    total_degree_ratio_df = surface_graph.calculate_total_degree_ratio()
+
+    print(total_degree_ratio_df.head(50))
+
+    # TODO: Reenable node betweenness statistics. Deactivated as it uses a lot of resources!
+    # node_betweenness_df = surface_graph.calculate_node_betweenness()
+    # print(node_betweenness_df.head(50))
     #####################################
 
     logging.info("Data processed successfully!")

@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime
+import itertools
 
 from tqdm import tqdm
 
@@ -137,7 +138,8 @@ class Room:
         nr_appointments_not_found = 0
         nr_rooms_not_found = 0
         nr_ok = 0
-        for line in tqdm(lines):
+        lines_iters = itertools.tee(lines, 2)
+        for line in tqdm(lines_iters[1], total=sum(1 for _ in lines_iters[0])):
             appointment_id = line[0]
             room_id = line[1]
             appointment_start = line[2]
@@ -159,10 +161,16 @@ class Room:
 
             # TODO: Fix date parsing and store start and end for multiple rooms
             if appointment_start != '':
-                appointments[appointment_id].start_datetime = datetime.strptime(appointment_start[:-1], "%Y-%m-%d %H:%M:%S.%f")
+                try:
+                    appointments[appointment_id].start_datetime = datetime.strptime(appointment_start[:-1], "%Y-%m-%d %H:%M:%S.%f")
+                except:
+                    appointments[appointment_id].start_datetime = datetime.strptime(appointment_start, "%Y-%m-%d %H:%M:%S")
 
             if appointment_end != '':
-                appointments[appointment_id].end_datetime = datetime.strptime(appointment_end[:-1], "%Y-%m-%d %H:%M:%S.%f")
+                try:
+                    appointments[appointment_id].end_datetime = datetime.strptime(appointment_end[:-1], "%Y-%m-%d %H:%M:%S.%f")
+                except:
+                    appointments[appointment_id].end_datetime = datetime.strptime(appointment_end, "%Y-%m-%d %H:%M:%S")
 
             nr_ok += 1
         logging.info(f"{nr_ok} rooms added to appointments, {nr_appointments_not_found} appointments not found, {nr_rooms_not_found} rooms not found")
