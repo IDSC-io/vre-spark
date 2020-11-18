@@ -5,6 +5,7 @@
 """
 
 import logging
+import itertools
 from datetime import datetime
 
 from tqdm import tqdm
@@ -84,7 +85,8 @@ class Appointment:
         nr_malformed = 0
         nr_ok = 0
         appointments = dict()
-        for line in tqdm(lines):
+        lines_iters = itertools.tee(lines, 2)
+        for line in tqdm(lines_iters[1], total=sum(1 for _ in lines_iters[0])):
             if len(line) != 7:
                 nr_malformed += 1
                 continue
@@ -123,7 +125,8 @@ class Appointment:
         nr_appointment_not_found = 0
         nr_case_not_found = 0
         nr_ok = 0
-        for line in tqdm(lines):
+        lines_iters = itertools.tee(lines, 2)
+        for line in tqdm(lines_iters[1], total=sum(1 for _ in lines_iters[0])):
             appointment_id = line[0]
             case_id = line[2]
             if appointments.get(appointment_id, None) is None:

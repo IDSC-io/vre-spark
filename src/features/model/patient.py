@@ -6,6 +6,9 @@ from tqdm import tqdm
 import pandas as pd
 
 from src.features.model.data_model_constants import ICUs
+from src.features.model import Stay, Appointment
+
+from typing import List
 
 
 class Patient:
@@ -18,8 +21,8 @@ class Patient:
         self.place_of_residence = place_of_residence
         self.canton = canton
         self.language = language
-        self.cases = dict()
-        self.risks = dict()  # dictionary mapping dt.dt() objects to Risk() objects, indicating at which datetime a particular VRE code has been entered in one of the Insel systems
+        self.cases = dict();  """ dictionary mapping case ids to case objects"""
+        self.risks = dict();  """dictionary mapping dt.dt() objects to Risk() objects, indicating at which datetime a particular VRE code has been entered in one of the Insel systems """
 
     def get_relevant_case_and_date(self):
         case = self.get_relevant_case()
@@ -198,7 +201,7 @@ class Patient:
 
         return self.has_stay_on_ward(icu_wards)
 
-    def get_stays(self):
+    def get_stays(self) -> List[Stay]:
         """
         Get all stays of a patient.
         :return:
@@ -282,23 +285,25 @@ class Patient:
 
         return relevant_medications
 
-    def get_chop_codes(self):
+    def get_chop_codes(self, ):
         """
-        Which chop codes (surgeries) was the patient exposed to during the relevant case, before the relevant date.
-        :return: Set of Chops, None if no relevant case
+        Which chop codes (surgeries) was the patient exposed to.
+        :return: Set of Chops
         """
-        (case, dt) = self.get_relevant_case_and_date()
-        if case is None:
-            return None
-        relevant_chops = set()
-        for surgery in case.surgeries:
-            if surgery.date <= dt:
-                relevant_chops.add(surgery.chop)
-        return relevant_chops
+        # TODO: Reimplement relevant case and date
+        # (case, dt) = self.get_relevant_case_and_date()
+        # if case is None:
+        #     return None
+        chops = set()
+        for case in self.cases.values():
+            for surgery in case.surgeries:
+                # if surgery.date <= dt:
+                chops.add(surgery.chop)
+        return chops
 
     def has_surgery(self):
         """
-        Does the patient have a chop code during relevant case before relevant date?
+        Does the patient have any chop codes?
         :return: boolean
         """
         relevant_chops = self.get_chop_codes()
@@ -515,7 +520,7 @@ class Patient:
 
         return candidate_stays
 
-    def get_appointments(self):
+    def get_appointments(self) -> List[Appointment]:
         """
         Get all appointments of this patient
         :return:

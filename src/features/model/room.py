@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime
+import itertools
 
 from tqdm import tqdm
 
@@ -137,7 +138,8 @@ class Room:
         nr_appointments_not_found = 0
         nr_rooms_not_found = 0
         nr_ok = 0
-        for line in tqdm(lines):
+        lines_iters = itertools.tee(lines, 2)
+        for line in tqdm(lines_iters[1], total=sum(1 for _ in lines_iters[0])):
             appointment_id = line[0]
             room_id = line[1]
             appointment_start = line[2]

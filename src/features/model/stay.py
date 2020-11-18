@@ -85,6 +85,7 @@ class Stay:
         nr_not_formatted = 0
         nr_ok = 0
         nr_wards_updated = 0
+        # TODO: Rewrite parts of loop to pandas checks before making all objects
         for stay in tqdm(stay_objects.to_list()):
                 if cases.get(stay.case_id, None) is not None:
                     cases[stay.case_id].add_stay(stay)

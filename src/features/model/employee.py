@@ -5,6 +5,7 @@
 """
 
 import logging
+import itertools
 
 from tqdm import tqdm
 
@@ -42,7 +43,8 @@ class Employee:
         """
         logging.debug("create_employee_map")
         employee_dict = dict()
-        for line in tqdm(lines):
+        lines_iters = itertools.tee(lines, 2)
+        for line in tqdm(lines_iters[1], total=sum(1 for _ in lines_iters[0])):
             employee = line[1]
             employee_dict[employee] = Employee(employee)
         logging.info(f"{len(employee_dict)} employees created")

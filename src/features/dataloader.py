@@ -29,7 +29,7 @@ from src.features.model import Employee
 from src.features.model import Chop
 from src.features.model import Surgery
 from src.features.model import Partner
-from src.features.model import Care
+from src.features.model import Treatment
 from src.features.model import ICDCode
 
 ###############################################################################################################
@@ -316,14 +316,14 @@ class DataLoader:
                                                       else self.get_csv_file(self.appointment_employee_path),
                                                       appointments, employees)
                 if load_care_data:
-                    # Add Care data to Cases from table: TACS_DATEN
-                    logging.info("Adding Care data to Cases from TACS")
-                    Care.add_care_entries_to_case(self.get_hdfs_pipe(self.tacs_path) if self.hdfs_pipe is True
+                    # Add Treatment/Care data to Cases from table: TACS_DATEN
+                    logging.info("Adding Treatment/Care data to Cases from TACS")
+                    Treatment.add_care_entries_to_case(self.get_hdfs_pipe(self.tacs_path) if self.hdfs_pipe is True
                                                   else self.get_csv_file(self.tacs_path), cases, employees)
                     # --> Note: Care() objects are not part of the returned dictionary, they are only used in
                     #               Case() objects --> Case().cares = [Care(), Care(), ...] (list of all cares for each case)
                 else:
-                    logging.info("loading care data omitted.")
+                    logging.info("loading treatment/care data omitted.")
 
             else:
                 logging.info("loading employees omitted.")
