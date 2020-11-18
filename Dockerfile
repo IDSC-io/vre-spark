@@ -11,10 +11,10 @@ RUN apt-get update \
 WORKDIR /
 
 # copy the dependencies file to the working directory
-COPY requirements/requirements.txt .
+COPY requirements/production.txt .
 
 # install dependencies
-RUN pip install -r requirements.txt
+RUN pip install -r production.txt
 
 # copy the local src directory to the working directory
 COPY src/ src/.
