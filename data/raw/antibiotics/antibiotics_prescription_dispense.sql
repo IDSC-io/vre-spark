@@ -45,7 +45,7 @@ SELECT
 	therapie_start		= CONVERT(SMALLDATETIME,mf_s.zeitpunkt_rueckgemeldet),
 	therapie_ende		= CONVERT(SMALLDATETIME,mf_e.zeitpunkt_rueckgemeldet)
 
-FROM [AtelierIDCL].[dbo].[vrc_beni_contact] AS k
+FROM [AtelierIDCL].[dbo].[20201011173131_patient_ids] AS k
 
 LEFT JOIN mf_cte AS mf_s
 ON k.pid = mf_s.pid
