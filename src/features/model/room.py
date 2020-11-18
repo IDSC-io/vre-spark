@@ -161,10 +161,16 @@ class Room:
 
             # TODO: Fix date parsing and store start and end for multiple rooms
             if appointment_start != '':
-                appointments[appointment_id].start_datetime = datetime.strptime(appointment_start[:-1], "%Y-%m-%d %H:%M:%S.%f")
+                try:
+                    appointments[appointment_id].start_datetime = datetime.strptime(appointment_start[:-1], "%Y-%m-%d %H:%M:%S.%f")
+                except:
+                    appointments[appointment_id].start_datetime = datetime.strptime(appointment_start, "%Y-%m-%d %H:%M:%S")
 
             if appointment_end != '':
-                appointments[appointment_id].end_datetime = datetime.strptime(appointment_end[:-1], "%Y-%m-%d %H:%M:%S.%f")
+                try:
+                    appointments[appointment_id].end_datetime = datetime.strptime(appointment_end[:-1], "%Y-%m-%d %H:%M:%S.%f")
+                except:
+                    appointments[appointment_id].end_datetime = datetime.strptime(appointment_end, "%Y-%m-%d %H:%M:%S")
 
             nr_ok += 1
         logging.info(f"{nr_ok} rooms added to appointments, {nr_appointments_not_found} appointments not found, {nr_rooms_not_found} rooms not found")
