@@ -74,12 +74,12 @@ def pull_raw_dataset():
     this_filepath = os.path.dirname(os.path.realpath(__file__))
     # contains the directory in which this script is located, irrespective of the current working directory
 
-    SQL_DIR = os.path.join(this_filepath, "./sql/test_dataset") if configuration['PARAMETERS']['dataset'] == 'test' \
+    SQL_DIR = os.path.join(this_filepath, "./src/data/sql/test_dataset") if configuration['PARAMETERS']['dataset'] == 'test' \
         else os.path.join(this_filepath,
-                          "./sql/full_dataset")  # absolute or relative path to directory containing SQL files
+                          "./src/data/sql/full_dataset")  # absolute or relative path to directory containing SQL files
 
-    CSV_DIR = configuration['PATHS']['test_data_dir'] if configuration['PARAMETERS']['dataset'] == 'test' \
-        else configuration['PATHS']['model_data_dir']  # absolute or relative path to directory where data is stored
+    CSV_DIR = configuration['PATHS']['raw_data_dir'].format("test") if configuration['PARAMETERS']['dataset'] == 'test' \
+        else configuration['PATHS']['raw_data_dir'].format("model")  # absolute or relative path to directory where data is stored
 
     CSV_DELIM = configuration['DELIMITERS']['csv_sep']  # delimiter for CSV files written from SQL results
 
