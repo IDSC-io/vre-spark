@@ -25,9 +25,6 @@ def main():
     logger.info('Pulling dataset from database if not available yet...')
     pull_raw_dataset()
 
-    logger.info('Merge data together from multiple sources...')
-    merge_data()
-
     logger.info('Cleaning up dataset...')
     cleanup_dataset()
 
