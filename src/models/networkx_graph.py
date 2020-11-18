@@ -30,6 +30,7 @@ import json
 import random
 from collections import Counter
 import pathlib
+import pandas as pd
 
 from tqdm import tqdm
 
@@ -287,7 +288,7 @@ class SurfaceModel:
             self.patient_add_warnings += 1
             return
         risk_codes = [each_risk.result for each_risk in risk_dict.values()]
-        self.S_GRAPH.add_node(str(string_id), type='Patient', risk=risk_dict, vre_status='pos' if "pos" in risk_codes else 'neg')
+        self.S_GRAPH.add_node(str(string_id), type='Patient', risk=risk_dict, vre_status='pos' if len(risk_codes) != 0 else 'neg')
         self.Nodes['Patient'].add(string_id)
 
     def new_room_node(self, string_id, ward=None, room_id=None, warn_log=False):
@@ -529,6 +530,7 @@ class SurfaceModel:
             max_path_length (int):  Maximum path length to consider for pairs of nodes when `approximate` == ``True``.
                                     If set to ``None`` (default), all possible shortest paths will be considered.
         """
+        logging.info("Update betweenness statistics...")
         target_nodes = focus_nodes if focus_nodes is not None else self.S_GRAPH.nodes
         node_combinations = list(itertools.combinations(target_nodes, 2))
         # Returns a list of tuples containing all unique pairs of nodes in considered_nodes
@@ -632,10 +634,10 @@ class SurfaceModel:
         logging.info('------------------------------')
 
         # Extract specific node statistics
-        nbr_pat_nodes = len(['_' for node_data_tuple in all_nodes if node_data_tuple[1]['type'] == 'Patient'])
-        nbr_dev_nodes = len(['_' for node_data_tuple in all_nodes if node_data_tuple[1]['type'] == 'Device'])
-        nbr_emp_nodes = len(['_' for node_data_tuple in all_nodes if node_data_tuple[1]['type'] == 'Employee'])
-        nbr_room_nodes = len(['_' for node_data_tuple in all_nodes if node_data_tuple[1]['type'] == 'Room'])
+        nbr_pat_nodes = len(['_' for node_data_tuple in all_nodes if not pd.isna(node_data_tuple[0]) and node_data_tuple[1]['type'] == 'Patient'])
+        nbr_dev_nodes = len(['_' for node_data_tuple in all_nodes if not pd.isna(node_data_tuple[0]) and node_data_tuple[1]['type'] == 'Device'])
+        nbr_emp_nodes = len(['_' for node_data_tuple in all_nodes if not pd.isna(node_data_tuple[0]) and node_data_tuple[1]['type'] == 'Employee'])
+        nbr_room_nodes = len(['_' for node_data_tuple in all_nodes if not pd.isna(node_data_tuple[0]) and node_data_tuple[1]['type'] == 'Room'])
         accounted_for = nbr_pat_nodes + nbr_dev_nodes + nbr_emp_nodes + nbr_room_nodes
         logging.info('Node overview:')
         logging.info(f"--> {nbr_pat_nodes} Patient nodes")
@@ -685,7 +687,7 @@ class SurfaceModel:
         logging.info('------------------------------')
 
         # Number of positive patients in the network
-        nbr_pos_pat = len(['_' for node_data_tuple in all_nodes if node_data_tuple[1]['type'] == 'Patient' and
+        nbr_pos_pat = len(['_' for node_data_tuple in all_nodes if not pd.isna(node_data_tuple[0]) and node_data_tuple[1]['type'] == 'Patient' and
                            node_data_tuple[1]['vre_status'] == 'pos'])
         logging.info(f"--> {nbr_pos_pat} VRE-positive Patients in the network")
         logging.info('------------------------------')
@@ -748,12 +750,14 @@ class SurfaceModel:
                 if patient_subset is not None and patient.patient_id not in patient_subset:
                     continue
 
-                pat_relevant_case = patient.get_relevant_case()  # Returns a Case() object or None
-                if pat_relevant_case is None:
-                    nbr_pat_no_rel_case += 1
-                    continue
+                # TODO: Rethink relevant case for patient
+                # pat_relevant_case = patient.get_relevant_case()  # Returns a Case() object or None
+                # if pat_relevant_case is None:
+                #     nbr_pat_no_rel_case += 1
+                #     continue
                 nbr_pat_rel_case += 1
-                this_pat_id = pat_relevant_case.patient.patient_id
+
+                this_pat_id = patient.patient_id
                 if this_pat_id == '':
                     logging.warning('Encountered empty patient ID !')
                     continue
@@ -762,7 +766,7 @@ class SurfaceModel:
                 #########################################
                 # --> Step 1: Add rooms based on Stay() objects to the network
                 #########################################
-                for stay in pat_relevant_case.stays.values():  # iterate over all stays in a Patient's relevant case
+                for stay in patient.get_stays():  # iterate over all stays of a Patient
                     room_id = stay.room_id  # will either be the room's name or None
                     ward_name = stay.ward.name  # will either be the ward's name or None
                     if room_id is None:  # --> If room is not identified, add it to the 'generic' Room node "Room_Unknown"
@@ -778,7 +782,7 @@ class SurfaceModel:
                         if stay.room is not None else None)
                         # .get_ids() will return a '@'-delimited list of [room_id]_[system] entries, or None
                         nbr_room_id += 1
-                    # Add Patient-Room edge if it's within scope of the current snapshot
+                    # Add Patient-Room edge if it is within scope of the current snapshot
                     edge_dict = {'from': stay.from_datetime, 'to': stay.to_datetime,
                                  'type': 'Patient-Room', 'origin': 'Stay'}
                     if edge_dict['to'] < snapshot:
@@ -795,10 +799,10 @@ class SurfaceModel:
                 #         --> Device-Room
                 #         (Remember: nodes in edge specifications are sorted alphabetically)
                 #########################################
-                for each_app in pat_relevant_case.appointments:
+                for each_app in patient.get_appointments():
                     nbr_app += 1
                     duration_from = each_app.date
-                    duration_to = each_app.date + datetime.timedelta(hours=each_app.duration_in_mins / 60)
+                    duration_to = each_app.date + datetime.timedelta(hours=each_app.duration_in_mins / 60.0)
                     edge_attributes = {'from': duration_from, 'to': duration_to, 'origin': 'Appointment'}
                     # 'type' key will be added during the creation of edges, see below
                     device_list = []
@@ -891,6 +895,39 @@ class SurfaceModel:
     ################################################################################################################
     # Data Export Functions
     ################################################################################################################
+    def calculate_patient_degree_ratio(self):
+        if not self.edges_infected:
+            logging.error('This operation requires infection data on edges !')
+            return None
+
+        logging.info('Calculating patient degree ratio...')
+        patient_degree_rows = []
+
+        for each_node in tqdm(self.S_GRAPH.nodes(data=True)):
+            if pd.isna(each_node[0]):
+                continue
+
+            # each_node will be a tuple of length 2 --> ( 'node_id', {'att_1' : 'att_value1', ... } )
+            this_node_edges = self.S_GRAPH.edges(each_node[0], data=True, keys=True)
+            # will return a list of tuples
+            # --> [ ( 'node_id', 'target_id1', key, {attr_dict} ), ('node_id', 'target_id2', key, {attr_dict} ),...]
+            pat_edges = [edge for edge in this_node_edges if 'Patient' in edge[3]['type']]
+            # indicates a type of "Patient-XXX" node
+            infected_pat_edges = [True if edge[3]['infected'] is True else False for edge in pat_edges]
+
+            # Write to output file:
+            really_intected_pat_edges = [entry for entry in infected_pat_edges if entry]
+            patient_degree_rows.append([each_node[0], each_node[1]['type'], sum(infected_pat_edges) / len(infected_pat_edges),
+                                        len(really_intected_pat_edges), len(pat_edges), len(this_node_edges)])
+
+        patient_degree_df = pd.DataFrame.from_records(patient_degree_rows)
+        patient_degree_df.columns = ["Node ID", "Node Type", "Degree Ratio", "Number of Infected Edges", "Total Patient Edges", "Total Edges"]
+        patient_degree_df.sort_values(by="Degree Ratio", ascending=False, inplace=True)
+
+        logging.info(f"Successfully calculated patient degree ratios for {len(patient_degree_rows)} nodes.")
+
+        return patient_degree_df
+
     def export_patient_degree_ratio(self, csv_sep=';', export_path=None):
         """Calculates and exports patient degree ratio for all nodes in the network.
 
@@ -912,34 +949,43 @@ class SurfaceModel:
         - Total number of patient-related edges
         - Total number of edges (i.e. degree of node_x)
         """
-        if not self.edges_infected:
-            logging.error('This operation requires infection data on edges !')
-            return None
-        exact_path = self.data_dir if export_path is None else export_path
-        logging.info('Calculating patient degree ratio...')
-        write_count = 0
-        with open(os.path.join(exact_path, self.snapshot_dt.strftime('%Y_%m_%d') + '_pdr.txt'), 'w') as outfile:
-            outfile.write(f"Node ID{csv_sep}Node Type{csv_sep}Degree Ratio{csv_sep}Number of Infected Edges{csv_sep}"
-                          f"Total Patient Edges{csv_sep}Total Edges\n")
-            for each_node in self.S_GRAPH.nodes(data=True):
-                # each_node will be a tuple of length 2 --> ( 'node_id', {'att_1' : 'att_value1', ... } )
-                this_node_edges = self.S_GRAPH.edges(each_node[0], data=True, keys=True)
-                # will return a list of tuples
-                # --> [ ( 'node_id', 'target_id1', key, {attr_dict} ), ('node_id', 'target_id2', key, {attr_dict} ),...]
-                pat_edges = [edge for edge in this_node_edges if 'Patient' in edge[3]['type']]
-                # indicates a type of "Patient-XXX" node
-                infected_pat_edges = [True if edge[3]['infected'] is True else False for edge in pat_edges]
 
-                # Write to output file:
-                really_intected_pat_edges = [entry for entry in infected_pat_edges if entry]
-                outfile.write(f"{each_node[0]}{csv_sep}{each_node[1]['type']}{csv_sep}"
-                              f"{sum(infected_pat_edges) / len(infected_pat_edges)}{csv_sep}"
-                              f"{len(really_intected_pat_edges)}{csv_sep}"
-                              f"{len(pat_edges)}{csv_sep}{len(this_node_edges)}\n")
-                write_count += 1
+        df = self.calculate_patient_degree_ratio()
+
+        exact_path = self.data_dir if export_path is None else export_path
+        export_path = os.path.join(exact_path, self.snapshot_dt.strftime('%Y_%m_%d') + '_pdr.txt')
+        df.to_csv(export_path, sep=csv_sep)
+
         # Write to log
-        logging.info(f"Successfully wrote patient degree ratios for {write_count} nodes to "
-                     f"{os.path.join(exact_path, self.snapshot_dt.strftime('%Y_%m_%d') + '_pdr.txt')}")
+        logging.info(f"Successfully exported patient degree ratios to {os.path.join(exact_path, self.snapshot_dt.strftime('%Y_%m_%d') + '_pdr.txt')}")
+
+    def calculate_total_degree_ratio(self):
+        logging.info('Calculating total degree ratio...')
+        patient_degree_ratio_rows = []
+
+        for each_node in tqdm(self.S_GRAPH.nodes(data=True)):
+            if pd.isna(each_node[0]):
+                continue
+
+            # each_node will be a tuple of length 2 --> ( 'node_id', {'att_1' : 'att_value1', ... } )
+            this_node_edges = self.S_GRAPH.edges(each_node[0], data=True, keys=True)
+            # will return a list of tuples
+            # --> [ ( 'node_id', 'target_id1', key, {attr_dict} ), ('node_id', 'target_id2', key, {attr_dict} ),...]
+            infected_edges = [True if edge[3]['infected'] else False for edge in this_node_edges]
+            # Write to output file:
+            patient_degree_ratio_rows.append([each_node[0],
+                                              each_node[1]['type'],
+                                              sum(infected_edges)/len(this_node_edges),
+                                              len([entry for entry in infected_edges if entry]),
+                                              len(this_node_edges)])
+        patient_degree_ratio_df = pd.DataFrame.from_records(patient_degree_ratio_rows)
+        patient_degree_ratio_df.columns = ["Node ID", "Node Type", "Total Degree Ratio", "Number of Infected Edges", "Total Edges"]
+        patient_degree_ratio_df.sort_values(by="Total Degree Ratio", ascending=False, inplace=True)
+
+        # Write to log
+        logging.info(f"Successfully calculated total degree ratios for {len(patient_degree_ratio_rows)} nodes")
+
+        return patient_degree_ratio_df
 
     def export_total_degree_ratio(self, csv_sep=';', export_path=None):
         """Exports total degree ratio (TDR) for all nodes in the network.
@@ -947,8 +993,8 @@ class SurfaceModel:
         Will calculate and export the total degree ratio for all nodes in the network, which is defined for a
         single *node_x* as:
 
-        :math:`TDR = \\frac{Number~of~infected~edges~between~node
-        \\_x~and~patients}{Total~number~of~edges~leading~to~node\\_x}`
+        :math:`TDR = \\frac{Number\_of\_infected\_edges\_between\_node
+        \\_x\_and\_patients}{Total\_number\_of\_edges\_leading\_to\_node\\_x}`
 
         The result file will be written to a file [self.data_dir]/[self.snapshot_dt]_tdr.txt, and contains the
         following columns:
@@ -965,25 +1011,13 @@ class SurfaceModel:
                                 exported file will be written to `self.data_dir`.
         """
         exact_path = self.data_dir if export_path is None else export_path
-        logging.info('Calculating total degree ratio...')
-        write_count = 0
-        with open(os.path.join(exact_path, self.snapshot_dt.strftime('%Y_%m_%d') + '_tdr.txt'), 'w') as outfile:
-            outfile.write(f"Node ID{csv_sep}Node Type{csv_sep}Degree Ratio{csv_sep}"
-                          f"Number of Infected Edges{csv_sep}Total Edges\n")
-            for each_node in self.S_GRAPH.nodes(data=True):
-                # each_node will be a tuple of length 2 --> ( 'node_id', {'att_1' : 'att_value1', ... } )
-                this_node_edges = self.S_GRAPH.edges(each_node[0], data=True, keys=True)
-                # will return a list of tuples
-                # --> [ ( 'node_id', 'target_id1', key, {attr_dict} ), ('node_id', 'target_id2', key, {attr_dict} ),...]
-                infected_edges = [True if edge[3]['infected'] == True else False for edge in this_node_edges]
-                # Write to output file:
-                outfile.write(f"{each_node[0]}{csv_sep}{each_node[1]['type']}{csv_sep}"
-                              f"{sum(infected_edges)/len(this_node_edges)}{csv_sep}"
-                              f"{len([entry for entry in infected_edges if entry == True])}{csv_sep}"
-                              f"{len(this_node_edges)}\n")
-                write_count += 1
+        export_path = os.path.join(exact_path, self.snapshot_dt.strftime('%Y_%m_%d') + '_tdr.txt')
+        df = self.calculate_total_degree_ratio()
+
+        df.to_csv(export_path, sep=csv_sep)
+
         # Write to log
-        logging.info(f"Successfully wrote total degree ratios for {write_count} nodes to "
+        logging.info(f"Successfully wrote total degree ratios to "
                      f"{os.path.join(exact_path, self.snapshot_dt.strftime('%Y_%m_%d') + '_tdr.txt')}")
 
     def export_shortest_path_length_overview(self, focus_nodes=None, csv_sep=';', export_path=None):
@@ -1025,10 +1059,43 @@ class SurfaceModel:
         logging.info(f'Successfully exported shortest path length overview to'
                      f"{os.path.join(exact_path, self.snapshot_dt.strftime('%Y_%m_%d') + '_plov.txt')}")
 
+    def calculate_node_betweenness(self):
+        """Calculate node betweenness.
+
+        This function will calculate node betweenness for all nodes of the network. This is done by calculating the sum
+        of all fractions of shortest paths a particular node is in, which is found in the attribute keys starting with
+        the "SP-" prefix (e.g. "SP-Node1-Node4"). These tuples contain 2 entries, the first being the fraction of
+        shortest path this node is found in (between the given pair of nodes), and the second one being the total
+        number of shortest paths. This function can only be executed once the function update_shortest_path_statistics()
+        has been called. Nodes without an attribute key starting with the "SP-" prefix will have node betweenness of 0.
+        """
+        logging.info('Calculating node betweenness...')
+        # self.update_shortest_path_statistics()
+        node_betweenness_rows = []
+
+        for node_tuple in tqdm(self.S_GRAPH.nodes(data=True)):
+            # Returns tuples of length 2 --> (node_id, attribute_dict)
+            write_string = [node_tuple[0], self.identify_id(node_tuple[0])]
+            target_keys = [each_key for each_key in node_tuple[1].keys() if each_key.startswith('SP-')]
+            betweenness_score = sum([node_tuple[1][each_key][0] / node_tuple[1][each_key][1]
+                                     for each_key in target_keys])
+            write_string.append(betweenness_score)
+
+            node_betweenness_rows.append(write_string)
+
+        node_betweenness_df = pd.DataFrame.from_records(node_betweenness_rows)
+        node_betweenness_df.columns = ['Node ID', 'Node Type', 'Betweenness Score']
+        node_betweenness_df.sort_values(by="Betweenness Score", ascending=False, inplace=True)
+
+        # Write to log
+        logging.info(f"Successfully calculated betweenness centralities for {len(node_betweenness_rows)} nodes")
+
+        return node_betweenness_df
+
     def export_node_betweenness(self, csv_sep=';', export_path=None):
         """Exports node betweenness.
 
-        This function will export node betweenness for all nodes from the network. This is done by exporting the sum
+        This function will export node betweenness for all nodes of the network. This is done by exporting the sum
         of all fractions of shortest paths a particular node is in, which is found in the attribute keys starting with
         the "SP-" prefix (e.g. "SP-Node1-Node4"). These tuples contain 2 entries, the first being the fraction of
         shortest path this node is found in (between the given pair of nodes), and the second one being the total
@@ -1046,27 +1113,15 @@ class SurfaceModel:
             export_path (str):  Path to which node files will be written. If set to `None` (the default), the
                                 exported file will be written to `self.data_dir`.
         """
-        if self.shortest_path_stats is False:
-            logging.error(f"This function requires specific node attributes which can be added with the function "
-                          f"update_shortest_path_statitics()")
-            raise self.NodeBetweennessException('Missing a required call to update_shortest_path_statitics()')
+
+        df = self.calculate_node_betweenness()
+
         exact_path = self.data_dir if export_path is None else export_path
-        with open(os.path.join(exact_path, self.snapshot_dt.strftime('%Y_%m_%d') + '_nbc.txt'), 'w') as outfile:
-            outfile.write(csv_sep.join(['Node ID', 'Node Type', 'Betweenness_Score']) + '\n')
-            write_counter = 0
-            for node_tuple in self.S_GRAPH.nodes(data=True):
-                # Returns tuples of length 2 --> (node_id, attribute_dict)
-                write_string = [node_tuple[0], self.identify_id(node_tuple[0])]
-                target_keys = [each_key for each_key in node_tuple[1].keys() if each_key.startswith('SP-')]
-                betweenness_score = sum([node_tuple[1][each_key][0] / node_tuple[1][each_key][1]
-                                         for each_key in target_keys])
-                write_string.append(str(betweenness_score))
-                # Then write to outfile
-                outfile.write(csv_sep.join(write_string) + '\n')
-                write_counter += 1
-        # Log progress
-        logging.info(f"Successfully wrote betweenness scores for {write_counter} nodes to "
-                     f"{os.path.join(exact_path, self.snapshot_dt.strftime('%Y_%m_%d') + '_nbc.txt')}")
+        export_path = os.path.join(exact_path, self.snapshot_dt.strftime('%Y_%m_%d') + '_nbc.txt')
+        df.to_csv(export_path, sep=csv_sep)
+
+        # Write to log
+        logging.info(f"Successfully exported betweenness centrality scores to {os.path.join(exact_path, self.snapshot_dt.strftime('%Y_%m_%d') + '_nbc.txt')}")
 
     def write_node_files(self, attribute_subset=None, export_path=None):
         """Writes a JSON representation of all nodes in the network to file.
