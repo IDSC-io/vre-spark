@@ -287,7 +287,7 @@ class SurfaceModel:
                 logging.warning('Empty patient identifier - node is skipped')
             self.patient_add_warnings += 1
             return
-        risk_codes = [each_risk.result for each_risk in risk_dict.values()]
+        risk_codes = [each_risk.result for each_risk in risk_dict.values() if each_risk.result != "nn"]
         self.S_GRAPH.add_node(str(string_id), type='Patient', risk=risk_dict, vre_status='pos' if len(risk_codes) != 0 else 'neg')
         self.Nodes['Patient'].add(string_id)
 
