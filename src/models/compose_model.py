@@ -18,6 +18,9 @@ sys.path.append("../..")
 
 import logging
 
+import datetime
+import pathlib
+
 import click
 
 from src.features.dataloader import DataLoader
@@ -32,6 +35,8 @@ def compose_model():
     logging.basicConfig(format='%(asctime)s - %(levelname)s: %(message)s', level=logging.INFO,
                         datefmt='%d.%m.%Y %H:%M:%S')
     #####################################
+
+    now_str = datetime.now().strftime("%Y%m%d%H%M%S")
 
     #####################################
     # Initiate data loader
@@ -72,17 +77,20 @@ def compose_model():
 
     # calculate scores
 
-    patient_degree_ratio_df = surface_graph.calculate_patient_degree_ratio()
+    pathlib.Path("./data/processed/metrics").mkdir(parents=True, exist_ok=True)
 
+    patient_degree_ratio_df = surface_graph.calculate_patient_degree_ratio()
     print(patient_degree_ratio_df.head(50))
+    patient_degree_ratio_df.to_csv(f"./data/processed/metrics/{now_str}_patient_degree_ratio.csv")
 
     total_degree_ratio_df = surface_graph.calculate_total_degree_ratio()
-
     print(total_degree_ratio_df.head(50))
+    total_degree_ratio_df.to_csv(f"./data/processed/metrics/{now_str}_total_degree_ratio.csv")
 
     # TODO: Reenable node betweenness statistics. Deactivated as it uses a lot of resources!
     # node_betweenness_df = surface_graph.calculate_node_betweenness()
     # print(node_betweenness_df.head(50))
+    # node_betweenness_df.to_csv(f"./data/processed/metrics/{now_str}_node_betweenness.csv")
     #####################################
 
     logging.info("Data processed successfully!")
