@@ -46,9 +46,11 @@ def write_sql_query_results_to_csv(path_to_sql, path_to_csv, csv_sep, connection
             print(f"{path_to_csv} exists. force_overwrite is disabled, not overwriting.")
             return None
 
+    pathlib.Path(path_to_csv).parent.mkdir(parents=True, exist_ok=True)
+
     connection_string = ';'.join([line.replace('\n', '') for line in open(connection_file, 'r')])
 
-    print(connection_string)
+    # print(connection_string)
     conn = pyodbc.connect(connection_string, trusted_connection='yes' if trusted_connection else 'no')
     cursor = conn.cursor()
 
