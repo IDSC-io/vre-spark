@@ -35,10 +35,6 @@ def write_sql_query_results_to_csv(path_to_sql, path_to_csv, csv_sep, connection
         trusted_connection (bool):  additional argument passed to pyodbc.connect(), converted to "yes" if ``True`` and
                                     "no" otherwise (defaults to ``True``)
     """
-    # create path to store the csvs
-    path = pathlib.Path(path_to_csv)
-    path.parent.mkdir(parents=True, exist_ok=True)
-
     if os.path.exists(path_to_csv):
         if force_overwrite:
             print(f"Overwriting {path_to_csv} as force_overwrite is enabled.")
@@ -46,6 +42,7 @@ def write_sql_query_results_to_csv(path_to_sql, path_to_csv, csv_sep, connection
             print(f"{path_to_csv} exists. force_overwrite is disabled, not overwriting.")
             return None
 
+    # create path to store the csvs
     pathlib.Path(path_to_csv).parent.mkdir(parents=True, exist_ok=True)
 
     connection_string = ';'.join([line.replace('\n', '') for line in open(connection_file, 'r')])
