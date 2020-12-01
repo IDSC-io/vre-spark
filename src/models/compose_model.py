@@ -18,7 +18,7 @@ sys.path.append("../..")
 
 import logging
 
-import datetime
+from datetime import datetime
 import pathlib
 
 import click
@@ -48,7 +48,7 @@ def compose_model():
                                        load_icd_codes=False,
                                        load_chop_codes=False,
                                        load_surgeries=False,
-                                       load_care_data=False) # TODO: Check if care data is used as a link between employees and patients
+                                       load_partners=False)
     #####################################
 
     #####################################
