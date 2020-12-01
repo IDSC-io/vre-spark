@@ -81,16 +81,16 @@ def compose_model():
 
     patient_degree_ratio_df = surface_graph.calculate_patient_degree_ratio()
     print(patient_degree_ratio_df.head(50))
-    patient_degree_ratio_df.to_csv(f"./data/processed/metrics/{now_str}_patient_degree_ratio.csv")
+    patient_degree_ratio_df.to_csv(f"./data/processed/metrics/{now_str}_patient_degree_ratio.csv", index=False)
 
     total_degree_ratio_df = surface_graph.calculate_total_degree_ratio()
     print(total_degree_ratio_df.head(50))
-    total_degree_ratio_df.to_csv(f"./data/processed/metrics/{now_str}_total_degree_ratio.csv")
+    total_degree_ratio_df.to_csv(f"./data/processed/metrics/{now_str}_total_degree_ratio.csv", index=False)
 
     # TODO: Reenable node betweenness statistics. Deactivated as it uses a lot of resources!
     # node_betweenness_df = surface_graph.calculate_node_betweenness()
     # print(node_betweenness_df.head(50))
-    # node_betweenness_df.to_csv(f"./data/processed/metrics/{now_str}_node_betweenness.csv")
+    # node_betweenness_df.to_csv(f"./data/processed/metrics/{now_str}_node_betweenness.csv", index=False)
     #####################################
 
     logging.info("Data processed successfully!")
