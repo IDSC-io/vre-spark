@@ -50,25 +50,27 @@ class DataLoader:
 
         logging.debug(f"base_path: {self.base_path}")
 
-        self.devices_path = os.path.join(self.base_path, "DIM_GERAET.csv")
         self.patients_path = os.path.join(self.base_path, "DIM_PATIENT.csv")
+        self.devices_path = os.path.join(self.base_path, "DIM_GERAET.csv")
+        self.rooms_path = os.path.join(self.base_path, "DIM_RAUM.csv")
         self.cases_path = os.path.join(self.base_path, "DIM_FALL.csv")
         self.stays_path = os.path.join(self.base_path, "LA_ISH_NBEW.csv")
-        self.risks_path = os.path.join(self.base_path, "DIM_RISIKO.csv")
+        # self.risks_path = os.path.join(self.base_path, "DIM_RISIKO.csv")
+
         self.appointments_path = os.path.join(self.base_path, "DIM_TERMIN.csv")
-        self.device_appointment_path = os.path.join(self.base_path, "FAKT_TERMIN_GERAET.csv")
+        self.appointment_device_path = os.path.join(self.base_path, "FAKT_TERMIN_GERAET.csv")
         self.appointment_patient_path = os.path.join(self.base_path, "FAKT_TERMIN_PATIENT.csv")
-        self.rooms_path = os.path.join(self.base_path, "DIM_RAUM.csv")
-        self.room_appointment_path = os.path.join(self.base_path, "FAKT_TERMIN_RAUM.csv")
+        self.appointment_room_path = os.path.join(self.base_path, "FAKT_TERMIN_RAUM.csv")
         self.appointment_employee_path = os.path.join(self.base_path, "FAKT_TERMIN_MITARBEITER.csv")
-        self.medication_path = os.path.join(self.base_path, "FAKT_MEDIKAMENTE.csv")
+
+        self.medication_path = os.path.join(self.base_path, "FAKT_MEDIKAMENTE.csv") # TODO: Investigate source table
         self.partner_path = os.path.join(self.base_path, "LA_ISH_NGPA.csv")
-        self.partner_case_path = os.path.join(self.base_path, "LA_ISH_NFPZ.csv")
+        self.case_partner_path = os.path.join(self.base_path, "LA_ISH_NFPZ.csv")
         self.chop_path = os.path.join(self.base_path, "LA_CHOP_FLAT.csv")
         self.surgery_path = os.path.join(self.base_path, "LA_ISH_NICP.csv")
-        self.tacs_path = os.path.join(self.base_path, "TACS_DATEN.csv")
-        self.icd_path = os.path.join(self.base_path, "V_LA_ISH_NDIA_NORM.csv")
-        self.VRE_screenings_path = os.path.join(self.base_path, "VRE_SCREENING_DATA.csv")
+        self.tacs_care_path = os.path.join(self.base_path, "TACS_DATEN.csv")
+        self.icd_codes_path = os.path.join(self.base_path, "V_LA_ISH_NDIA_NORM.csv")
+        self.vre_screenings_path = os.path.join(self.base_path, "VRE_SCREENING_DATA.csv")
 
         #self.VRE_ward_screenings_path = os.path.join(self.base_path, "WARD_SCREENINGS.csv")
         #self.oe_pflege_map_path = os.path.join(self.base_path, "OE_PFLEGE_MAP.csv")
@@ -187,7 +189,7 @@ class DataLoader:
                 partners = Partner.create_partner_map(self.partner_path, encoding=self.encoding)
                 logging.info("adding partners to cases")
                 Partner.add_partners_to_cases(  # This will update partners from table: LA_ISH_NFPZ
-                    self.partner_case_path, self.encoding, cases, partners)
+                    self.case_partner_path, self.encoding, cases, partners)
             else:
                 logging.info("loading partner data omitted.")
 
@@ -233,7 +235,7 @@ class DataLoader:
             # )
             # ## --> NEW VERSION: from file VRE_Screenings_Final.csv
             # TODO: Analyze how risks are added to patients to ensure VRE-positive patients are properly annotated
-            Risk.add_annotated_screening_data_to_patients(self.VRE_screenings_path,
+            Risk.add_annotated_screening_data_to_patients(self.vre_screenings_path,
                                                           self.encoding,
                                                           patient_dict=patients)
         else:
@@ -297,8 +299,8 @@ class DataLoader:
                                                    else self.get_csv_file(self.devices_path))
 
                 # Add Device data to Appointments from table: V_DH_FACT_TERMINGERAET
-                Device.add_device_to_appointment(self.get_hdfs_pipe(self.device_appointment_path) if self.hdfs_pipe is True
-                                                 else self.get_csv_file(self.device_appointment_path),
+                Device.add_device_to_appointment(self.get_hdfs_pipe(self.appointment_device_path) if self.hdfs_pipe is True
+                                                 else self.get_csv_file(self.appointment_device_path),
                                                  appointments, devices)
             else:
                 logging.info("loading devices omitted.")
@@ -318,8 +320,8 @@ class DataLoader:
                 if load_care_data:
                     # Add Treatment/Care data to Cases from table: TACS_DATEN
                     logging.info("Adding Treatment/Care data to Cases from TACS")
-                    Treatment.add_care_entries_to_case(self.get_hdfs_pipe(self.tacs_path) if self.hdfs_pipe is True
-                                                  else self.get_csv_file(self.tacs_path), cases, employees)
+                    Treatment.add_care_entries_to_case(self.get_hdfs_pipe(self.tacs_care_path) if self.hdfs_pipe is True
+                                                  else self.get_csv_file(self.tacs_care_path), cases, employees)
                     # --> Note: Care() objects are not part of the returned dictionary, they are only used in
                     #               Case() objects --> Case().cares = [Care(), Care(), ...] (list of all cares for each case)
                 else:
@@ -331,8 +333,8 @@ class DataLoader:
             if load_rooms:
                 # Add Room data to Appointments from table: V_DH_FACT_TERMINRAUM
                 logging.info('Adding rooms to appointments')
-                Room.add_rooms_to_appointment(self.get_hdfs_pipe(self.room_appointment_path) if self.hdfs_pipe is True
-                                              else self.get_csv_file(self.room_appointment_path), appointments, rooms)
+                Room.add_rooms_to_appointment(self.get_hdfs_pipe(self.appointment_room_path) if self.hdfs_pipe is True
+                                              else self.get_csv_file(self.appointment_room_path), appointments, rooms)
                 logging.info(f"Dataset contains in total {len(rooms)} Rooms")
             else:
                 logging.info("loading rooms omitted.")
@@ -344,10 +346,10 @@ class DataLoader:
         if load_icd_codes:
             logging.info("Adding ICD codes to cases")
             # Add ICD codes to cases from table: LA_ISH_NDIA_NORM
-            icd_codes = ICDCode.create_icd_code_map(self.get_hdfs_pipe(self.icd_path) if self.hdfs_pipe is True
-                                            else self.get_csv_file(self.icd_path))
-            ICDCode.add_icd_codes_to_case(self.get_hdfs_pipe(self.icd_path) if self.hdfs_pipe is True
-                                else self.get_csv_file(self.icd_path), cases)
+            icd_codes = ICDCode.create_icd_code_map(self.get_hdfs_pipe(self.icd_codes_path) if self.hdfs_pipe is True
+                                            else self.get_csv_file(self.icd_codes_path))
+            ICDCode.add_icd_codes_to_case(self.get_hdfs_pipe(self.icd_codes_path) if self.hdfs_pipe is True
+                                else self.get_csv_file(self.icd_codes_path), cases)
         else:
             logging.info("loading ICD codes omitted.")
 
