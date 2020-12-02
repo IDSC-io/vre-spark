@@ -65,7 +65,8 @@ def create_append_df_to_sql():
                                              password="A7D32FXXA2F&=K5QM40")
 
     for (timestamp, metric_name, metric_df) in get_all_timestamped_metrics():
-         metric_df["Timstamp"] = datetime.strptime(timestamp, "%Y%m%d%H%M%S")
+         metric_df["Timestamp"] = datetime.strptime(timestamp, "%Y%m%d%H%M%S")
+         # metric_df = metric_df.drop(["Unnamed: 0"], axis=1)
          table_name = f"metric_{metric_name}"
          metric_df.to_sql(table_name, engine, schema="temp", if_exists='append', chunksize=1000)
 

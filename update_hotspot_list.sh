@@ -11,6 +11,9 @@ echo "Updating hotspot lists..."
 python ./src/models/compose_model.py
 echo "...Done!"
 
+echo "Exporting data into sql table..."
+python ./src/postprocessing/export_metrics_to_db.py
+echo "...Done!"
 
 ###########################################################################################################################
 # PRINT SUCCESS AND EXECUTION TIME TO LOGFILE
