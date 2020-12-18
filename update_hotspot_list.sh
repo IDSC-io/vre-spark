@@ -8,7 +8,7 @@ python ./src/data/make_dataset.py    # pyodbc module installed
 echo "...Done!"
 
 echo "Updating hotspot lists..."
-python ./src/models/compose_model.py
+python ./src/models/compose_model_graph.py
 echo "...Done!"
 
 
