@@ -26,7 +26,7 @@ def get_mssql_engine(driver=os.getenv("DRIVER"),
                      host=os.getenv('SERVER_ADDRESS'),
                      db=os.getenv('DATABASE'),
                      user=os.getenv('user'),
-                    password=os.getenv('password')):
+                     password=os.getenv('password')):
     engine = create_engine(f'mssql+pyodbc://{user}:{password}@{host}/{db}?driver={driver}')
     return engine
 
