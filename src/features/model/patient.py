@@ -3,6 +3,7 @@ import logging
 
 from dateutil.relativedelta import relativedelta
 from tqdm import tqdm
+from concurrent.futures import ThreadPoolExecutor
 import pandas as pd
 
 from src.features.model.data_model_constants import ICUs
@@ -551,8 +552,15 @@ class Patient:
         patient_df = pd.read_csv(csv_path, encoding=encoding, parse_dates=["Birth Date"], dtype=str)
         # patient_df["Patient ID"] = patient_df["Patient ID"].astype(int) # in principle it should be an int, history makes it a varchar/string
 
+        # Parallel execution seems slower
+        # def create_patient(index_row_tuple):
+        #     return Patient(*(index_row_tuple[1].to_list()))
+        #
+        # use as many threads as possible, default: min(32, os.cpu_count()+4)
+        # with ThreadPoolExecutor() as executor:
+        #     patient_objects = executor.map(create_patient, tqdm(patient_df.iterrows(), total=len(patient_df)))
         patient_objects = patient_df.progress_apply(lambda row: Patient(*row.to_list()), axis=1)
-        for patient in patient_objects.to_list():
+        for patient in patient_objects:
             patients[patient.patient_id] = patient
             import_count += 1
             if load_limit is not None and import_count > load_limit:
