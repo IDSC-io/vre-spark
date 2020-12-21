@@ -2,6 +2,7 @@ import logging
 from datetime import datetime
 
 from tqdm import tqdm
+import itertools
 
 
 class Surgery:
@@ -46,7 +47,8 @@ class Surgery:
         nr_case_not_found = 0
         nr_surgery_cancelled = 0
         nr_ok = 0
-        for line in tqdm(lines):
+        lines_iters = itertools.tee(lines, 2)
+        for line in tqdm(lines_iters[1], total=sum(1 for _ in lines_iters[0])):
             surgery = Surgery(*line)
             if surgery.cancelled == 'X':  # ignore 'cancelled' surgeries
                 nr_surgery_cancelled += 1
