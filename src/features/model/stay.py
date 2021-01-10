@@ -7,6 +7,8 @@ import pandas as pd
 from src.features.model import Room
 from src.features.model import Ward
 
+import numpy as np
+
 
 class Stay:
     def __init__(self, serial_number, case_id, type_id, type, status, serial_reference, description, department,
@@ -32,6 +34,15 @@ class Stay:
         self.serial_reference = serial_reference
         self.department = department
         self.unit_of_entry = unit_of_entry
+
+    def __str__(self):
+        return str({"Case ID": self.case_id,
+                    "Serial Number": self.serial_number,
+                    "Type": self.type,
+                    "From Date": self.from_datetime,
+                    "To Date": self.to_datetime,
+                    "Description": self.description,
+                    "Room ID": self.room_id})
 
     def add_room(self, r):
         self.room = r
@@ -79,6 +90,9 @@ class Stay:
         # in principle they are all int, history makes them a varchar/string
         # stay_df["Case ID"] = stay_df["Case ID"].astype(int)
 
+        # TODO: SAP NBEW without Room ID is dropped. Is that correct?
+        stay_df = stay_df[~pd.isna(stay_df["Room ID"])]
+
         stay_objects = stay_df.progress_apply(lambda row: Stay(*row.to_list()), axis=1)
         logging.debug("add_stay_to_case")
         nr_not_found = 0
@@ -95,14 +109,14 @@ class Stay:
                     continue
                 ward = None
                 # Add ward to stay and vice versa
-                if stay.ward_id != "" and stay.ward_id != "NULL":
+                if stay.ward_id != "" and not pd.isna(stay.ward_id):
                     if wards.get(stay.ward_id, None) is None:
                         ward = Ward(stay.ward_id)
                         wards[stay.ward_id] = ward
                     wards[stay.ward_id].add_stay(stay)
                     stay.add_ward(wards[stay.ward_id])
                 # Add stay to room and vice versa (including an update of the Room().ward attribute)
-                if stay.room_id != "" and stay.room_id != "NULL":
+                if stay.room_id != "" and not pd.isna(stay.room_id):
                     if rooms.get(stay.room_id, None) is None:
                         # Note that the rooms are primarily identified through their name
                         # The names in this file come from SAP (without an associated ID), so they will NOT match the names already present in the rooms dictionary !

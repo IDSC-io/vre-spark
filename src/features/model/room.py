@@ -25,6 +25,14 @@ class Room:
         self.appointments = []
         self.beds = dict()
 
+    def __str__(self):
+        return str({"Room name": self.name,
+                    "Room ids": self.ids,
+                    "Ward": self.ward,
+                    "Stays Qty": len(self.stays),
+                    "Appointments Qty": self.appointments,
+                    "Beds Qty": len(self.beds.keys())})
+
     def add_stay(self, stay):
         """
         Add a Stay from SAP IS-H to this room.
