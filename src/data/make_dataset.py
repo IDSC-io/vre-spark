@@ -9,9 +9,9 @@ import logging
 from pathlib import Path
 #from dotenv import find_dotenv, load_dotenv
 
-from src.data.dataset_queries import pull_raw_dataset
+# from src.data.dataset_queries import pull_raw_dataset
 from src.data.merge_data import merge_data
-from src.data.dataset_preprocessor import cleanup_dataset
+from src.data.dataset_preprocessor import cleanup_dataset, improve_dataset
 
 
 @click.command()
@@ -28,10 +28,13 @@ def main():
     logger = logging.getLogger(__name__)
 
     logger.info('Pulling dataset from database if not available yet...')
-    pull_raw_dataset()
+#    pull_raw_dataset()
 
     logger.info('Cleaning up dataset...')
     cleanup_dataset()
+
+    logger.info('Improve dataset...')
+    improve_dataset()
 
 
 if __name__ == '__main__':
