@@ -55,12 +55,12 @@ def get_entity_interactions(patients):
                                          "timestamp_begin": patient_appointment.start_datetime, "timestamp_end": patient_appointment.end_datetime})
 
                 for room in patient_appointment.rooms:
-                    interactions.append({"node_0": "ROOM_" + str(room.name), "node_1": "DEVICE_" + str(device.id),
+                    interactions.append({"node_0": "ROOM_" + str(room.room_id), "node_1": "DEVICE_" + str(device.id),
                                          "timestamp_begin": patient_appointment.start_datetime, "timestamp_end": patient_appointment.end_datetime})
 
             for employee in patient_appointment.employees:
                 for room in patient_appointment.rooms:
-                    interactions.append({"node_0": "ROOM_" + str(room.name), "node_1": "EMPLOYEE_" + str(employee.id),
+                    interactions.append({"node_0": "ROOM_" + str(room.room_id), "node_1": "EMPLOYEE_" + str(employee.id),
                                          "timestamp_begin": patient_appointment.start_datetime, "timestamp_end": patient_appointment.end_datetime})
 
     # patient-room interactions
@@ -72,7 +72,7 @@ def get_entity_interactions(patients):
     for (patient_id, patient_stays) in stays_per_patient.items():
         patient_stays_count = 0
         for patient_stay in patient_stays:
-            interactions.append({"node_0": "PATIENT_" + str(patient_id), "node_1": "ROOM_" + str(patient_stay.room.name), "timestamp_begin": patient_stay.from_datetime, "timestamp_end" :patient_stay.to_datetime})
+            interactions.append({"node_0": "PATIENT_" + str(patient_id), "node_1": "ROOM_" + str(patient_stay.room.room_id), "timestamp_begin": patient_stay.from_datetime, "timestamp_end" :patient_stay.to_datetime})
             patient_stays_count += 1
 
         if patient_stays_count == 0:
@@ -100,7 +100,7 @@ if __name__ == '__main__':
 
     # --> Load all data:
     loader = DataLoader(hdfs_pipe=False)  # hdfs_pipe = False --> files will be loaded directly from CSV
-    patient_data = loader.patient_data(
+    patient_data = loader.prepare_dataset(
         load_cases=True,
         load_partners=False,
         load_stays=True,

@@ -37,6 +37,7 @@ scipy==1.5.4
 six
 sklearn==0.0
 tqdm==4.54.0
+requests
 
 # GNN
 # conda install pytorch cudatoolkit=10.1 -c pytorch

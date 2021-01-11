@@ -12,7 +12,8 @@ import numpy as np
 
 class Stay:
     def __init__(self, serial_number, case_id, type_id, type, status, serial_reference, description, department,
-                 ward_id, unit_of_entry, room_id, bed, cancelled, partner_id, begin_datetime, end_datetime):
+                 ward_id, unit_of_entry, sap_room_id, bed, cancelled, partner_id, begin_datetime, end_datetime,
+                 sap_building_abbreviation, ww_floor_id, ww_room_id):
         self.case_id = case_id
         self.serial_number = serial_number
         self.type_id = type_id
@@ -22,7 +23,10 @@ class Stay:
         self.to_datetime = end_datetime
         self.description = description
         self.ward_id = ward_id
-        self.room_id = room_id
+        self.room_id = sap_room_id
+        self.sap_building_abbreviation = sap_building_abbreviation
+        self.ww_floor_id = ww_floor_id
+        self.ww_room_id = ww_room_id
         self.bed = bed
         self.cancelled = cancelled
         self.partner_id = partner_id
@@ -91,7 +95,7 @@ class Stay:
         # stay_df["Case ID"] = stay_df["Case ID"].astype(int)
 
         # TODO: SAP NBEW without Room ID is dropped. Is that correct?
-        stay_df = stay_df[~pd.isna(stay_df["Room ID"])]
+        stay_df = stay_df[~pd.isna(stay_df["SAP Room ID"])]
 
         stay_objects = stay_df.progress_apply(lambda row: Stay(*row.to_list()), axis=1)
         logging.debug("add_stay_to_case")
@@ -99,6 +103,7 @@ class Stay:
         nr_not_formatted = 0
         nr_ok = 0
         nr_wards_updated = 0
+        nr_rooms_created = 0
         # TODO: Rewrite parts of loop to pandas checks before making all objects
         for stay in tqdm(stay_objects.to_list()):
                 if cases.get(stay.case_id, None) is not None:
@@ -120,8 +125,10 @@ class Stay:
                     if rooms.get(stay.room_id, None) is None:
                         # Note that the rooms are primarily identified through their name
                         # The names in this file come from SAP (without an associated ID), so they will NOT match the names already present in the rooms dictionary !
-                        this_room = Room(stay.room_id)
+                        this_room = Room(sap_room_id1=stay.room_id)
                         rooms[stay.room_id] = this_room
+                        nr_rooms_created += 1
+                        # print(stay.room_id)
 
                         # In order to extract the Room ID, we need to 'backtrace' the key in room_ids for which room_ids[key] == stay.zimmr (this will not be available for most Rooms)
                         # If a backtrace is not possible, the room object will be initiated without an ID
@@ -146,4 +153,4 @@ class Stay:
                 if load_limit is not None and nr_ok > load_limit:
                     break
 
-        logging.info(f"{nr_ok} stays ok, {nr_not_found} cases not found, {nr_not_formatted} malformed, {nr_wards_updated} wards updated")
+        logging.info(f"{nr_ok} stays ok, {nr_not_found} cases not found, {nr_not_formatted} malformed, {nr_wards_updated} wards updated, {nr_rooms_created} new rooms created")

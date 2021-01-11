@@ -27,7 +27,6 @@ import logging
 import datetime
 import itertools
 import json
-import random
 from collections import Counter
 import pathlib
 import pandas as pd
