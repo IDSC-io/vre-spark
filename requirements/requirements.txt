@@ -6,8 +6,6 @@
 # installed pytorch==1.7.1
 torch-geometric==1.6.3
 
-# Visualization (https://holoviz.org/installation.html)
-# conda install -c pyviz holoviz
 
 # external requirements
 click
@@ -42,8 +40,11 @@ requests
 # GNN
 # conda install pytorch cudatoolkit=10.1 -c pytorch
 
-# Visualization
-# conda install -c pyviz holoviz
+# Visualization (https://holoviz.org/installation.html)
+# (separaTe conda env)
+# conda install parso
+# conda install -c pyviz holoviz geoviews contextily networkx geopandas=0.8.
+
 
 
 pytest
