@@ -37,6 +37,12 @@ from tqdm import tqdm
 def create_model_snapshots(orig_model, snapshot_dt_list):
     """Creates model snapshots based on the datetime.datetime() values provided in snapshot_dt_list.
 
+    Just to remember how the edges are composed:
+    - patient -> cases, risks
+    - case -> appointments, stays
+    - appointment -> devices, employees, rooms
+    - stay -> room
+
     Note:
         For obvious reasons, all of the values provided must be smaller (earlier than) orig_model.snapshot_dt (i.e.
         the snapshot date of the model used as a basis for the other models).
@@ -290,7 +296,7 @@ class SurfaceModel:
         self.S_GRAPH.add_node(str(string_id), type='Patient', risk=risk_dict, vre_status='pos' if len(risk_codes) != 0 else 'neg')
         self.Nodes['Patient'].add(string_id)
 
-    def new_room_node(self, string_id, ward=None, room_id=None, warn_log=False):
+    def new_room_node(self, string_id, building_id=None, ward_id=None, room_id=None, warn_log=False):
         """Add a room node to the network.
 
         Automatically sets the 'type' attribute to "Room" and ward to the "ward" attribute, and sets room_id to either
@@ -299,7 +305,8 @@ class SurfaceModel:
 
         Args:
             string_id (str):    string identifier of room to be added.
-            ward (str):         name of ward of this room
+            building_id (str): id of ward of this room
+            ward_id (str):         id of ward of this room
             room_id (str):      room id (in string form) of this room
             warn_log (bool):    flag indicating whether or not to log warning messages.
         """
@@ -308,8 +315,10 @@ class SurfaceModel:
                 logging.warning('Empty room identifier - node is skipped')
             self.room_add_warnings += 1
             return
-        attribute_dict = {'ward': 'NULL' if ward is None else str(ward), 'room_id': 'NULL'
-        if room_id is None else str(room_id), 'type': 'Room'}
+        attribute_dict = {'building_id': 'NULL' if building_id is None else str(building_id),
+                          'ward': 'NULL' if ward_id is None else str(ward_id),
+                          'room_id': 'NULL' if room_id is None else str(room_id), 'type': 'Room'
+                          }
         self.S_GRAPH.add_node(str(string_id), **attribute_dict)
         self.Nodes['Room'].add(string_id)
 
@@ -777,8 +786,14 @@ class SurfaceModel:
                         this_room = stay.room_id
                         # Add room node - this will only overwrite attributes if node is already present
                         # --> does not matter since room_id and ward are the same
-                        self.new_room_node(stay.room_id, ward=ward_name, room_id=stay.room.get_ids()
-                        if stay.room is not None else None)
+                        try:
+                            room = patient_dict["rooms"][this_room]
+                            building_id = room.ww_building_id
+                        except:
+                            building_id = None
+
+                        self.new_room_node(stay.room_id, building_id=building_id, ward_id=ward_name, room_id=stay.room.get_ids()
+                                           if stay.room is not None else None)
                         # .get_ids() will return a '@'-delimited list of [room_id]_[system] entries, or None
                         nbr_room_id += 1
                     # Add Patient-Room edge if it is within scope of the current snapshot
@@ -820,8 +835,13 @@ class SurfaceModel:
                         employee_list.append(str(each_emp.id))
                     # --> Add Room nodes
                     for each_room in each_app.rooms:
-                        self.new_room_node(string_id=each_room.name, ward=each_room.ward.name if each_room.ward is not None else None, room_id=each_room.get_ids())
-                        room_list.append(each_room.name)
+                        try:
+                            room = patient_dict["rooms"][each_room.room_id]
+                            building_id = room.ww_building_id
+                        except:
+                            building_id = None
+                        self.new_room_node(string_id=each_room.room_id, building_id=building_id, ward_id=each_room.ward.name if each_room.ward is not None else None, room_id=each_room.get_ids())
+                        room_list.append(each_room.room_id)
                     ####################################
                     # --> ADD EDGES based on specifications in self.edge_types
                     ####################################
@@ -874,8 +894,7 @@ class SurfaceModel:
         logging.info(f"##################################################################################")
         logging.info(f"Encountered {nbr_room_no_id} stays without associated room, {nbr_room_id} rooms identified.")
         logging.info('------------------------------------------------------------------')
-        total_warnings = self.room_add_warnings + self.employee_add_warnings + self.device_add_warnings + \
-                         self.patient_add_warnings
+        total_warnings = self.room_add_warnings + self.employee_add_warnings + self.device_add_warnings + self.patient_add_warnings
         if total_warnings > 0:
             logging.warning(f'Encountered the following errors during the addition of nodes to the network:')
             logging.warning(f'--> {self.room_add_warnings} errors during the addition of room nodes to the network')
