@@ -320,7 +320,7 @@ class SurfaceModel:
                           'room_id': 'NULL' if room_id is None else str(room_id), 'type': 'Room'
                           }
         self.S_GRAPH.add_node(str(string_id), **attribute_dict)
-        self.Nodes['Room'].add(string_id)
+        self.Nodes['Room'].add(str(string_id))
 
     def new_device_node(self, string_id, name, warn_log=False):
         """Add a device node to the network.
