@@ -13,6 +13,8 @@ import sys
 from configuration.basic_configuration import configuration
 
 # make sure to append the correct path regardless where script is called from
+from src.features.model.building import Building
+
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'model'))
 
 from tqdm import tqdm
@@ -52,6 +54,7 @@ class DataLoader:
 
         self.patients_path = os.path.join(self.base_path, "DIM_PATIENT.csv")
         self.devices_path = os.path.join(self.base_path, "DIM_GERAET.csv")
+        self.buildings_path = os.path.join(self.base_path, "building_identifiers.csv")
         self.rooms_path = os.path.join(self.base_path, "room_identifiers.csv")
         self.cases_path = os.path.join(self.base_path, "DIM_FALL.csv")
         self.stays_path = os.path.join(self.base_path, "LA_ISH_NBEW.csv")
@@ -129,6 +132,7 @@ class DataLoader:
         return output
 
     def prepare_dataset(self,
+                        load_patients=True,
                         load_cases=True,
                         load_partners=True,
                         load_stays=True,
@@ -141,6 +145,7 @@ class DataLoader:
                         load_devices=True,
                         load_employees=True,
                         load_care_data=True,
+                        load_buildings=True,
                         load_rooms=True,
                         load_icd_codes=True):
         """Prepares dataset based on extracted data.
@@ -169,16 +174,27 @@ class DataLoader:
                      f" base_path set to {self.base_path}).")
 
         # load Patient data from table: V_DH_DIM_PATIENT_CUR
-        logging.info("loading patient data...")
-        patients = Patient.create_patient_dict(self.patients_path, self.encoding,
-                                               load_limit=self.load_limit)
+        if load_patients:
+            logging.info("loading patient data...")
+            patients = Patient.create_patient_dict(self.patients_path, self.encoding,
+                                                   load_limit=self.load_limit)
+        else:
+            patients = dict()
+            logging.info("loading patients omitted.")
+
+        if load_buildings:
+            logging.info("loading building data..")
+            buildings = Building.create_building_id_map(self.buildings_path, self.encoding)
+        else:
+            buildings = dict()
+            logging.info("preloading buildings omitted.")
 
         if load_rooms:
-            rooms, buildings, floors = Room.create_room_id_map(self.rooms_path, self.encoding, load_limit=self.load_limit)
+            logging.info("loading room data...")
+            rooms, buildings, floors = Room.create_room_id_map(self.rooms_path, buildings, self.encoding, load_limit=self.load_limit)
         else:
             rooms = dict()
             floors = dict()
-            buildings = dict()
             logging.info("preloading rooms omitted.")
 
         # load Case data from table: V_LA_ISH_NFAL_NORM

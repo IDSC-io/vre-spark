@@ -32,7 +32,7 @@ class Room:
         self.ww_floor_id = ww_floor_id
         self.floor_id = self.ww_building_id + " " + self.ww_floor_id if self.ww_building_id is not None and self.ww_floor_id is not None else None
         self.ww_room_id = ww_room_id
-        # self.name = name
+
         self.ids = []
         [self.add_id(room_id, "SAP") for room_id in self.sap_room_ids]
         self.add_id(self.ww_room_id, "Waveware")
@@ -118,7 +118,7 @@ class Room:
         return overlapping_stays
 
     @staticmethod
-    def create_room_id_map(csv_path, encoding, load_limit=None):
+    def create_room_id_map(csv_path, buildings, encoding, load_limit=None):
         """
         Initializes the dictionary mapping room ids to Room() objects based on the provided csv file.
         This function will be called by the HDFS_data_loader.patient_data() function (lines is an iterator object). The underlying table is structured as follows:
@@ -135,7 +135,6 @@ class Room:
         logging.debug("create_room_dict")
         import_count = 0
         rooms = dict()
-        buildings = dict()
         floors = dict()
         rooms_df = pd.read_csv(csv_path, encoding=encoding, dtype=str, index_col=0)
         rooms_objects = rooms_df.progress_apply(lambda row: Room(*row.to_list()), axis=1)
