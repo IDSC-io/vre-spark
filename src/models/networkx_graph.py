@@ -58,10 +58,10 @@ def create_model_snapshots(orig_model, snapshot_dt_list):
         meaning the list has length `len(snapshot_dt_list) + 1`. If no snapshot creation is possible, ``None`` is
         returned instead.
     """
-    if orig_model.snapshot_dt is None:
+    if orig_model.from_range is None or orig_model.to_range is None:
         logging.error('Please add data to the model before taking snapshots !')
         return None
-    if True in [dt_value > orig_model.snapshot_dt for dt_value in snapshot_dt_list]:
+    if True in [dt_value > orig_model.to_range for dt_value in snapshot_dt_list]:
         logging.error('All snapshot values must be smaller than the snapshot time of the current model !')
         return None
     sorted_snapshots = sorted(snapshot_dt_list, reverse=True)
@@ -170,7 +170,8 @@ class SurfaceModel:
 
         self.node_files_written = False  # indicates whether node files (in JSON format) are present in self.data_dir
 
-        self.snapshot_dt = None  # time at which "snapshot" of the model is taken (important for "sub-snapshots")
+        self.from_range = None  # time at which "snapshot" of the model is taken (important for "sub-snapshots")
+        self.to_range = None
 
         self.edge_types = ('Patient-Room', 'Device-Patient', 'Employee-Patient', 'Device-Room', 'Employee-Room',
                            'Device-Employee') if edge_types is None else edge_types
@@ -426,7 +427,7 @@ class SurfaceModel:
                          if edge_tuple[3]['to'] > snapshot_dt]
         # S_GRAPH.edges() returns a list of tuples of length 4 --> ('source_id', 'target_id', key, attr_dict)
         self.S_GRAPH.remove_edges_from(deleted_edges)
-        self.snapshot_dt = snapshot_dt
+        self.to_range = snapshot_dt
 
     ################################################################################################################
     # Functions for updating attributes
@@ -636,7 +637,7 @@ class SurfaceModel:
         all_edges = self.S_GRAPH.edges(data=True, keys=True)  # tuple list -> ('source', 'target', key, {attr_dict } )
 
         # Overall network statistics
-        logging.info(f'--> Model Snapshot date: {self.snapshot_dt.strftime("%d.%m.%Y %H:%M:%S")}')
+        logging.info(f'--> Model Snapshot date: from {self.from_range.strftime("%d.%m.%Y %H:%M:%S")} to {self.to_range.strftime("%d.%m.%Y %H:%M:%S")}')
         logging.info(f"--> Total {len(all_nodes)} nodes, out of which {node_degrees.count(0)} are isolated")
         logging.info(f"--> Total {len(all_edges)} edges")
         logging.info('------------------------------')
@@ -704,7 +705,8 @@ class SurfaceModel:
         #logging.info(f"--> Graph connected: {nx.is_connected(self.S_GRAPH)}")
         logging.info(f"###############################################################")
 
-    def add_network_data(self, patient_dict, case_subset='relevant_case', patient_subset=None, snapshot=datetime.datetime.now()):
+    def add_network_data(self, patient_dict, case_subset='relevant_case', patient_subset=None,
+                         from_range=datetime.datetime.min, to_range=datetime.datetime.now()):
         """Adds nodes and edges data to the network.
 
         Nodes and edges are added based on the data in patient_dict according to the subset specified (see description
@@ -722,7 +724,10 @@ class SurfaceModel:
 
             patient_subset (list)   A subset of patients to model in network.
 
-            snapshot (dt.dt()):     datetime.datetime() object specifying to which point in time data are to be
+            from_range(dt.dt()):    datetime.datetime() object specifying from which point in time data are to be imported.
+                                    Defaulting to a time far in the past, this parameter can be used to create a "snapshot"
+                                    of the model starting at a certain point in time.
+            to_range (dt.dt()):     datetime.datetime() object specifying to which point in time data are to be
                                     imported. Defaulting to the time of execution, this parameter can be used to create
                                     a "snapshot" of the model, and will *ignore* (i.e. not add) edges in patient_dict
                                     for which the 'to' attribute is larger than this parameter. Note that all nodes from
@@ -732,8 +737,9 @@ class SurfaceModel:
                                     network.
         """
         logging.info(f"Filter set to: {case_subset}")
-        logging.info(f"Snapshot created at: {snapshot.strftime('%d.%m.%Y %H:%M:%S')}")
-        self.snapshot_dt = snapshot
+        logging.info(f"Snapshot created from {from_range.strftime('%d.%m.%Y %H:%M:%S')} to {to_range.strftime('%d.%m.%Y %H:%M:%S')}")
+        self.from_range = from_range
+        self.to_range = to_range
         #############################################################
         # --> Measures for the created network
         #############################################################
@@ -799,7 +805,7 @@ class SurfaceModel:
                     # Add Patient-Room edge if it is within scope of the current snapshot
                     edge_dict = {'from': stay.from_datetime, 'to': stay.to_datetime,
                                  'type': 'Patient-Room', 'origin': 'Stay'}
-                    if edge_dict['to'] < snapshot:
+                    if edge_dict['from'] > self.from_range and edge_dict['to'] < self.to_range:
                         self.new_edge(str(this_pat_id), 'Patient', this_room, 'Room', att_dict=edge_dict)
                 #########################################
                 # --> Step 2: Add Rooms, devices and employees based on the relevant Case().appointments
@@ -849,21 +855,21 @@ class SurfaceModel:
                     if 'Device-Patient' in self.edge_types:
                         edge_attributes['type'] = 'Device-Patient'
                         for device in device_list:
-                            if edge_attributes['to'] < snapshot:
+                            if edge_attributes['from'] >= self.from_range and edge_attributes['to'] < self.to_range:
                                 self.new_edge(this_pat_id, 'Patient', device, 'Device', att_dict=edge_attributes)
                                 nbr_pat_device += 1
                     # --> Patient-Room
                     if 'Patient-Room' in self.edge_types:
                         edge_attributes['type'] = 'Patient-Room'
                         for room in room_list:
-                            if edge_attributes['to'] < snapshot:
+                            if edge_attributes['from'] >= self.from_range and edge_attributes['to'] < self.to_range:
                                 self.new_edge(this_pat_id, 'Patient', room, 'Room', att_dict=edge_attributes)
                                 nbr_pat_room += 1
                     # --> Employee-Patient
                     if 'Employee-Patient' in self.edge_types:
                         edge_attributes['type'] = 'Employee-Patient'
                         for emp in employee_list:
-                            if edge_attributes['to'] < snapshot:
+                            if edge_attributes['from'] >= self.from_range and edge_attributes['to'] < self.to_range:
                                 self.new_edge(this_pat_id, 'Patient', emp, 'Employee', att_dict=edge_attributes)
                                 nbr_pat_emp += 1
                     # --> Device-Employee
@@ -871,7 +877,7 @@ class SurfaceModel:
                         edge_attributes['type'] = 'Device-Employee'
                         for emp in employee_list:
                             for device in device_list:
-                                if edge_attributes['to'] < snapshot:
+                                if edge_attributes['from'] >= self.from_range and edge_attributes['to'] < self.to_range:
                                     self.new_edge(emp, 'Employee', device, 'Device', att_dict=edge_attributes)
                                     nbr_device_emp += 1
                     # --> Employee-Room
@@ -879,7 +885,7 @@ class SurfaceModel:
                         edge_attributes['type'] = 'Employee-Room'
                         for emp in employee_list:
                             for room in room_list:
-                                if edge_attributes['to'] < snapshot:
+                                if edge_attributes['from'] >= self.from_range and edge_attributes['to'] < self.to_range:
                                     self.new_edge(emp, 'Employee', room, 'Room', att_dict=edge_attributes)
                                     nbr_emp_room += 1
                     # --> Device-Room
@@ -887,7 +893,7 @@ class SurfaceModel:
                         edge_attributes['type'] = 'Device-Room'
                         for device in device_list:
                             for room in room_list:
-                                if edge_attributes['to'] < snapshot:
+                                if edge_attributes['from'] >= self.from_range and edge_attributes['to'] < self.to_range:
                                     self.new_edge(device, 'Device', room, 'Room', att_dict=edge_attributes)
                                     nbr_room_device += 1
         #########################################
