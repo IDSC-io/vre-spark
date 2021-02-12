@@ -44,11 +44,11 @@ def compose_model():
 
     # --> Load all data:
     loader = DataLoader(hdfs_pipe=False)  # hdfs_pipe = False --> files will be loaded directly from CSV
-    patient_data = loader.patient_data(load_medications=False,
-                                       load_icd_codes=False,
-                                       load_chop_codes=False,
-                                       load_surgeries=False,
-                                       load_partners=False)
+    patient_data = loader.prepare_dataset(load_medications=False,
+                                          load_icd_codes=False,
+                                          load_chop_codes=False,
+                                          load_surgeries=False,
+                                          load_partners=False)
     #####################################
 
     #####################################

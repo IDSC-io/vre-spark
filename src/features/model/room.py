@@ -2,9 +2,12 @@ import logging
 from datetime import datetime
 import itertools
 
+import pandas as pd
 from tqdm import tqdm
 
 from src.features.model import Bed
+from src.features.model.building import Building
+from src.features.model.floor import Floor
 
 
 class Room:
@@ -12,18 +15,42 @@ class Room:
     Models a room in the hospital and contains lists of stays and appointments that happened in this room.
     """
 
-    def __init__(self, name):
+    def __init__(self, campus_id=None, ww_building_id=None, room_description=None, room_type=None,
+                 sap_building_abbreviation1=None, sap_building_abbreviation2=None,
+                 department=None, ward=None, sap_room_id1=None, sap_room_id2=None, ww_floor_id=None, ww_room_id=None):
         """
-        Note that most rooms will not have an ID ! (for some reason yet to be discovered)
+        """
+        self.campus_id = campus_id
+        self.ww_building_id = ww_building_id
+        self.room_description = room_description
+        self.room_id = sap_room_id2
+        self.room_type = room_type
+        self.sap_building_abbreviations = [sap_building_abbreviation1, sap_building_abbreviation2]
+        self.department = department
+        self.ward = ward
+        self.sap_room_ids = [sap_room_id1, sap_room_id2]
+        self.ww_floor_id = ww_floor_id
+        self.floor_id = self.ww_building_id + " " + self.ww_floor_id if self.ww_building_id is not None and self.ww_floor_id is not None else None
+        self.ww_room_id = ww_room_id
 
-        :param name:    Room name
-        """
-        self.name = name
         self.ids = []
-        self.ward = None
+        [self.add_id(room_id, "SAP") for room_id in self.sap_room_ids]
+        self.add_id(self.ww_room_id, "Waveware")
+
         self.stays = []
         self.appointments = []
         self.beds = dict()
+
+    def __str__(self):
+        return str({"Room name": self.room_description,
+                    "Floor ID": self.ww_floor_id,
+                    "Room IDs": self.sap_room_ids.copy().append(self.ww_room_id),
+                    "Building IDs": self.sap_building_abbreviations.copy().append(self.ww_building_id),
+                    "Department": self.department,
+                    "Ward": self.ward,
+                    "Stays Qty": len(self.stays),
+                    "Appointments Qty": len(self.appointments),
+                    "Beds Qty": len(self.beds.keys())})
 
     def add_stay(self, stay):
         """
@@ -47,7 +74,7 @@ class Room:
         :param id:      id string
         :param system:  system string
         """
-        if id not in [id_tuple[0] for id_tuple in self.ids]:
+        if id not in [id_tuple[0] for id_tuple in self.ids] and not pd.isna(id):
             self.ids.append((str(id), str(system)))
 
     def add_appointment(self, appointment):
@@ -91,7 +118,7 @@ class Room:
         return overlapping_stays
 
     @staticmethod
-    def create_room_id_map(lines, rooms):
+    def create_room_id_map(csv_path, buildings, encoding, load_limit=None):
         """
         Initializes the dictionary mapping room ids to Room() objects based on the provided csv file.
         This function will be called by the HDFS_data_loader.patient_data() function (lines is an iterator object). The underlying table is structured as follows:
@@ -105,21 +132,55 @@ class Room:
         :param rooms:   Dictionary mapping room names to Room() objects --> {'BH N 129' : Room(), ... }
         :return:        Dictionary mapping room ids to Room() objects   --> {'127803' : Room(), ... }
         """
-        logging.debug("create_room_id_map")
-        room_id_map = dict()
-        for line in lines:
-            room_obj = Room(line[1])
-            room_obj.add_id(id=line[0], system='Polypoint')
-            # Update the room_id_map dictionary
-            room_id_map[line[0]] = Room(line[1])
-            # Update the rooms dictionary
-            if line[1] not in rooms.keys():
-                rooms[line[1]] = room_obj
-            else:
-                rooms[line[1]].add_id(id=line[0], system='Polypoint')
+        logging.debug("create_room_dict")
+        import_count = 0
+        rooms = dict()
+        floors = dict()
+        rooms_df = pd.read_csv(csv_path, encoding=encoding, dtype=str, index_col=0)
+        rooms_objects = rooms_df.progress_apply(lambda row: Room(*row.to_list()), axis=1)
+        for room in rooms_objects:
+            building = None
+            floor = None
+            for room_id in room.sap_room_ids:  # TODO: Solve the multiple room id disaster
+                rooms[room_id] = room
 
-        logging.info(f"{len(room_id_map)} rooms created")
-        return room_id_map
+            if not any([abbreviation in buildings for abbreviation in room.sap_building_abbreviations]) and not room.ww_building_id in buildings:
+                building = Building(room.campus_id, room.ww_building_id)
+                for abbreviation in room.sap_building_abbreviations:
+                    building.sap_building_abbreviations.append(abbreviation)
+                    buildings[abbreviation] = building
+                buildings[room.ww_building_id] = building
+
+            if room.floor_id not in floors:
+                floor = Floor(room.campus_id, room.ww_building_id, ww_floor_id=room.ww_floor_id)
+                floor.sap_building_abbreviations.extend(room.sap_building_abbreviations)
+                floors[room.floor_id] = floor
+                building = buildings[floor.ww_building_id]
+                building.floors[floor.floor_id] = floor
+
+            building = buildings[room.ww_building_id]
+            building.rooms[room.room_id] = room
+
+            floor = floors[room.floor_id]
+            floor.rooms[room.room_id] = room
+
+            import_count += 1
+            if load_limit is not None and import_count > load_limit:
+                break
+
+        # for line in lines:
+        #     room_obj = Room(line[1])
+        #     room_obj.add_id(id=line[0], system='Polypoint')
+        #     # Update the room_id_map dictionary
+        #     room_id_map[line[0]] = Room(line[1])
+        #     # Update the rooms dictionary
+        #     if line[1] not in rooms.keys():
+        #         rooms[line[1]] = room_obj
+        #     else:
+        #         rooms[line[1]].add_id(id=line[0], system='Polypoint')
+
+        logging.info(f"{len(rooms)} rooms created, {len(buildings)} buildings created, {len(floors)} floors created")
+        return rooms, buildings, floors
 
     @staticmethod
     def add_rooms_to_appointment(lines, appointments, rooms):
@@ -136,8 +197,8 @@ class Room:
         """
         logging.debug("add_room_to_appointment")
         nr_appointments_not_found = 0
-        nr_rooms_not_found = 0
         nr_ok = 0
+        nr_rooms_created = 0
         lines_iters = itertools.tee(lines, 2)
         for line in tqdm(lines_iters[1], total=sum(1 for _ in lines_iters[0])):
             appointment_id = line[0]
@@ -153,9 +214,11 @@ class Room:
             #     continue
             # name = room_id_map[room_id]
             if rooms.get(room_name, None) is None:
-                new_room = Room(room_name)
-                new_room.add_id(id=room_id, system='Polypoint')
+                new_room = Room(room_description=room_name)
+                new_room.room_id = room_id
+                new_room.add_id(id=room_id, system='SAP')
                 rooms[room_name] = new_room
+                nr_rooms_created += 1
             rooms[room_name].add_appointment(appointments[appointment_id])
             appointments[appointment_id].add_room(rooms[room_name])
 
@@ -173,4 +236,4 @@ class Room:
                     appointments[appointment_id].end_datetime = datetime.strptime(appointment_end, "%Y-%m-%d %H:%M:%S")
 
             nr_ok += 1
-        logging.info(f"{nr_ok} rooms added to appointments, {nr_appointments_not_found} appointments not found, {nr_rooms_not_found} rooms not found")
+        logging.info(f"{nr_ok} rooms added to appointments, {nr_appointments_not_found} appointments not found, {nr_rooms_created} new rooms created")

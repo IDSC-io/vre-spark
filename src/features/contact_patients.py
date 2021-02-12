@@ -24,7 +24,7 @@ if __name__ == '__main__':
 
     # --> Load all data:
     loader = DataLoader(hdfs_pipe=False)  # hdfs_pipe = False --> files will be loaded directly from CSV
-    patient_data = loader.patient_data(
+    patient_data = loader.prepare_dataset(
                                        load_cases=True,
                                        load_partners=False,
                                        load_stays=True,

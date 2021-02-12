@@ -7,6 +7,7 @@
 import logging
 
 from tqdm import tqdm
+import itertools
 
 
 class Chop:
@@ -116,7 +117,8 @@ class Chop:
         """
         logging.debug("create_chop_dict")
         chops = dict()
-        for line in tqdm(lines):
+        lines_iters = itertools.tee(lines, 2)
+        for line in tqdm(lines_iters[1], total=sum(1 for _ in lines_iters[0])):
             chop = Chop(*line)
             chops[chop.chop_code + "_" + chop.chop_sap_catalog_id] = chop
             # based on the schema in the docstring, this would yield "Z62.99.30_16" or "Z62.99.99_10"
