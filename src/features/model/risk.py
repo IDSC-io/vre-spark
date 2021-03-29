@@ -10,8 +10,8 @@ class Risk:
     """Models a ``Risk`` (i.e. Screening) object.
     """
 
-    def __init__(self, order_id, recording_date, measurement_date, last_name, first_name, birth_date,
-                 patient_id, requester, cost_unit, material_type, transport, result, analysis_method, screening_context):
+    def __init__(self, order_id, recording_date, measurement_date, first_name, last_name, birth_date,
+                 patient_id, result):
         """Initiates a Risk (i.e. Screening) object.
         """
         self.order_id = order_id
@@ -24,16 +24,6 @@ class Risk:
         self.last_name = last_name
         self.first_name = first_name
         self.birth_date = birth_date
-        # self.gender = gender
-        # self.zip_code = zip_code
-        # self.place_of_residence = place_of_residence
-        # self.canton = canton
-        self.requester = requester
-        self.cost_unit = cost_unit
-        self.material_type = material_type
-        self.transport = transport
-        self.analysis_method = analysis_method
-        self.screening_context = screening_context
 
     @staticmethod
     def generate_screening_overview_map(lines):

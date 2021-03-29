@@ -214,44 +214,10 @@ def cleanup_dataset(overwrite_files=False):
             df.columns = ["Patient ID", "Risk Factor ID", "Description", "Creation Date", "Creation Time"]
             df = df.set_index(["Patient ID", "Risk Factor ID", "Creation Time"])
         elif path.name == "VRE_SCREENING_DATA.csv":
-            df = pd.read_csv(path, encoding="ISO-8859-1", parse_dates=["Birth Date"], dtype=str)
-            df.columns = ['Order ID', 'Record Date', 'Measurement Date', 'Patient Number', 'Last Name',
-                          'First Name', 'Birth Date', 'Gender', 'Zip Code', 'Place of Residence',
-                          'Canton', 'Patient ID', 'Requester', 'Cost Unit', 'Material Type',
-                          'Transport', 'Result', 'Analysis Method', 'Screening Context']
+            df = pd.read_csv(path, parse_dates=["Birth Date", "Record Date"], dtype=str, index_col=0)
+            df.columns = ['Order ID', 'Record Date', 'Measurement Date',
+                          'First Name', 'Last Name', 'Birth Date', 'Patient ID', 'Pathogen Result']
             df = df.set_index(["Order ID"])
-
-            df.loc[df["Gender"] == "M", "Gender"] = "male"
-            df.loc[df["Gender"] == "F", "Gender"] = "female"
-
-            # try to fix patient ids from screening data using the patient data
-            patient_df = pd.read_csv(interim_data_path + "DIM_PATIENT.csv", encoding="iso-8859-1", parse_dates=["Birth Date"], dtype="str")
-
-            def find_patient_id(row, patient_df):
-                if pd.isna(row["Patient ID"]):
-
-                    # try to find the patient id in the patient table via other properties
-                    patient_query = None
-                    if not pd.isna(row["Birth Date"]):
-                        patient_query = patient_df["Birth Date"] == row["Birth Date"]
-
-                    if not pd.isna(row["Gender"]):
-                        patient_query = patient_query & patient_df["Gender"] == row["Gender"]
-
-                    if not pd.isna(row["Zip Code"]):
-                        patient_query = patient_query & patient_df["Zip Code"] == row["Zip Code"]
-
-                    if patient_query is not None:  # if we found a single match, set patient id
-                        patient_row = patient_df[patient_query]
-                        if patient_row.shape[0] == 1:
-                            row["Patient ID"] = patient_row["Patient ID"].iloc[0]
-                return row
-
-            # print(df[df["Patient ID"].isnull()].shape[0])
-            df.apply(find_patient_id, args=[patient_df], axis=1)
-            # print(df[df["Patient ID"].isnull()].shape[0])
-
-            df = df.drop(labels=["Gender", "Zip Code", "Place of Residence", "Canton", "Patient Number"], axis=1)
         elif path.name == "SAP_ISH_ZHC_RB_STANDORT":  # Raumbuch Standort Data (apparently Waveware)
             df = pd.read_csv(path, dtype=str)
             df.drop(["MANDT", "ERDAT", "ERNAM", "AEDAT", "AENAM", "BATCH_RUN_ID"], axis=1, inplace=True)

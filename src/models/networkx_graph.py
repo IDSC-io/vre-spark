@@ -474,7 +474,7 @@ class SurfaceModel:
         neg_infect_count = 0
         pos_infect_count = 0
         error_count = 0
-        for each_edge in self.S_GRAPH.edges(data=True, keys=True):
+        for each_edge in tqdm(self.S_GRAPH.edges(data=True, keys=True)):
             # will yield a list of tuples of length 4 --> (source_id, target_id, key, attribute_dict)
             try:
                 edge_types = [self.identify_id(each_edge[i]) for i in range(0, 2)]
@@ -493,7 +493,7 @@ class SurfaceModel:
                     # Patient-Room, Patient-Device or Patient-Employee (patient id is always in each_edge[0])
                     pat_index = edge_types.index('Patient')
                     # returns the index (0 or 1) containing the patient node (can either be source_id or target_id)
-                    if self.S_GRAPH.node[each_edge[pat_index]]['vre_status'] == 'neg':
+                    if self.S_GRAPH.nodes[each_edge[pat_index]]['vre_status'] == 'neg':
                         self.update_edge_attributes(edge_tuple=(each_edge[0], each_edge[1], each_edge[2]),
                                                     attribute_dict={'infected': False})
                         neg_infect_count += 1
@@ -941,11 +941,12 @@ class SurfaceModel:
 
             # Write to output file:
             really_intected_pat_edges = [entry for entry in infected_pat_edges if entry]
-            patient_degree_rows.append([each_node[0], each_node[1]['type'], sum(infected_pat_edges) / len(infected_pat_edges),
+            risk_status = each_node[1]["vre_status"] if "vre_status" in each_node[1] else 'neg'
+            patient_degree_rows.append([each_node[0], each_node[1]['type'], risk_status, sum(infected_pat_edges) / len(infected_pat_edges),
                                         len(really_intected_pat_edges), len(pat_edges), len(this_node_edges)])
 
         patient_degree_df = pd.DataFrame.from_records(patient_degree_rows)
-        patient_degree_df.columns = ["Node ID", "Node Type", "Degree Ratio", "Number of Infected Edges", "Total Patient Edges", "Total Edges"]
+        patient_degree_df.columns = ["Node ID", "Node Type", "Risk Status", "Degree Ratio", "Number of Infected Edges", "Total Patient Edges", "Total Edges"]
         patient_degree_df.sort_values(by="Degree Ratio", ascending=False, inplace=True)
 
         logging.info(f"Successfully calculated patient degree ratios for {len(patient_degree_rows)} nodes.")

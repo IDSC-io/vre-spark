@@ -65,6 +65,7 @@ class DataLoader:
         self.appointment_room_path = os.path.join(self.base_path, "FAKT_TERMIN_RAUM.csv")
         self.appointment_employee_path = os.path.join(self.base_path, "FAKT_TERMIN_MITARBEITER.csv")
 
+        # TODO: Sort data by node attributes and edge information
         self.medication_path = os.path.join(self.base_path, "FAKT_MEDIKAMENTE.csv")
         self.partner_path = os.path.join(self.base_path, "LA_ISH_NGPA.csv")
         self.case_partner_path = os.path.join(self.base_path, "LA_ISH_NFPZ.csv")
@@ -175,57 +176,57 @@ class DataLoader:
 
         # load Patient data from table: V_DH_DIM_PATIENT_CUR
         if load_patients:
-            logging.info("loading patient data...")
+            logging.info("[AGENT] loading patient data...")
             patients = Patient.create_patient_dict(self.patients_path, self.encoding,
                                                    load_limit=self.load_limit)
         else:
             patients = dict()
-            logging.info("loading patients omitted.")
+            logging.info("[AGENT] loading patients omitted.")
 
         if load_buildings:
-            logging.info("loading building data..")
+            logging.info("[AGENT ATTRIBUTE] loading building data..")
             buildings = Building.create_building_id_map(self.buildings_path, self.encoding)
         else:
             buildings = dict()
-            logging.info("preloading buildings omitted.")
+            logging.info("[AGENT ATTRIBUTE] preloading buildings omitted.")
 
         if load_rooms:
-            logging.info("loading room data...")
+            logging.info("[AGENT] loading room data...")
             rooms, buildings, floors = Room.create_room_id_map(self.rooms_path, buildings, self.encoding, load_limit=self.load_limit)
         else:
             rooms = dict()
             floors = dict()
-            logging.info("preloading rooms omitted.")
+            logging.info("[AGENT] preloading rooms omitted.")
 
         # load Case data from table: V_LA_ISH_NFAL_NORM
         cases = {}
         partners = {}
         if load_cases or load_partners or load_stays:
-            logging.info("loading case data...")
+            logging.info("[INTERACTION] loading case data...")
             cases = Case.create_case_map(self.cases_path, self.encoding, patients,
                                          load_limit=self.load_limit)
 
             # load Partner data from table: LA_ISH_NGPA
             if load_partners:
-                logging.info("loading partner data...")
+                logging.info("[AGENT ATTRIBUTE] loading partner data...")
                 partners = Partner.create_partner_map(self.partner_path, encoding=self.encoding)
                 logging.info("adding partners to cases")
                 Partner.add_partners_to_cases(  # This will update partners from table: LA_ISH_NFPZ
                     self.case_partner_path, self.encoding, cases, partners)
             else:
-                logging.info("loading partner data omitted.")
+                logging.info("[AGENT ATTRIBUTE] loading partner data omitted.")
 
             # load Stay data from table: LA_ISH_NBEW
             if load_stays:
-                logging.info("loading stay data...")
+                logging.info("[INTERACTION] loading stay data...")
                 Stay.add_stays_to_case(self.stays_path, self.encoding, cases, rooms, wards, partners,
                                        load_limit=self.load_limit)
                 # --> Note: Stay() objects are not part of the returned dictionary, they are only used in
                 #                           Case() objects --> Case().stays = [1 : Stay(), 2 : Stay(), ...]
             else:
-                logging.info("loading stays omitted.")
+                logging.info("[INTERACTION] loading stays omitted.")
         else:
-            logging.info("loading cases omitted.")
+            logging.info("[INTERACTION] loading cases omitted.")
 
         # TODO: ward screenings and care map data is broken. Readd it.
         # Generate ward screening overview map
@@ -246,7 +247,7 @@ class DataLoader:
 
         # load Risk data
         if load_risks:
-            logging.info("loading risk screening data...")
+            logging.info("[RISK] loading risk screening data...")
             # ## --> OLD VERSION: from table: V_LA_ISH_NRSF_NORM
             # Risk.add_risk_to_patient( self.get_hdfs_pipe(self.risks_path) if self.hdfs_pipe is True
             # else self.get_csv_file(self.risks_path), patients )
@@ -259,7 +260,7 @@ class DataLoader:
                                                           self.encoding,
                                                           patient_dict=patients)
         else:
-            logging.info("loading risk screening data omitted.")
+            logging.info("[RISK] loading risk screening data omitted.")
 
         if risk_only:
             logging.info("keeping only risk patients")
@@ -273,19 +274,19 @@ class DataLoader:
         # load Drug/Medication data from table: V_LA_IPD_DRUG_NORM
         drugs = {}
         if load_medications:
-            logging.info("loading drug data...")
+            logging.info("[AGENT ATTRIBUTE] loading drug data...")
             drugs = Medication.create_drug_map(self.get_hdfs_pipe(self.medication_path) if self.hdfs_pipe is True
                                                else self.get_csv_file(self.medication_path))
             Medication.add_medications_to_case(  # Update is based on the same table
                 self.get_hdfs_pipe(self.medication_path) if self.hdfs_pipe is True
                 else self.get_csv_file(self.medication_path), cases)
         else:
-            logging.info("loading drug data omitted.")
+            logging.info("[AGENT ATTRIBUTE] loading drug data omitted.")
 
         # load CHOP surgery codes data from table: V_DH_REF_CHOP
         chops = {}
         if load_chop_codes or load_surgeries:
-            logging.info("loading chop data...")
+            logging.info("[AGENT ATTRIBUTE] loading surgeries chop data...")
             chops = Chop.create_chop_map(self.get_hdfs_pipe(self.chop_path) if self.hdfs_pipe is True
                                           else self.get_csv_file(self.chop_path))
 
@@ -294,14 +295,14 @@ class DataLoader:
                                           else self.get_csv_file(self.surgery_path), cases, chops)
             # Surgery() objects are not part of the returned dictionary
         else:
-            logging.info("loading surgeries omitted.")
+            logging.info("[AGENT ATTRIBUTE] loading surgeries chop data omitted.")
 
         # load Appointment data from table: V_DH_DIM_TERMIN_CUR
         appointments = {}
         devices = {}
         employees = {}
         if load_appointments or load_devices or load_employees:
-            logging.info("loading appointment data")
+            logging.info("[INTERACTON] loading appointment data")
             appointments = Appointment.create_appointment_map(self.get_hdfs_pipe(self.appointments_path)
                                                          if self.hdfs_pipe is True
                                                          else self.get_csv_file(self.appointments_path))
@@ -314,7 +315,7 @@ class DataLoader:
 
             if load_devices:
                 # Load Device data from table: V_DH_DIM_GERAET_CUR
-                logging.info("loading device data")
+                logging.info("[AGENT] loading device data")
                 devices = Device.create_device_map(self.get_hdfs_pipe(self.devices_path) if self.hdfs_pipe is True
                                                    else self.get_csv_file(self.devices_path))
 
@@ -323,11 +324,11 @@ class DataLoader:
                                                  else self.get_csv_file(self.appointment_device_path),
                                                  appointments, devices)
             else:
-                logging.info("loading devices omitted.")
+                logging.info("[AGENT] loading devices omitted.")
 
             # load Employee data (RAP) from table: V_DH_FACT_TERMINMITARBEITER
             if load_care_data or load_employees:
-                logging.info("loading employee data from RAP")
+                logging.info("[AGENT] loading employee data from RAP")
                 employees = Employee.create_employee_map(self.get_hdfs_pipe(self.appointment_employee_path)
                                                          if self.hdfs_pipe is True
                                                          else self.get_csv_file(self.appointment_employee_path))
@@ -339,38 +340,38 @@ class DataLoader:
                                                       appointments, employees)
                 if load_care_data:
                     # Add Treatment/Care data to Cases from table: TACS_DATEN
-                    logging.info("Adding Treatment/Care data to Cases from TACS")
+                    logging.info("[INTERACTION] Adding Treatment/Care data to Cases from TACS")
                     Treatment.add_care_entries_to_case(self.get_hdfs_pipe(self.tacs_care_path) if self.hdfs_pipe is True
                                                   else self.get_csv_file(self.tacs_care_path), cases, employees)
                     # --> Note: Care() objects are not part of the returned dictionary, they are only used in
                     #               Case() objects --> Case().cares = [Care(), Care(), ...] (list of all cares for each case)
                 else:
-                    logging.info("loading treatment/care data omitted.")
+                    logging.info("[INTERACTION] loading treatment/care data omitted.")
 
             else:
-                logging.info("loading employees omitted.")
+                logging.info("[AGENT] loading employees omitted.")
 
             # add Room data to Appointments from table: V_DH_FACT_TERMINRAUM
             if load_rooms:
-                logging.info('Adding rooms to appointments')
+                logging.info('[INTERACTION] Adding rooms to appointments')
                 Room.add_rooms_to_appointment(self.get_hdfs_pipe(self.appointment_room_path) if self.hdfs_pipe is True
                                               else self.get_csv_file(self.appointment_room_path), appointments, rooms)
                 logging.info(f"Dataset contains in total {len(rooms)} Rooms")
             else:
-                logging.info("loading rooms omitted.")
+                logging.info("[INTERACTION] adding rooms to appointments omitted.")
         else:
-            logging.info("loading appointments omitted.")
+            logging.info("[INTERACTION] loading appointments omitted.")
 
         icd_codes = {}
         if load_icd_codes:
-            logging.info("Adding ICD codes to cases")
+            logging.info("[AGENT ATTRIBUTE] Adding ICD codes to cases")
             # Add ICD codes to cases from table: LA_ISH_NDIA_NORM
             icd_codes = ICDCode.create_icd_code_map(self.get_hdfs_pipe(self.icd_codes_path) if self.hdfs_pipe is True
                                             else self.get_csv_file(self.icd_codes_path))
             ICDCode.add_icd_codes_to_case(self.get_hdfs_pipe(self.icd_codes_path) if self.hdfs_pipe is True
                                 else self.get_csv_file(self.icd_codes_path), cases)
         else:
-            logging.info("loading ICD codes omitted.")
+            logging.info("[AGENT ATTRIBUTE] loading ICD codes omitted.")
 
         # load Buildings
         # load Floors
@@ -397,19 +398,23 @@ class DataLoader:
         logging.info(f"##################################################################################")
         logging.info(f"Dataset load finished.")
         logging.info(f"Data overview:")
-        logging.info(f"--> Rooms: {len(rooms)}")
-        logging.info(f"--> Floors: {len(floors)}")
-        logging.info(f"--> Buildings: {len(buildings)}")
-        logging.info(f"--> Wards: {len(wards)}")
-        logging.info(f"--> Partners: {len(partners)}")
-        logging.info(f"--> Patients: {len(patients)}")
-        logging.info(f"--> Cases: {len(cases)}")
-        logging.info(f"--> Drugs/Medications: {len(drugs)}")
-        logging.info(f"--> Chop/Surgery Codes: {len(chops)}")
-        logging.info(f"--> Appointments: {len(appointments)}")
-        logging.info(f"--> Devices: {len(devices)}")
-        logging.info(f"--> Employees: {len(employees)}")
-        logging.info(f"--> ICD Codes: {len(icd_codes)}")
+        logging.info(f"--> Patients: {len(patients)} [AGENT]")
+        logging.info(f"--> Cases: {len(cases)} [INTERACTION]")
+        logging.info(f"--> Drugs/Medications: {len(drugs)} [AGENT ATTRIBUTE]")
+        logging.info(f"--> Chop/Surgery Codes: {len(chops)} [AGENT ATTRIBUTE]")
+        logging.info(f"--> ICD Codes: {len(icd_codes)} [AGENT ATTRIBUTE]")
+
+        logging.info(f"--> Rooms: {len(rooms)} [AGENT]")
+        logging.info(f"--> Floors: {len(floors)} [AGENT ATTRIBUTE]")
+        logging.info(f"--> Buildings: {len(buildings)} [AGENT ATTRIBUTE]")
+        logging.info(f"--> Wards: {len(wards)} [AGENT ATTRIBUTE]")
+
+        logging.info(f"--> Partners: {len(partners)} [AGENT]")
+        logging.info(f"--> Devices: {len(devices)} [AGENT]")
+        logging.info(f"--> Employees: {len(employees)} [AGENT]")
+
+        logging.info(f"--> Appointments: {len(appointments)} [INTERACTION]")
+
         logging.info(f"##################################################################################")
 
         return dataset
