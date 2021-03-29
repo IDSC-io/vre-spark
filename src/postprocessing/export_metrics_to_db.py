@@ -20,6 +20,8 @@ from sqlalchemy import create_engine
 import pyodbc
 from pathlib import Path
 import re
+import math
+from tqdm import tqdm
 
 
 def get_mssql_engine(driver=os.getenv("DRIVER"),
@@ -64,13 +66,44 @@ def create_append_df_to_sql():
                                              user="Atelier_DataScience_reader",
                                              password="A7D32FXXA2F&=K5QM40")
 
-    for (timestamp, metric_name, metric_df) in get_all_timestamped_metrics():
-         metric_df["Timestamp"] = datetime.strptime(timestamp, "%Y%m%d%H%M%S")
-         # metric_df = metric_df.drop(["Unnamed: 0"], axis=1)
-         table_name = f"metric_{metric_name}"
-         metric_df.to_sql(table_name, engine, schema="temp", if_exists='append', chunksize=1000)
+    for (timestamp, metric_name, metric_df) in tqdm(get_all_timestamped_metrics()):
+        print(f"Exporting {metric_name}...")
+        metric_df["Timestamp"] = datetime.strptime(timestamp, "%Y%m%d%H%M%S")
+        metric_df = metric_df.drop(["Unnamed: 0"], axis=1)
+        # metric_df.to_csv(f"./data/processed/metrics/{timestamp}_{metric_name}_fixed.csv", index=False)
+        table_name = f"metric_{metric_name}"
+
+        #
+        insert_with_progress(metric_df, engine, table=table_name, schema="temp")
+        # metric_df.to_sql(table_name, engine, schema="temp", if_exists='append', index=False)
 
     logging.info("Data exported successfully!")
+
+
+# based on: https://leblancfg.com/benchmarks_writing_pandas_dataframe_SQL_Server.html
+def chunker(seq, size):
+    return [seq[pos: pos + size] for pos in range(0, len(seq), size)]
+
+
+def insert_with_progress(df, engine, table="", schema=""):
+    con = engine.connect()
+
+    # Replace table
+    # engine.execute(f"DROP TABLE IF EXISTS {schema}.{table};")
+
+    # Insert with progress
+    SQL_SERVER_CHUNK_LIMIT = 2099
+    chunksize = math.floor(SQL_SERVER_CHUNK_LIMIT / len(df.columns))
+
+    for chunk in tqdm(chunker(df, chunksize), desc=f"{table} SQL insertion with chunksize={chunksize}"):
+        chunk.to_sql(
+            name=table,
+            con=con,
+            if_exists="append",
+            index=False,
+            schema=schema,
+            method="multi",
+        )
 
 
 if __name__ == "__main__":
