@@ -137,7 +137,7 @@ class DataLoader:
                         load_cases=True,
                         load_partners=True,
                         load_stays=True,
-                        load_medications=True,
+                        load_medications=False,  # TODO: Medications are not used in code and take long to load
                         load_risks=True,
                         risk_only=False,
                         load_chop_codes=True,
@@ -148,7 +148,9 @@ class DataLoader:
                         load_care_data=True,
                         load_buildings=True,
                         load_rooms=True,
-                        load_icd_codes=True):
+                        load_icd_codes=True,
+                        from_range=None,
+                        to_range=None):
         """Prepares dataset based on extracted data.
 
         If self.hdfs_pipe is ``True``, this will use the :meth:`get_hdfs_pipe()` method. Otherwise, the
@@ -179,6 +181,7 @@ class DataLoader:
             logging.info("[AGENT] loading patient data...")
             patients = Patient.create_patient_dict(self.patients_path, self.encoding,
                                                    load_limit=self.load_limit)
+
         else:
             patients = dict()
             logging.info("[AGENT] loading patients omitted.")
@@ -272,16 +275,15 @@ class DataLoader:
         logging.info(f"Loaded {len(patients)} patients")
 
         # load Drug/Medication data from table: V_LA_IPD_DRUG_NORM
-        drugs = {}
+        medications = {}
         if load_medications:
-            logging.info("[AGENT ATTRIBUTE] loading drug data...")
-            drugs = Medication.create_drug_map(self.get_hdfs_pipe(self.medication_path) if self.hdfs_pipe is True
-                                               else self.get_csv_file(self.medication_path))
+            logging.info("[AGENT ATTRIBUTE] loading medication data...")
+            medications = Medication.create_drug_map(self.medication_path, self.encoding)
             Medication.add_medications_to_case(  # Update is based on the same table
                 self.get_hdfs_pipe(self.medication_path) if self.hdfs_pipe is True
                 else self.get_csv_file(self.medication_path), cases)
         else:
-            logging.info("[AGENT ATTRIBUTE] loading drug data omitted.")
+            logging.info("[AGENT ATTRIBUTE] loading medication data omitted.")
 
         # load CHOP surgery codes data from table: V_DH_REF_CHOP
         chops = {}
@@ -303,9 +305,7 @@ class DataLoader:
         employees = {}
         if load_appointments or load_devices or load_employees:
             logging.info("[INTERACTON] loading appointment data")
-            appointments = Appointment.create_appointment_map(self.get_hdfs_pipe(self.appointments_path)
-                                                         if self.hdfs_pipe is True
-                                                         else self.get_csv_file(self.appointments_path))
+            appointments = Appointment.create_appointment_map(self.appointments_path, self.encoding, from_range, to_range)
 
             # Add Appointments to cases from table: V_DH_FACT_TERMINPATIENT
             logging.info('Adding appointments to cases')
@@ -341,8 +341,7 @@ class DataLoader:
                 if load_care_data:
                     # Add Treatment/Care data to Cases from table: TACS_DATEN
                     logging.info("[INTERACTION] Adding Treatment/Care data to Cases from TACS")
-                    Treatment.add_care_entries_to_case(self.get_hdfs_pipe(self.tacs_care_path) if self.hdfs_pipe is True
-                                                  else self.get_csv_file(self.tacs_care_path), cases, employees)
+                    Treatment.add_care_entries_to_case(self.tacs_care_path, self.encoding, cases, employees, from_range, to_range)
                     # --> Note: Care() objects are not part of the returned dictionary, they are only used in
                     #               Case() objects --> Case().cares = [Care(), Care(), ...] (list of all cares for each case)
                 else:
@@ -386,7 +385,7 @@ class DataLoader:
                 "partners": partners,
                 "patients": patients,
                 "cases": cases,
-                "drugs": drugs,
+                "drugs": medications,
                 "chops": chops,
                 "appointments": appointments,
                 "devices": devices,
@@ -400,7 +399,7 @@ class DataLoader:
         logging.info(f"Data overview:")
         logging.info(f"--> Patients: {len(patients)} [AGENT]")
         logging.info(f"--> Cases: {len(cases)} [INTERACTION]")
-        logging.info(f"--> Drugs/Medications: {len(drugs)} [AGENT ATTRIBUTE]")
+        logging.info(f"--> Drugs/Medications: {len(medications)} [AGENT ATTRIBUTE]")
         logging.info(f"--> Chop/Surgery Codes: {len(chops)} [AGENT ATTRIBUTE]")
         logging.info(f"--> ICD Codes: {len(icd_codes)} [AGENT ATTRIBUTE]")
 
