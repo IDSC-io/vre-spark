@@ -21,82 +21,88 @@ from src.features.model import Room
 from src.features.model import Partner
 from src.features.model import Treatment
 from src.features.model import ICDCode
+from src.features.model import Building
+from tqdm import tqdm
 
 from configuration.basic_configuration import configuration
 
-base_path = configuration['PATHS']['test_data_dir']  # Must point to the directory containing all CSV testfiles - these are patient data and may NOT be in the repo !
+base_path = "data/raw/test_data/" #configuration['PATHS']['input_dir']  # Must point to the directory containing all CSV testfiles - these are patient data and may NOT be in the repo !
 
-patients_path = os.path.join(base_path, "V_DH_DIM_PATIENT_CUR.csv")
-cases_path = os.path.join(base_path, "V_LA_ISH_NFAL_NORM.csv")
+building_path = os.path.join(base_path, "building_identifiers.csv")
+patients_path = os.path.join(base_path, "DIM_PATIENT.csv")
+cases_path = os.path.join(base_path, "DIM_FALL.csv")
 stays_path = os.path.join(base_path, "LA_ISH_NBEW.csv")
-risks_path = os.path.join(base_path, "V_LA_ISH_NRSF_NORM.csv")
-deleted_risks_path = os.path.join(base_path, "deleted_screenings.csv")
-medication_path = os.path.join(base_path, "V_LA_IPD_DRUG_NORM.csv")
-chop_path = os.path.join(base_path, "V_DH_REF_CHOP.csv")
+risks_path = os.path.join(base_path, "VRE_SCREENING_DATA.csv")
+medication_path = os.path.join(base_path, "FAKT_MEDIKAMENTE.csv")
+chop_path = os.path.join(base_path, "LA_CHOP_FLAT.csv")
 surgery_path = os.path.join(base_path, "LA_ISH_NICP.csv")
-appointments_path = os.path.join(base_path, "V_DH_DIM_TERMIN_CUR.csv")
-appointment_patient_path = os.path.join(base_path, "V_DH_FACT_TERMINPATIENT.csv")
-devices_path = os.path.join(base_path, "V_DH_DIM_GERAET_CUR.csv")
-device_appointment_path = os.path.join(base_path, "V_DH_FACT_TERMINGERAET.csv")
-appointment_employee_path = os.path.join(base_path, "V_DH_FACT_TERMINMITARBEITER.csv")
-rooms_path = os.path.join(base_path, "V_DH_DIM_RAUM_CUR.csv")
-room_appointment_path = os.path.join(base_path, "V_DH_FACT_TERMINRAUM.csv")
+appointments_path = os.path.join(base_path, "DIM_TERMIN.csv")
+appointment_patient_path = os.path.join(base_path, "FAKT_TERMIN_PATIENT.csv")
+devices_path = os.path.join(base_path, "DIM_GERAET.csv")
+device_appointment_path = os.path.join(base_path, "FAKT_TERMIN_GERAET.csv")
+appointment_employee_path = os.path.join(base_path, "FAKT_TERMIN_MITARBEITER.csv")
+rooms_path = os.path.join(base_path, "room_identifiers.csv")
+room_appointment_path = os.path.join(base_path, "FAKT_TERMIN_RAUM.csv")
 partner_path = os.path.join(base_path, "LA_ISH_NGPA.csv")
 partner_case_path = os.path.join(base_path, "LA_ISH_NFPZ.csv")
 tacs_path = os.path.join(base_path, "TACS_DATEN.csv")
-icd_path = os.path.join(base_path, "LA_ISH_NDIA_NORM.csv")
+icd_path = os.path.join(base_path, "V_LA_ISH_NDIA_NORM.csv")
 
 
-def get_hdfs_pipe(path):
+def get_lines(path):
     encoding = "iso-8859-1"
-    lines = csv.reader(open(path, 'r'), delimiter=configuration['DELIMITERS']['csv_sep'])
+    lines = csv.reader(open(path, 'r', encoding=encoding), delimiter=configuration['DELIMITERS']['csv_sep'])
     next(lines, None)  # skip header
     return lines
 
 
 @pytest.fixture
 def patient_data():
+    tqdm.pandas()
+
     rooms = dict()
     wards = dict()
 
-    patients = Patient.create_patient_dict(get_hdfs_pipe(patients_path))
-    cases = Case.create_case_map(get_hdfs_pipe(cases_path), patients)
+    encoding = "iso-8859-1"
+    patients = Patient.create_patient_dict(patients_path, encoding=encoding)
+    cases = Case.create_case_map(cases_path, encoding, patients)
 
-    partners = Partner.create_partner_map(get_hdfs_pipe(partner_path))
-    Partner.add_partners_to_cases(get_hdfs_pipe(partner_case_path), cases, partners)
+    partners = Partner.create_partner_map(partner_path, encoding)
+    Partner.add_partners_to_cases(partner_case_path, encoding, cases, partners)
 
     Stay.add_stays_to_case(
-        get_hdfs_pipe(stays_path),
+        stays_path,
+        encoding,
         cases,
         rooms,
         wards,
         partners,
     )
-    Risk.add_risk_to_patient(get_hdfs_pipe(risks_path), patients)
-    Risk.add_deleted_risk_to_patient(get_hdfs_pipe(deleted_risks_path), patients)
+    Risk.add_annotated_screening_data_to_patients(risks_path, encoding, patients)
 
-    drugs = Medication.create_drug_map(get_hdfs_pipe(medication_path))
-    Medication.add_medications_to_case(get_hdfs_pipe(medication_path), cases)
+    drugs = Medication.create_drug_map(get_lines(medication_path))
+    Medication.add_medications_to_case(medication_path, cases)
 
-    chops = Chop.create_chop_map(get_hdfs_pipe(chop_path))
-    Surgery.add_surgeries_to_case(get_hdfs_pipe(surgery_path), cases, chops)
+    chops = Chop.create_chop_map(get_lines(chop_path))
+    Surgery.add_surgeries_to_case(get_lines(surgery_path), cases, chops)
 
-    appointments = Appointment.create_appointment_map(get_hdfs_pipe(appointments_path))
-    Appointment.add_appointment_to_case(get_hdfs_pipe(appointment_patient_path), cases, appointments)
+    appointments = Appointment.create_appointment_map(appointments_path, encoding)
+    Appointment.add_appointment_to_case(get_lines(appointment_patient_path), cases, appointments)
 
-    devices = Device.create_device_map(get_hdfs_pipe(devices_path))
-    Device.add_device_to_appointment(get_hdfs_pipe(device_appointment_path), appointments, devices)
+    devices = Device.create_device_map(get_lines(devices_path))
+    Device.add_device_to_appointment(device_appointment_path, appointments, devices)
 
-    employees = Employee.create_employee_map(get_hdfs_pipe(appointment_employee_path))
-    Employee.add_employees_to_appointment(get_hdfs_pipe(appointment_employee_path), appointments, employees)
+    employees = Employee.create_employee_map(get_lines(appointment_employee_path))
+    Employee.add_employees_to_appointment(get_lines(appointment_employee_path), appointments, employees)
 
-    Treatment.add_care_entries_to_case(get_hdfs_pipe(tacs_path), cases, employees)
+    Treatment.add_care_entries_to_case(get_lines(tacs_path), cases, employees)
 
-    room_id_map = Room.create_room_id_map(get_hdfs_pipe(rooms_path))
-    Room.add_rooms_to_appointment(get_hdfs_pipe(room_appointment_path), appointments, room_id_map, rooms)
+    buildings = Building.create_building_id_map(building_path, encoding)
+    rooms, buildings, floors = Room.create_room_id_map(rooms_path, buildings, encoding)
+    Room.add_rooms_to_appointment(get_lines(room_appointment_path), appointments, rooms)
 
-    icd_codes = ICDCode.create_icd_code_map(get_hdfs_pipe(icd_path))
-    ICDCode.add_icd_codes_to_case(get_hdfs_pipe(icd_path), cases)
+    icd_codes = ICDCode.create_icd_code_map(get_lines(icd_path))
+    ICDCode.add_icd_codes_to_case(get_lines(icd_path), cases)
 
     return dict(
         {
@@ -110,7 +116,6 @@ def patient_data():
             "appointments": appointments,
             "devices": devices,
             "employees": employees,
-            "room_id_map": room_id_map,
             "icd_codes": icd_codes
         }
     )
