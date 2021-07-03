@@ -15,7 +15,7 @@ from typing import List
 class Patient:
 
     def __init__(self, patient_id, gender, birth_date, zip_code, place_of_residence, canton, language):
-        self.patient_id = patient_id.zfill(11)  # extend the patient id to length 11 to get a standardized representation
+        self.patient_id = "".join(c for c in patient_id if c.isdigit()).zfill(11)  # drop nondigits and extend the patient id to length 11 to get a standardized representation
         self.gender = gender
         self.birth_date = birth_date
         self.zip_code = zip_code
@@ -128,6 +128,7 @@ class Patient:
         :param since:   Relevant case must still be open at "since"
         :return:        A Case() object in case there is a relevant case, or None otherwise
         """
+        # TODO: Relevant case is different from research study to operationalisation!
         relevant_dt = self.get_relevant_date(dt)
 
         # candidate relevant case must be
@@ -220,7 +221,7 @@ class Patient:
             return False
         stays = case.get_stays_before_dt(dt)
         for stay in stays:
-            if stay.ward in wards:
+            if stay.ward_id in wards:
                 return True
         return False
 
@@ -560,6 +561,7 @@ class Patient:
         # with ThreadPoolExecutor() as executor:
         #     patient_objects = executor.map(create_patient, tqdm(patient_df.iterrows(), total=len(patient_df)))
         patient_objects = patient_df.progress_apply(lambda row: Patient(*row.to_list()), axis=1)
+        del patient_df
         for patient in patient_objects:
             patients[patient.patient_id] = patient
             import_count += 1
@@ -579,58 +581,81 @@ class Patient:
     # patient related queries
 
     @staticmethod
-    def get_contact_patients_for_case(c, contact_patients):
+    def get_contact_patients_for_case(c, contact_patients, with_details=True):
         # TODO: Make contact patient dependent on VRE positive date
-        for stay in c.stays.values():
+        for stay in tqdm(c.stays.values()):
             # contacts in the same room
             if stay.to_datetime is not None and stay.room is not None:
                 stays_in_range = stay.room.get_stays_during(stay.from_datetime, stay.to_datetime)
                 for stay_in_range in stays_in_range:
+                    if not with_details and stay_in_range.case.patient_id in contact_patients:
+                        continue
+
                     if stay_in_range.case is not None and stay.case is not None:
                         if stay_in_range.case.case_type_id == "1" and stay_in_range.type_id in ["1", "2", "3"] and stay_in_range.to_datetime is not None:
-                            # if n.case.patient_id > m.case.patient_id and n.bwe_dt is not None:
-                            # if n.bwe_dt is not None:
-                            start_overlap = max(stay.from_datetime, stay_in_range.from_datetime)
-                            end_overlap = min(stay.to_datetime, stay_in_range.to_datetime)
 
-                            if stay_in_range.case.patient_id not in contact_patients:
-                                contact_patients[stay_in_range.case.patient_id] = []
 
-                            contact_patients[stay_in_range.case.patient_id].append(
-                                (
-                                    stay.case.patient_id,  # risk patient
-                                    # stay_in_range.case.patient_id,  # contact patient
-                                    start_overlap,
-                                    end_overlap,
-                                    stay.room.name,
-                                    "contact_room",
+                            if with_details:
+                                if stay_in_range.case.patient_id not in contact_patients:
+                                    contact_patients[stay_in_range.case.patient_id] = []
+
+                                start_overlap = max(stay.from_datetime, stay_in_range.from_datetime)
+                                end_overlap = min(stay.to_datetime, stay_in_range.to_datetime)
+
+                                contact_patients[stay_in_range.case.patient_id].append(
+                                    (
+                                        stay.case.patient_id,  # risk patient
+                                        stay_in_range.case.patient_id,  # contact patient
+                                        start_overlap,
+                                        end_overlap,
+                                        stay.room.room_id if stay.room is not None else stay.room_id,
+                                        "contact_room",
+                                    )
                                 )
-                            )
+                            else:
+                                if stay_in_range.case.patient_id not in contact_patients:
+                                    contact_patients[stay_in_range.case.patient_id] = (
+                                            stay.case.patient_id,  # risk patient
+                                            stay_in_range.case.patient_id,  # contact patient
+                                            "contact_room",
+                                        )
             # contacts in the same ward (ORGPF)
             if stay.to_datetime is not None and stay.ward is not None:
                 stays_in_range = stay.ward.get_stays_during(stay.from_datetime, stay.to_datetime)
                 for stay_in_range in stays_in_range:
+                    if not with_details and stay_in_range.case.patient_id in contact_patients:
+                        continue
+
                     if stay_in_range.case is not None and stay.case is not None:
                         if stay_in_range.case.case_type_id == "1" \
                                 and stay_in_range.type_id in ["1", "2", "3"] \
                                 and stay_in_range.to_datetime is not None \
                                 and (stay_in_range.room_id is None or stay.room_id is None or stay_in_range.room_id != stay.room_id):
-                            start_overlap = max(stay.from_datetime, stay_in_range.from_datetime)
-                            end_overlap = min(stay.to_datetime, stay_in_range.to_datetime)
+                            if with_details:
 
-                            if stay_in_range.case.patient_id not in contact_patients:
-                                contact_patients[stay_in_range.case.patient_id] = []
+                                if stay_in_range.case.patient_id not in contact_patients:
+                                    contact_patients[stay_in_range.case.patient_id] = []
 
-                            contact_patients[stay_in_range.case.patient_id].append(
-                                (
-                                    stay.case.patient_id,  # risk patient
-                                    # stay_in_range.case.patient_id,  # contact patient
-                                    start_overlap,
-                                    end_overlap,
-                                    stay.ward.name,
-                                    "contact_ward",
+                                start_overlap = max(stay.from_datetime, stay_in_range.from_datetime)
+                                end_overlap = min(stay.to_datetime, stay_in_range.to_datetime)
+
+                                contact_patients[stay_in_range.case.patient_id].append(
+                                    (
+                                        stay.case.patient_id,  # risk patient
+                                        stay_in_range.case.patient_id,  # contact patient
+                                        start_overlap,
+                                        end_overlap,
+                                        stay.ward.name if stay.ward is not None else stay.ward_id,
+                                        "contact_ward",
+                                    )
                                 )
-                            )
+                            else:
+                                if stay_in_range.case.patient_id not in contact_patients:
+                                    contact_patients[stay_in_range.case.patient_id] = (
+                                            stay.case.patient_id,  # risk patient
+                                            stay_in_range.case.patient_id,  # contact patient
+                                            "contact_ward",
+                                        )
 
     @staticmethod
     def get_risk_patients(patients):
@@ -641,14 +666,14 @@ class Patient:
         return risk_patients
 
     @staticmethod
-    def get_contact_patients(patients):
+    def get_contact_patients(patients, with_details=True):
         contact_patients = {}
         for p in tqdm(patients.values()):
             if p.has_risk():
                 for c in p.cases.values():
                     if c.case_type_id == "1":  # only stationary cases # TODO: cast to int for faster comparison
                         if c.stays_end is not None:  # and c.stays_end > datetime.datetime.now() - relativedelta(years=1): # TODO: Think again about this
-                            Patient.get_contact_patients_for_case(c, contact_patients)
+                            Patient.get_contact_patients_for_case(c, contact_patients, with_details=with_details)
         return contact_patients
 
     @staticmethod
