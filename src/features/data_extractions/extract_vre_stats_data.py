@@ -12,6 +12,7 @@ from src.features.dataloader import DataLoader
 from src.features.model import Patient
 from datetime import datetime
 from configuration.basic_configuration import configuration
+from tqdm import tqdm
 
 
 def get_general_patient_data(patients: list):
@@ -22,6 +23,7 @@ def get_general_patient_data(patients: list):
     df = pd.DataFrame({"Patient ID": [patient.patient_id for patient in patients],
                        "Birth date": [patient.birth_date for patient in patients],
                        "Gender": [patient.gender for patient in patients]})
+    logger.info(f"Exported {len(df)} patients with general info")
     return df
 
 
@@ -29,11 +31,19 @@ def get_patient_icu_data(patients: list):
     """Return ICU stays (ICU Admission, Length of stay, Clinic at day of coding) for each patient.
     """
     rows = []
-    for patient in patients:
+    patient_with_icu_stay = 0
+    patient_without_icu_stay = 0
+    for patient in tqdm(patients):
         icu_stays = patient.get_icu_stays()
-        rows.extend([[patient.patient_id, icu_stay.from_datetime, icu_stay.to_datetime, icu_stay.ward_id] for icu_stay in icu_stays])
+
+        if len(icu_stays) != 0:
+            patient_with_icu_stay += 1
+            rows.extend([[patient.patient_id, icu_stay.from_datetime, icu_stay.to_datetime, icu_stay.ward_id] for icu_stay in icu_stays])
+        else:
+            patient_without_icu_stay += 1
 
     df = pd.DataFrame(data=rows, columns=["Patient ID", "From Datetime", "To Datetime", "ICU Ward ID"])
+    logger.info(f"Exported {len(patients)} patients, {patient_with_icu_stay} with icu stay, {patient_without_icu_stay} without icu stay")
     return df
 
 
@@ -52,10 +62,14 @@ def get_patient_antibiotics_data(patients: list):
     # TODO: PIDs are not numbers...
     df["Patient ID"] = pd.to_numeric(df["Patient ID"])
     patient_ids = set([int(patient.patient_id) for patient in patients])
-    return df[df["Patient ID"].isin(patient_ids)]
+    patients_with_antibiotics_df = df[df["Patient ID"].isin(patient_ids)]
+
+    patients_with_antibiotics = df['Patient ID'].drop_duplicates().isin(patient_ids).sum()
+    logger.info(f"Exported {len(patients)} patients, {patients_with_antibiotics} with antibiotics prescription, {len(patients) - patients_with_antibiotics} without antibiotics")
+    return patients_with_antibiotics_df
 
 
-def get_patient_icd10_data(patients):
+def get_patient_icd10_data(patients: list):
     """Get ICD10 codes of each patient.
 
     :param patients:
@@ -64,8 +78,9 @@ def get_patient_icd10_data(patients):
 
     patient_icd10_codes = []
     patients_without_icd10_codes = 0
+    patients_with_icd10_codes = 0
     patients_icd10_codes_qty = 0
-    for patient in patients.values():
+    for patient in patients:
         patient_codes = []
         for case in patient.cases.values():
             patient_codes.extend(case.icd_codes)
@@ -74,15 +89,16 @@ def get_patient_icd10_data(patients):
             patients_without_icd10_codes += 1
         else:
             patients_icd10_codes_qty += len(patient_codes)
+            patients_with_icd10_codes += 1
         patient_icd10_codes.append({"patient_id": str(patient.patient_id), "patient_icd_10_codes": [code.icd_code for code in patient_codes]})
 
-    logger.info(f"Exported {patients_icd10_codes_qty} ICD10 codes for {len(patients.values())} patients, {patients_without_icd10_codes} patients without ICD10 codes.")
+    logger.info(f"Exported {patients_icd10_codes_qty} ICD10 codes for {patients_with_icd10_codes} patients, {patients_without_icd10_codes} patients without ICD10 codes.")
 
     patient_icd10_codes_df = pd.DataFrame.from_records(patient_icd10_codes)
     return patient_icd10_codes_df
 
 
-def get_patient_surgery_qty_data(patients):
+def get_patient_surgery_qty_data(patients: list):
     """Get number of surgeries of each patient.
 
     :param patients:
@@ -91,22 +107,24 @@ def get_patient_surgery_qty_data(patients):
 
     patient_surgeries = []
     patients_without_surgeries = 0
+    patients_with_surgeries = 0
     patients_surgery_qty = 0
-    for patient in patients.values():
+    for patient in patients:
         if len(patient.get_chop_codes()) == 0:
             patients_without_surgeries += 1
         else:
+            patients_with_surgeries += 1
             patients_surgery_qty += len(patient.get_chop_codes())
         patient_surgeries.append({"patient_id": str(patient.patient_id), "surgery quantity": str(len(patient.get_chop_codes()))})
 
     patient_surgeries_df = pd.DataFrame.from_records(patient_surgeries)
 
-    logger.info(f"Exported {patients_surgery_qty} surgeries for {len(patients.values())} patients, {patients_without_surgeries} patients without surgeries.")
+    logger.info(f"Exported {patients_surgery_qty} surgeries for {patients_with_surgeries} patients, {patients_without_surgeries} patients without surgeries.")
 
     return patient_surgeries_df
 
 
-def get_patient_interactions(patients):
+def get_patient_interactions(patients: list):
     """Return patient interactions (room stays, employee treatments, device interactions).
     :param patients:
     :return:
@@ -117,11 +135,13 @@ def get_patient_interactions(patients):
 
     # patient-device-employee interactions
     appointments_per_patient = {}
-    for patient in patients.values():
+    for patient in patients:
         appointments_per_patient[patient.patient_id] = patient.get_appointments()
 
     patients_without_employees = 0
+    patients_with_employees = 0
     patients_without_devices = 0
+    patients_with_devices = 0
     for (patient_id, patient_appointments) in appointments_per_patient.items():
         patient_employees = 0
         patient_devices = 0
@@ -138,9 +158,13 @@ def get_patient_interactions(patients):
 
             if patient_devices == 0:
                 patients_without_devices += 1
+            else:
+                patients_with_devices += 1
 
             if patient_employees == 0:
                 patients_without_employees += 1
+            else:
+                patients_with_employees += 1
 
                 # for employee in patient_appointment.employees:
                 #     interactions.append({"node_0": "EMPLOYEE_" + str(employee.id), "node_1": "DEVICE_" + str(device.id),
@@ -163,24 +187,27 @@ def get_patient_interactions(patients):
     # patient-room interactions
     stays_per_patient = {}
     patients_without_stays = 0
-    for patient in patients.values():
+    patients_with_stays = 0
+    for patient in patients:
         stays_per_patient[patient.patient_id] = patient.get_stays()
 
     for (patient_id, patient_stays) in stays_per_patient.items():
         patient_stays_count = 0
-        for patient_stay in patient_stays:
-            if not pd.isna(patient_stay.room.name):
-                stays.append({"patient_id": str(patient_id), "room_id": str(patient_stay.room.name), "timestamp_begin": patient_stay.from_datetime, "timestamp_end" :patient_stay.to_datetime})
+        for patient_stay in patient_stays:  # TODO: room_id is always NA. WHY? (Exported 0 Patient stays for 0 patients, 2004681 without stays)
+            if not pd.isna(patient_stay.room.get_ids()):
+                stays.append({"patient_id": str(patient_id), "room_id": str(patient_stay.room.get_ids()), "timestamp_begin": patient_stay.from_datetime, "timestamp_end" :patient_stay.to_datetime})
                 patient_stays_count += 1
 
         if patient_stays_count == 0:
             patients_without_stays += 1
+        else:
+            patients_with_stays += 1
 
     stay_df = pd.DataFrame.from_records(stays)
 
-    logging.info(f"Exported {len(stays)} Patient stays for {len(patients.values())} patients, {patients_without_stays} without stays")
-    logging.info(f"Exported {len(employee_interations)} Patient-Employee interactions for {len(patients.values())} patients, {patients_without_employees} without employees")
-    logging.info(f"Exported {len(device_interactions)} Patient-Device interactions for {len(patients.values())} patients, {patients_without_devices} without devices")
+    logging.info(f"Exported {len(stays)} Patient stays for {patients_with_stays} patients, {patients_without_stays} without stays")
+    logging.info(f"Exported {len(employee_interations)} Patient-Employee interactions for {patients_with_employees} patients, {patients_without_employees} without employees")
+    logging.info(f"Exported {len(device_interactions)} Patient-Device interactions for {patients_with_devices} patients, {patients_without_devices} without devices")
 
     return employee_interations_df, device_interactions_df, stay_df
 
@@ -215,7 +242,8 @@ if __name__ == '__main__':
         load_employees=True,
         load_care_data=False,
         load_rooms=False,
-        load_icd_codes=True)
+        load_icd_codes=True,
+        load_buildings=False)
 
     logger.info("...Done.\nGetting risk patients...")
 
@@ -244,54 +272,62 @@ if __name__ == '__main__':
     assert(len(risk_patients.keys()) + len(contact_patients.keys()) + len(remaining_patients.keys()) == len(patient_data["patients"]))
 
     logger.info("...Done.\nExtracting general patient data...")
-
     # get general data dataframes
-    patient_ids_data = get_general_patient_data(list(patient_data["patients"].values()))
+    patients = list(patient_data["patients"].values())
+    #patient_general_data = get_general_patient_data(patients)
     risk_patient_general_data = get_general_patient_data(list(risk_patients.values()))
     # contact_patient_general_data = get_general_patient_data(list(contact_patients.values()))
     remaining_patient_general_data = get_general_patient_data(list(remaining_patients.values()))
 
-    logger.info("...Done.\nExtracting patient ICU data...")
+    risk_patient_general_data["Risk"] = "pp"
+    remaining_patient_general_data["Risk"] = "nn"
 
+    patient_general_data = pd.concat([risk_patient_general_data, remaining_patient_general_data]).reset_index()
+
+    logger.info("...Done.\nExtracting patient ICU data...")
     # get ICU data dataframes
-    risk_patient_icu_data = get_patient_icu_data(list(risk_patients.values()))
+    patient_icu_data = get_patient_icu_data(patients)
+    #risk_patient_icu_data = get_patient_icu_data(list(risk_patients.values()))
     # contact_patient_icu_data = get_patient_icu_data(list(contact_patients.values()))
-    remaining_patient_icu_data = get_patient_icu_data(list(remaining_patients.values()))
+    #remaining_patient_icu_data = get_patient_icu_data(list(remaining_patients.values()))
 
     logger.info("...Done.\nExtracting patient antibiotics data...")
-
     # get antibiotics data dataframes
-    risk_patient_antibiotics_data = get_patient_antibiotics_data(list(risk_patients.values()))
+    patient_antibiotics_data = get_patient_antibiotics_data(patients)
+    #risk_patient_antibiotics_data = get_patient_antibiotics_data(list(risk_patients.values()))
     # contact_patient_antibiotics_data = get_patient_antibiotics_data(list(contact_patients.values()))
-    remaining_patient_antibiotics_data = get_patient_antibiotics_data(list(remaining_patients.values()))
+    #remaining_patient_antibiotics_data = get_patient_antibiotics_data(list(remaining_patients.values()))
 
+    logger.info("...Done.\nExtracting patient diagnostics data...")
     # get ICD10 data dataframes
-    patient_icd10_df = get_patient_icd10_data(patient_data["patients"])
+    patient_icd10_df = get_patient_icd10_data(patients)
 
+    logger.info("...Done.\nExtracting patient surgery data...")
     # get surgery data dataframes
-    patient_surgery_qty_df = get_patient_surgery_qty_data(patient_data["patients"])
+    patient_surgery_qty_df = get_patient_surgery_qty_data(patients)
 
     logger.info("...Done.\nExtracting patient interactions...")
-
-    employee_interactions_df, device_interactions_df, patient_stays_df = get_patient_interactions(patient_data["patients"])
+    employee_interactions_df, device_interactions_df, patient_stays_df = get_patient_interactions(patients)
 
     logger.info("...Done.\nSaving data to files...")
 
     # make the delivery/stats path if not available
     pathlib.Path("./data/processed/delivery/stats/").mkdir(parents=True, exist_ok=True)
 
-    patient_ids_data.to_csv(f"./data/processed/delivery/stats/{now_str}_patient_ids.csv")
-    risk_patient_general_data.to_csv(f"./data/processed/delivery/stats/{now_str}_risk_patient_general.csv")
+    patient_general_data.to_csv(f"./data/processed/delivery/stats/{now_str}_patient_general.csv")
+    # risk_patient_general_data.to_csv(f"./data/processed/delivery/stats/{now_str}_risk_patient_general.csv")
     # contact_patient_general_data.to_csv(f"./data/processed/delivery/stats/{now_str}_contact_patient_general.csv")
-    remaining_patient_general_data.to_csv(f"./data/processed/delivery/stats/{now_str}_remaining_patient_general.csv")
+    # remaining_patient_general_data.to_csv(f"./data/processed/delivery/stats/{now_str}_remaining_patient_general.csv")
 
-    risk_patient_icu_data.to_csv(f"./data/processed/delivery/stats/{now_str}_risk_patient_icu.csv")
+    patient_icu_data.to_csv(f"./data/processed/delivery/stats/{now_str}_patient_icu.csv")
+    # risk_patient_icu_data.to_csv(f"./data/processed/delivery/stats/{now_str}_risk_patient_icu.csv")
     # contact_patient_icu_data.to_csv(f"./data/processed/delivery/stats/{now_str}_contact_patient_icu.csv")
-    remaining_patient_icu_data.to_csv(f"./data/processed/delivery/stats/{now_str}_remaining_patient_icu.csv")
+    # remaining_patient_icu_data.to_csv(f"./data/processed/delivery/stats/{now_str}_remaining_patient_icu.csv")
 
-    risk_patient_antibiotics_data.to_csv(f"./data/processed/delivery/stats/{now_str}_risk_patient_antibiotics.csv")
+    patient_antibiotics_data.to_csv(f"./data/processed/delivery/stats/{now_str}_patient_antibiotics.csv")
+    # risk_patient_antibiotics_data.to_csv(f"./data/processed/delivery/stats/{now_str}_risk_patient_antibiotics.csv")
     # contact_patient_antibiotics_data.to_csv(f"./data/processed/delivery/stats/{now_str}_contact_patient_antibiotics.csv")
-    remaining_patient_antibiotics_data.to_csv(f"./data/processed/delivery/stats/{now_str}_remaining_patient_antibiotics.csv")
+    # remaining_patient_antibiotics_data.to_csv(f"./data/processed/delivery/stats/{now_str}_remaining_patient_antibiotics.csv")
 
     employee_interactions_df.to_csv(f"./data/processed/delivery/stats/{now_str}_employee_interactions.csv")
     device_interactions_df.to_csv(f"./data/processed/delivery/stats/{now_str}_device_interactions.csv")
