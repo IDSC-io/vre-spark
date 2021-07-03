@@ -414,20 +414,27 @@ class SurfaceModel:
             logging.info(f'-->  After processing, network contains {len(node_degrees_after)} total nodes, out of which '
                          f'{node_degrees_after.count(0)} are isolated.')
 
-    def trim_model(self, snapshot_dt):
+    def trim_model(self, snapshot_dt_from=None, snapshot_dt_to=None):
         """Trims the current model.
 
-        Restays all edges for which the ``to`` attribute is larger than snapshot_dt, and updates the self.snapshot_dt
+        Removes all edges for which the ``to`` attribute is larger than snapshot_dt, and updates the self.snapshot_dt
         attribute. However, this function does NOT remove isolated nodes.
 
         Args:
             snapshot_dt (dt.dt()): dt.dt() object specifying to which timepoint the model should be trimmed
         """
+        if snapshot_dt_to is None:
+            raise Exception("Not snapshot dt to provided")
         deleted_edges = [edge_tuple for edge_tuple in self.S_GRAPH.edges(data=True, keys=True)
-                         if edge_tuple[3]['to'] > snapshot_dt]
+                         if edge_tuple[3]['to'] > snapshot_dt_to]
+
+        if snapshot_dt_from is not None:
+            deleted_edges += [edge_tuple for edge_tuple in self.S_GRAPH.edges(data=True, keys=True)
+                             if edge_tuple[3]['from'] < snapshot_dt_from]
         # S_GRAPH.edges() returns a list of tuples of length 4 --> ('source_id', 'target_id', key, attr_dict)
         self.S_GRAPH.remove_edges_from(deleted_edges)
-        self.to_range = snapshot_dt
+        self.to_range = snapshot_dt_to
+        self.from_range = snapshot_dt_from
 
     ################################################################################################################
     # Functions for updating attributes
@@ -916,6 +923,20 @@ class SurfaceModel:
         # Log "global" statistics
         self.inspect_network()
 
+    def get_positive_patients(self):
+        """
+        Get positive patients currently in graph.
+        :return:
+        """
+        all_nodes = self.S_GRAPH.nodes(data=True)  # list of tuples of ('source_id', key, {attr_dict } )
+
+        # Number of positive patients in the network
+        pos_pats = ['_' for node_data_tuple in all_nodes if not pd.isna(node_data_tuple[0]) and node_data_tuple[1]['type'] == 'Patient' and
+                           node_data_tuple[1]['vre_status'] == 'pos']
+
+        return pos_pats
+
+
     ################################################################################################################
     # Data Export Functions
     ################################################################################################################
@@ -939,7 +960,6 @@ class SurfaceModel:
             # indicates a type of "Patient-XXX" node
             infected_pat_edges = [True if edge[3]['infected'] is True else False for edge in pat_edges]
 
-            # Write to output file:
             really_intected_pat_edges = [entry for entry in infected_pat_edges if entry]
             risk_status = each_node[1]["vre_status"] if "vre_status" in each_node[1] else 'neg'
             patient_degree_rows.append([each_node[0], each_node[1]['type'], risk_status, sum(infected_pat_edges) / len(infected_pat_edges),
@@ -985,6 +1005,7 @@ class SurfaceModel:
         logging.info(f"Successfully exported patient degree ratios to {os.path.join(exact_path, self.snapshot_dt.strftime('%Y_%m_%d') + '_pdr.txt')}")
 
     def calculate_total_degree_ratio(self):
+        # TODO: Total degree ratio is the same as patient degree ratio!
         logging.info('Calculating total degree ratio...')
         patient_degree_ratio_rows = []
 
