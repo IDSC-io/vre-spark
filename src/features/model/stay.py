@@ -98,6 +98,7 @@ class Stay:
         stay_df = stay_df[~pd.isna(stay_df["SAP Room ID"])]
 
         stay_objects = stay_df.progress_apply(lambda row: Stay(*row.to_list()), axis=1)
+        del stay_df
         logging.debug("add_stay_to_case")
         nr_not_found = 0
         nr_not_formatted = 0

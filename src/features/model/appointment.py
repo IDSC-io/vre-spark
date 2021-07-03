@@ -6,9 +6,10 @@
 
 import logging
 import itertools
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from tqdm import tqdm
+import pandas as pd
 
 
 class Appointment:
@@ -21,7 +22,7 @@ class Appointment:
         self.description = description
         self.type_nr = type_nr
         self.type = type
-        self.date = datetime.strptime(date, "%Y-%m-%d")
+        self.date = date
         self.start_datetime = None
         self.end_datetime = None
 
@@ -29,6 +30,9 @@ class Appointment:
             self.duration_in_mins = int(float(duration_in_mins))
         except ValueError as e:
             self.duration_in_mins = 0
+
+        self.start_datetime = self.date
+        self.end_datetime = self.date + timedelta(self.duration_in_mins)
 
         self.devices = []
         self.employees = []
@@ -59,7 +63,7 @@ class Appointment:
         self.employees.append(employee)
 
     @staticmethod
-    def create_appointment_map(lines):
+    def create_appointment_map(csv_path, encoding, from_range=None, to_range=None):
         """Loads the appointments from a csv reader instance.
 
         This function will be called by the ``HDFS_data_loader.patient_data()`` function (lines is an iterator object).
@@ -85,15 +89,20 @@ class Appointment:
         nr_malformed = 0
         nr_ok = 0
         appointments = dict()
-        lines_iters = itertools.tee(lines, 2)
-        for line in tqdm(lines_iters[1], total=sum(1 for _ in lines_iters[0])):
-            if len(line) != 7:
-                nr_malformed += 1
-                continue
-            else:
-                appointment = Appointment(*line)
-                appointments[appointment.id] = appointment
+        appointments_df = pd.read_csv(csv_path, encoding=encoding, parse_dates=["Date"], dtype=str)
+
+        if from_range is not None:
+            appointments_df = appointments_df.loc[appointments_df['Date'] > from_range]
+
+        if to_range is not None:
+            appointments_df = appointments_df.loc[appointments_df['Date'] <= to_range]
+
+        appointment_objects = appointments_df.progress_apply(lambda row: Appointment(*row.to_list()), axis=1)
+        del appointments_df
+        for appointment in appointment_objects:
+            appointments[appointment.id] = appointment
             nr_ok += 1
+
         logging.info(f"{nr_ok} appointments ok, {nr_malformed} appointments malformed")
         return appointments
 

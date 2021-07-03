@@ -22,7 +22,7 @@ class Case:
             patient_status,
     ):
         self.case_id = case_id
-        self.patient_id = patient_id.zfill(11)  # extend the patient id to length 11 to get a standardized representation
+        self.patient_id = "".join(c for c in patient_id if c.isdigit()).zfill(11)  # drop nondigits and extend the patient id to length 11 to get a standardized representation
         self.case_type_id = case_type_id
         self.case_status = case_status
         self.case_type = case_type
@@ -193,6 +193,7 @@ class Case:
         # case_df["Case ID"] = case_df["Case ID"].astype(int)
         # case_df["Patient ID"] = case_df["Patient ID"].astype(int)
         case_objects = case_df.progress_apply(lambda row: Case(*row.to_list()), axis=1)
+        del case_df
 
         import_count = 0
         nr_not_found = 0

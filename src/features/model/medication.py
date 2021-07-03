@@ -7,6 +7,7 @@
 import logging
 from datetime import datetime
 import concurrent.futures
+import pandas as pd
 
 from tqdm import tqdm
 
@@ -19,12 +20,12 @@ class Medication:
             self,
             patient_id,
             case_id,
+            drug_submission,
             drug_text,
             drug_atc,
             drug_quantity,
             drug_unit,
             drug_dispform,
-            drug_submission,
     ):
         self.patient_id = patient_id.zfill(11)  # extend the patient id to length 11 to get a standardized representation
         self.case_id = case_id
@@ -49,7 +50,7 @@ class Medication:
         return self.drug_atc.startswith("J01")
 
     @staticmethod
-    def create_drug_map(lines):
+    def create_drug_map(csv_path, encoding):
         """Creates a dictionary of ATC codes to human readable drug names.
 
         This function will be called by the HDFS_data_loader.patient_data() function (lines is an iterator object).
@@ -72,12 +73,21 @@ class Medication:
                 :math:`\\longrightarrow` ``{'B02BA01' : 'NaCl Braun Inf LÃ¶s 0.9 % 500 ml (Natriumchlorid)', ... }``
         """
         logging.debug("create_drug_map")
-        drugs = dict()
-        for line in tqdm(lines):
-            if drugs.get(line[3], None) is None:
-                drugs[line[3]] = line[2]
-        logging.info(f"{len(drugs)} drugs created")
-        return drugs
+        medications = dict()
+        medication_df = pd.read_csv(csv_path, encoding=encoding, parse_dates=["Submission Date"], dtype=str)
+        medication_objects = medication_df.progress_apply(lambda row: Medication(*row.to_list()), axis=1)
+        del medication_df
+        # TODO: This generates just a list of all possible medications, but this might not be what we want.
+        for medication in medication_objects:
+            if medications.get(medication.case_id, None) is None:
+                medications[medication.case_id] = []
+            medications[medication.case_id].append(medication)
+
+        # for line in tqdm(lines):
+        #     if drugs.get(line[3], None) is None:
+        #         drugs[line[3]] = line[2]
+        logging.info(f"{len(medications)} medications created")
+        return medications
 
     @staticmethod
     def add_medications_to_case(lines, cases):
@@ -97,6 +107,7 @@ class Medication:
         nr_cases_not_found = 0
         nr_malformed = 0
         nr_ok = 0
+        # TODO: Add previously loaded medications to patient cases, not new ones
         # TODO: Parallelize processing with concurrent.Futures (https://docs.python.org/3/library/concurrent.futures.html)
 
         def create_medication(line):

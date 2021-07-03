@@ -7,6 +7,7 @@
 import logging
 import itertools
 from datetime import datetime
+import pandas as pd
 
 from tqdm import tqdm
 
@@ -37,10 +38,8 @@ class Treatment:
     ):
         self.patient_id = patient_id.zfill(11)  # extend the patient id to length 11 to get a standardized representation
         self.case_id = case_id
-        try:
-            self.date = datetime.strptime(date, "%Y-%m-%d %H:%M:%S")
-        except ValueError as e:
-            self.date = datetime.strptime(date, "%Y-%m-%d %H:%M:%S")
+
+        self.date = date
         self.duration_in_minutes = int(duration_in_minutes)
         self.employee_nr = employee_nr
 
@@ -58,7 +57,7 @@ class Treatment:
         self.employee = employee
 
     @staticmethod
-    def add_care_entries_to_case(lines, cases, employees):
+    def add_care_entries_to_case(csv_path, encoding, cases, employees, from_range=None, to_range=None):
         """Adds the entries from TACS as instances of Care() objects to the respective Case().
 
         This function will be called by the HDFS_data_loader.patient_data() function (lines is an iterator object).
@@ -84,11 +83,20 @@ class Treatment:
         nr_case_not_found = 0
         nr_employee_created = 0
         nr_employee_found = 0
-        lines_iters = itertools.tee(lines, 2)
-        for line in tqdm(lines_iters[1], total=sum(1 for _ in lines_iters[0])):
-            care = Treatment(*line)
+        care_df = pd.read_csv(csv_path, encoding=encoding, parse_dates=["Date of Care"], dtype=str)
 
-            # discard if we don't have the case
+        if from_range is not None:
+            care_df = care_df.loc[care_df['Date of Care'] > from_range]
+
+        if to_range is not None:
+            care_df = care_df.loc[care_df['Date of Care'] <= to_range]
+
+        care_objects = care_df.progress_apply(lambda row: Treatment(*row.to_list()), axis=1)
+
+        del care_df
+
+        for care in care_objects:
+        # discard if we don't have the case
             case = cases.get(care.case_id, None)
             if case is None:
                 nr_case_not_found += 1
@@ -105,5 +113,6 @@ class Treatment:
             employees[employee.id] = employee
 
             care.add_employee(employee)
+
         logging.info(f"{nr_case_not_found} cases not found, "
                      f"{nr_employee_created} employees created, {nr_employee_found} employees found")

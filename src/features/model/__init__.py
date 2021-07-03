@@ -14,3 +14,4 @@ from src.features.model.partner import Partner
 from src.features.model.patient import Patient
 from src.features.model.risk import Risk
 from src.features.model.surgery import Surgery
+from src.features.model.building import Building
