@@ -97,7 +97,8 @@ class Stay:
         # TODO: SAP NBEW without Room ID is dropped. Is that correct?
         stay_df = stay_df[~pd.isna(stay_df["SAP Room ID"])]
 
-        stay_objects = stay_df.progress_apply(lambda row: Stay(*row.to_list()), axis=1)
+        # stay_objects = stay_df.progress_apply(lambda row: Stay(*row.to_list()), axis=1)
+        stay_objects = list(map(lambda row: Stay(*row), tqdm(stay_df.values.tolist())))
         del stay_df
         logging.debug("add_stay_to_case")
         nr_not_found = 0
@@ -106,7 +107,7 @@ class Stay:
         nr_wards_updated = 0
         nr_rooms_created = 0
         # TODO: Rewrite parts of loop to pandas checks before making all objects
-        for stay in tqdm(stay_objects.to_list()):
+        for stay in tqdm(stay_objects):
                 if cases.get(stay.case_id, None) is not None:
                     cases[stay.case_id].add_stay(stay)
                     stay.add_case(cases[stay.case_id])

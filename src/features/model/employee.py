@@ -71,7 +71,8 @@ class Employee:
         nr_employee_not_found = 0
         nr_appointment_not_found = 0
         nr_ok = 0
-        for line in tqdm(lines):
+        lines_iters = itertools.tee(lines, 2)
+        for line in tqdm(lines_iters[1], total=sum(1 for _ in lines_iters[0])):
             employee_id = line[1]
             appointment_id = line[0]
             if appointments.get(appointment_id, None) is None:

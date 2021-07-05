@@ -89,17 +89,18 @@ class Appointment:
         nr_malformed = 0
         nr_ok = 0
         appointments = dict()
-        appointments_df = pd.read_csv(csv_path, encoding=encoding, parse_dates=["Date"], dtype=str)
+        appointment_df = pd.read_csv(csv_path, encoding=encoding, parse_dates=["Date"], dtype=str)
 
         if from_range is not None:
-            appointments_df = appointments_df.loc[appointments_df['Date'] > from_range]
+            appointment_df = appointment_df.loc[appointment_df['Date'] > from_range]
 
         if to_range is not None:
-            appointments_df = appointments_df.loc[appointments_df['Date'] <= to_range]
+            appointment_df = appointment_df.loc[appointment_df['Date'] <= to_range]
 
-        appointment_objects = appointments_df.progress_apply(lambda row: Appointment(*row.to_list()), axis=1)
-        del appointments_df
-        for appointment in appointment_objects:
+        # appointment_objects = appointment_df.progress_apply(lambda row: Appointment(*row.to_list()), axis=1)
+        appointment_objects = list(map(lambda row: Appointment(*row), tqdm(appointment_df.values.tolist())))
+        del appointment_df
+        for appointment in tqdm(appointment_objects):
             appointments[appointment.id] = appointment
             nr_ok += 1
 

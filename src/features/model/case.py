@@ -192,7 +192,8 @@ class Case:
         # case_df["Patient ID"] = case_df["Patient ID"].apply(lambda id: re.sub("\D", "", id)) # remove all non-digits from id
         # case_df["Case ID"] = case_df["Case ID"].astype(int)
         # case_df["Patient ID"] = case_df["Patient ID"].astype(int)
-        case_objects = case_df.progress_apply(lambda row: Case(*row.to_list()), axis=1)
+        #case_objects = case_df.progress_apply(lambda row: Case(*row.to_list()), axis=1)
+        case_objects = list(map(lambda row: Case(*row), tqdm(case_df.values.tolist())))
         del case_df
 
         import_count = 0
@@ -201,7 +202,7 @@ class Case:
         nr_not_inpatient_case = 0
         nr_case_not_active = 0
         cases = dict()
-        for case in case_objects.to_list():
+        for case in tqdm(case_objects):
             # TODO: Rewrite to pandas
             # TODO: Hardcoded label, extract to configuration
             # TODO: Look into the consequences of adding closed cases
