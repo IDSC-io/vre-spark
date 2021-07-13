@@ -91,11 +91,11 @@ class Treatment:
         if to_range is not None:
             care_df = care_df.loc[care_df['Date of Care'] <= to_range]
 
-        care_objects = care_df.progress_apply(lambda row: Treatment(*row.to_list()), axis=1)
-
+        # care_objects = care_df.progress_apply(lambda row: Treatment(*row.to_list()), axis=1)
+        care_objects = list(map(lambda row: Treatment(*row), tqdm(treatment_df.values.tolist())))
         del care_df
 
-        for care in care_objects:
+        for care in tqdm(care_objects):
         # discard if we don't have the case
             case = cases.get(care.case_id, None)
             if case is None:

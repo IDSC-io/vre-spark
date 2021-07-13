@@ -78,7 +78,8 @@ class Device:
         nr_appointment_not_found = 0
         nr_device_not_found = 0
         nr_ok = 0
-        for line in tqdm(lines):
+        lines_iters = itertools.tee(lines, 2)
+        for line in tqdm(lines_iters[1], total=sum(1 for _ in lines_iters[0])):
             appointment_id = line[0]
             if appointments.get(appointment_id, None) is None:
                 nr_appointment_not_found += 1

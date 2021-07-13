@@ -136,9 +136,10 @@ class Room:
         import_count = 0
         rooms = dict()
         floors = dict()
-        rooms_df = pd.read_csv(csv_path, encoding=encoding, dtype=str, index_col=0)
-        rooms_objects = rooms_df.progress_apply(lambda row: Room(*row.to_list()), axis=1)
-        for room in rooms_objects:
+        room_df = pd.read_csv(csv_path, encoding=encoding, dtype=str, index_col=0)
+        # room_objects = room_df.progress_apply(lambda row: Room(*row.to_list()), axis=1)
+        room_objects = list(map(lambda row: Room(*row), tqdm(room_df.values.tolist())))
+        for room in tqdm(room_objects):
             building = None
             floor = None
             for room_id in room.sap_room_ids:  # TODO: Solve the multiple room id disaster

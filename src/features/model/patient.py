@@ -560,9 +560,10 @@ class Patient:
         # use as many threads as possible, default: min(32, os.cpu_count()+4)
         # with ThreadPoolExecutor() as executor:
         #     patient_objects = executor.map(create_patient, tqdm(patient_df.iterrows(), total=len(patient_df)))
-        patient_objects = patient_df.progress_apply(lambda row: Patient(*row.to_list()), axis=1)
+        #patient_objects = patient_df.progress_apply(lambda row: Patient(*row.to_list()), axis=1)
+        patient_objects = list(map(lambda row: Patient(*row), tqdm(patient_df.values.tolist())))
         del patient_df
-        for patient in patient_objects:
+        for patient in tqdm(patient_objects):
             patients[patient.patient_id] = patient
             import_count += 1
             if load_limit is not None and import_count > load_limit:

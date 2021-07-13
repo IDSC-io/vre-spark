@@ -41,7 +41,7 @@ class DataLoader:
     """Loads all the csv files and creates the data model.
     """
 
-    def __init__(self, hdfs_pipe=True):
+    def __init__(self, hdfs_pipe=False):
 
         tqdm.pandas()
 
@@ -176,7 +176,7 @@ class DataLoader:
         logging.info(f"Processing data (load_test_data is {self.load_test_data}, hdfs_pipe is {self.hdfs_pipe},"
                      f" base_path set to {self.base_path}).")
 
-        # load Patient data from table: V_DH_DIM_PATIENT_CUR
+        # load Patient data from table: DIM_PATIENT
         if load_patients:
             logging.info("[AGENT] loading patient data...")
             patients = Patient.create_patient_dict(self.patients_path, self.encoding,
@@ -201,7 +201,7 @@ class DataLoader:
             floors = dict()
             logging.info("[AGENT] preloading rooms omitted.")
 
-        # load Case data from table: V_LA_ISH_NFAL_NORM
+        # load Case data from table: DIM_FALL
         cases = {}
         partners = {}
         if load_cases or load_partners or load_stays:
@@ -272,20 +272,17 @@ class DataLoader:
                 if patient.get_screening_label() > 0:
                     patients_risk[patient.patient_id] = patient
             patients = patients_risk
-        logging.info(f"Loaded {len(patients)} patients")
+            logging.info(f"Loaded {len(patients)} patients")
 
-        # load Drug/Medication data from table: V_LA_IPD_DRUG_NORM
+        # load Drug/Medication data from table: FAKT_MEDIKAMENTE
         medications = {}
         if load_medications:
             logging.info("[AGENT ATTRIBUTE] loading medication data...")
-            medications = Medication.create_drug_map(self.medication_path, self.encoding)
-            Medication.add_medications_to_case(  # Update is based on the same table
-                self.get_hdfs_pipe(self.medication_path) if self.hdfs_pipe is True
-                else self.get_csv_file(self.medication_path), cases)
+            medications = Medication.create_drug_map(self.medication_path, cases, self.encoding)
         else:
             logging.info("[AGENT ATTRIBUTE] loading medication data omitted.")
 
-        # load CHOP surgery codes data from table: V_DH_REF_CHOP
+        # load CHOP surgery codes data from table: LA_CHOP_FLAT
         chops = {}
         if load_chop_codes or load_surgeries:
             logging.info("[AGENT ATTRIBUTE] loading surgeries chop data...")
@@ -293,13 +290,14 @@ class DataLoader:
                                           else self.get_csv_file(self.chop_path))
 
             # Add Surgery data to cases from table: LA_ISH_NICP
+            logging.info("[AGENT ATTRIBUTE] loading surgeries data...")
             Surgery.add_surgeries_to_case(self.get_hdfs_pipe(self.surgery_path) if self.hdfs_pipe is True
                                           else self.get_csv_file(self.surgery_path), cases, chops)
             # Surgery() objects are not part of the returned dictionary
         else:
-            logging.info("[AGENT ATTRIBUTE] loading surgeries chop data omitted.")
+            logging.info("[AGENT ATTRIBUTE] loading surgeries and chop data omitted.")
 
-        # load Appointment data from table: V_DH_DIM_TERMIN_CUR
+        # load Appointment data from table: DIM_TERMIN
         appointments = {}
         devices = {}
         employees = {}
@@ -307,26 +305,27 @@ class DataLoader:
             logging.info("[INTERACTON] loading appointment data")
             appointments = Appointment.create_appointment_map(self.appointments_path, self.encoding, from_range, to_range)
 
-            # Add Appointments to cases from table: V_DH_FACT_TERMINPATIENT
+            # Add Appointments to cases from table: FAKT_TERMIN_PATIENT
             logging.info('Adding appointments to cases')
             Appointment.add_appointment_to_case(self.get_hdfs_pipe(self.appointment_patient_path) if self.hdfs_pipe is True
                                                 else self.get_csv_file(self.appointment_patient_path),
                                                 cases, appointments)
 
             if load_devices:
-                # Load Device data from table: V_DH_DIM_GERAET_CUR
+                # Load Device data from table: DIM_GERAET
                 logging.info("[AGENT] loading device data")
                 devices = Device.create_device_map(self.get_hdfs_pipe(self.devices_path) if self.hdfs_pipe is True
                                                    else self.get_csv_file(self.devices_path))
 
-                # Add Device data to Appointments from table: V_DH_FACT_TERMINGERAET
+                # Add Device data to Appointments from table: FAKT_TERMIN_GERAET
+                logging.info("[INTERACTION] adding devices to appointments")
                 Device.add_device_to_appointment(self.get_hdfs_pipe(self.appointment_device_path) if self.hdfs_pipe is True
                                                  else self.get_csv_file(self.appointment_device_path),
                                                  appointments, devices)
             else:
                 logging.info("[AGENT] loading devices omitted.")
 
-            # load Employee data (RAP) from table: V_DH_FACT_TERMINMITARBEITER
+            # load Employee data (RAP) from table: FAKT_TERMIN_MITARBEITER
             if load_care_data or load_employees:
                 logging.info("[AGENT] loading employee data from RAP")
                 employees = Employee.create_employee_map(self.get_hdfs_pipe(self.appointment_employee_path)
@@ -334,6 +333,7 @@ class DataLoader:
                                                          else self.get_csv_file(self.appointment_employee_path))
 
                 # Add Employees to Appointments using the same table
+                logging.info("[AGENT] add employees to appointments")
                 Employee.add_employees_to_appointment(self.get_hdfs_pipe(self.appointment_employee_path)
                                                       if self.hdfs_pipe is True
                                                       else self.get_csv_file(self.appointment_employee_path),

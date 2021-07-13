@@ -64,9 +64,11 @@ class Partner:
 
         partner_df = pd.read_csv(csv_path, encoding=encoding)
         partner_df["Partner ID"] = partner_df["Partner ID"].astype(int)
-        partner_objects = partner_df.progress_apply(lambda row: Partner(*row.to_list()), axis=1)
+        #partner_objects = partner_df.progress_apply(lambda row: Partner(*row.to_list()), axis=1)
+        partner_objects = list(map(lambda row: Partner(*row), tqdm(partner_df.values.tolist())))
+        del partner_df
         partners = dict()
-        for partner in tqdm(partner_objects.to_list()):
+        for partner in tqdm(partner_objects):
             partners[partner.partner_id] = partner
 
         logging.info(f"{len(partners)} partners created")

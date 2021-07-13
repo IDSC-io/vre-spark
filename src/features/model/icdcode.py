@@ -57,7 +57,8 @@ class ICDCode:
         logging.debug("Creating ICD dictionary")
         icd_dict = {}
 
-        for each_line in tqdm(lines):
+        lines_iters = itertools.tee(lines, 2)
+        for line in tqdm(lines_iters[1], total=sum(1 for _ in lines_iters[0])):
             this_icd = ICDCode(*each_line)
             icd_dict[this_icd.icd_code] = this_icd
         # Write success to log and return dictionary
