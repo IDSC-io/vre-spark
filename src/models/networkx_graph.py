@@ -511,7 +511,7 @@ class SurfaceModel:
                                     pos_edges += 1
                                 else:
                                     neg_edges += 1
-                            print(each_edge[e], pos_edges, neg_edges)
+                            # print(each_edge[e], pos_edges, neg_edges)
 
                     nodes.append(each_edge[0])
                     nodes.append(each_edge[1])

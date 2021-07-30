@@ -53,7 +53,7 @@ def compose_model():
                                           load_partners=False,
                                           from_range=start_range,
                                           to_range=end_range,
-                                          load_fraction=0.1,
+                                          load_fraction=1.0,  # 0.1,
                                           load_fraction_seed=7)
     #####################################
 
@@ -82,7 +82,11 @@ def compose_model():
     pathlib.Path("./data/processed/metrics").mkdir(parents=True, exist_ok=True)
 
     infection_degree_df = surface_graph.calculate_infection_degree()
+    print("Top 50 across all nodes")
     print(infection_degree_df.head(50))
+
+    print("Top 50 of patients")
+    print(infection_degree_df[infection_degree_df["Node Type"] == "Patient"].head(50))
     infection_degree_df.to_csv(f"./data/processed/metrics/{now_str}_infection_degree.csv", index=False)
 
     # TODO: Reenable node betweenness statistics. Deactivated as it uses a lot of resources!
