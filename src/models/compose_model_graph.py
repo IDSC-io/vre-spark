@@ -42,13 +42,19 @@ def compose_model():
     # Initiate data loader
     logging.info("Initiating data_loader")
 
-    # --> Load all data:
+    # --> Load all data from time range:
+    start_range = datetime(2018, 3, 1)
+    end_range = datetime(2018, 5, 31)
     loader = DataLoader(hdfs_pipe=False)  # hdfs_pipe = False --> files will be loaded directly from CSV
     patient_data = loader.prepare_dataset(load_medications=False,
                                           load_icd_codes=False,
                                           load_chop_codes=False,
                                           load_surgeries=False,
-                                          load_partners=False)
+                                          load_partners=False,
+                                          from_range=start_range,
+                                          to_range=end_range,
+                                          load_fraction=0.1,
+                                          load_fraction_seed=7)
     #####################################
 
     #####################################
@@ -62,7 +68,8 @@ def compose_model():
     surface_graph = SurfaceModel(data_dir='./data/processed/networkx')
     surface_graph.add_network_data(patient_dict=patient_data, case_subset='relevant_case')
     surface_graph.remove_isolated_nodes()
-    surface_graph.add_edge_infection()
+    surface_graph.inspect_network()
+    surface_graph.add_edge_infection(infection_distance=2)
 
     patient_data = None  # free up memory before graph processing!
 
@@ -70,22 +77,13 @@ def compose_model():
     # positive_patient_nodes = [node for node, nodedata in surface_graph.S_GRAPH.nodes(data=True)
     #                           if nodedata['type'] == 'Patient' and nodedata['vre_status'] == 'pos']
 
-    # Write node files
-    # surface_graph.write_node_files()
-    #
-    # export_path = './data/processed'
-
     # calculate scores
 
     pathlib.Path("./data/processed/metrics").mkdir(parents=True, exist_ok=True)
 
-    patient_degree_ratio_df = surface_graph.calculate_patient_degree_ratio()
-    print(patient_degree_ratio_df.head(50))
-    patient_degree_ratio_df.to_csv(f"./data/processed/metrics/{now_str}_patient_degree_ratio.csv", index=False)
-
-    total_degree_ratio_df = surface_graph.calculate_total_degree_ratio()
-    print(total_degree_ratio_df.head(50))
-    total_degree_ratio_df.to_csv(f"./data/processed/metrics/{now_str}_total_degree_ratio.csv", index=False)
+    infection_degree_df = surface_graph.calculate_infection_degree()
+    print(infection_degree_df.head(50))
+    infection_degree_df.to_csv(f"./data/processed/metrics/{now_str}_infection_degree.csv", index=False)
 
     # TODO: Reenable node betweenness statistics. Deactivated as it uses a lot of resources!
     # node_betweenness_df = surface_graph.calculate_node_betweenness()
