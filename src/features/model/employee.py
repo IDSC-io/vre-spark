@@ -8,6 +8,7 @@ import logging
 import itertools
 
 from tqdm import tqdm
+import pandas as pd
 
 
 class Employee:
@@ -18,7 +19,7 @@ class Employee:
         self.id = id
 
     @staticmethod
-    def create_employee_map(lines):
+    def create_employee_map(csv_path, encoding, load_fraction=1.0, load_seed=7):
         """Reads the appointment to employee file and creates an Employee().
 
 
@@ -42,13 +43,19 @@ class Employee:
                 :math:`\\longrightarrow` ``{'0032719' : Employee(), ... }``
         """
         logging.debug("create_employee_map")
-        employee_dict = dict()
-        lines_iters = itertools.tee(lines, 2)
-        for line in tqdm(lines_iters[1], total=sum(1 for _ in lines_iters[0])):
-            employee = line[1]
-            employee_dict[employee] = Employee(employee)
-        logging.info(f"{len(employee_dict)} employees created")
-        return employee_dict
+        employee_df = pd.read_csv(csv_path, encoding=encoding, dtype=str)
+        if load_fraction != 1.0:
+            employee_df = employee_df.sample(frac=load_fraction, random_state=load_seed)
+
+        employees_objects = list(map(lambda row: Employee(*row[0:1]), tqdm(employee_df.values.tolist())))
+        del employee_df
+
+        employees = dict()
+        for employee in tqdm(employees_objects):
+            employees[employee.id] = employee
+
+        logging.info(f"{len(employees)} employees created")
+        return employees
 
     @staticmethod
     def add_employees_to_appointment(lines, appointments, employees):

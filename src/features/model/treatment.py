@@ -92,7 +92,7 @@ class Treatment:
             care_df = care_df.loc[care_df['Date of Care'] <= to_range]
 
         # care_objects = care_df.progress_apply(lambda row: Treatment(*row.to_list()), axis=1)
-        care_objects = list(map(lambda row: Treatment(*row), tqdm(treatment_df.values.tolist())))
+        care_objects = list(map(lambda row: Treatment(*row), tqdm(care_df.values.tolist())))
         del care_df
 
         for care in tqdm(care_objects):

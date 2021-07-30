@@ -69,7 +69,7 @@ class Stay:
         return bwart
 
     @staticmethod
-    def add_stays_to_case(csv_path, encoding, cases, rooms, wards, partners, load_limit=None):
+    def add_stays_to_case(csv_path, encoding, cases, rooms, wards, partners, load_fraction=1.0, load_seed=7):
         """
         Reads the stays csv and performs the following:
         --> creates a Stay() object from the read-in line data
@@ -90,7 +90,8 @@ class Stay:
         :param partners: Dictionary mapping partner ids to Partner() --> {'0010000990' : Partner(), ... }
         """
         stay_df = pd.read_csv(csv_path, encoding=encoding, parse_dates=["Begin Datetime", "End Datetime"], dtype=str)
-
+        if load_fraction != 1.0:
+            stay_df = stay_df.sample(frac=load_fraction, random_state=load_seed)
         # in principle they are all int, history makes them a varchar/string
         # stay_df["Case ID"] = stay_df["Case ID"].astype(int)
 
@@ -152,7 +153,5 @@ class Stay:
                         partners[stay.partner_id].add_case(stay.case)
                         stay.case.add_referrer(partners[stay.partner_id])
                 nr_ok += 1
-                if load_limit is not None and nr_ok > load_limit:
-                    break
 
         logging.info(f"{nr_ok} stays ok, {nr_not_found} cases not found, {nr_not_formatted} malformed, {nr_wards_updated} wards updated, {nr_rooms_created} new rooms created")

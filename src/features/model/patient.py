@@ -534,7 +534,7 @@ class Patient:
         return appointments
 
     @staticmethod
-    def create_patient_dict(csv_path, encoding, load_limit=None):
+    def create_patient_dict(csv_path, encoding, load_fraction=1.0, load_seed=7):
         """
         Read the patient csv and create Patient objects from the rows.
         Populate a dict (patient_id -> patient). This function will be called by the HDFS_data_loader.patient_data() function. The lines argument corresponds to a csv.reader() instance
@@ -551,6 +551,9 @@ class Patient:
         import_count = 0
         patients = dict()
         patient_df = pd.read_csv(csv_path, encoding=encoding, parse_dates=["Birth Date"], dtype=str)
+
+        if load_fraction != 1.0:
+            patient_df = patient_df.sample(frac=load_fraction, random_state=load_seed)
         # patient_df["Patient ID"] = patient_df["Patient ID"].astype(int) # in principle it should be an int, history makes it a varchar/string
 
         # Parallel execution seems slower
@@ -566,8 +569,6 @@ class Patient:
         for patient in tqdm(patient_objects):
             patients[patient.patient_id] = patient
             import_count += 1
-            if load_limit is not None and import_count > load_limit:
-                break
 
         logging.info(f"{len(patients)} patients created")
         return patients

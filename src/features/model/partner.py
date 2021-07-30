@@ -75,7 +75,7 @@ class Partner:
         return partners
 
     @staticmethod
-    def add_partners_to_cases(csv_path, encoding, cases, partners):
+    def add_partners_to_cases(csv_path, encoding, cases, partners, load_fraction=1.0, load_seed=7):
         """
         Reads lines from csv reader originating from SAP IS-H table NFPZ, and updates the referring physician (Partner() object) from partners to the corresponding case,
         and also adds the corresponding Case() to Partner() from cases. This function is called by the HDFS_data_loader.patient_data() method.
@@ -88,6 +88,8 @@ class Partner:
         Referring physicians (EARZT = 'U') are added only to cases which are NOT cancelled, i.e. STORN != 'X'.
         """
         case_partners_df = pd.read_csv(csv_path, encoding=encoding, dtype=str)
+        if load_fraction != 1.0:
+            case_partners_df = case_partners_df.sample(frac=load_fraction, seed=load_seed)
         # in principle they are all int, history makes them a varchar/string
         # case_partners_df["Case ID"] = case_partners_df["Case ID"].astype(int)
         # case_partners_df["Partner ID"] = case_partners_df["Partner ID"].astype(int)

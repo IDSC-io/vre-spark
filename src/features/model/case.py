@@ -170,7 +170,7 @@ class Case:
         return stays
 
     @staticmethod
-    def create_case_map(csv_path, encoding, patients, load_limit=None):
+    def create_case_map(csv_path, encoding, patients, load_fraction=1.0, load_seed=7):
         """
         Read the case csv and create Case objects from the rows. Populate a dict with cases (case_id -> case) that are not 'storniert'. Note that the function goes both ways, i.e. it adds
         Cases to Patients and vice versa. This function will be called by the HDFS_data_loader.patient_data() function. The lines argument corresponds to a csv.reader() instance
@@ -188,6 +188,9 @@ class Case:
         logging.debug("create_case_map")
 
         case_df = pd.read_csv(csv_path, encoding=encoding, parse_dates=["Start Date", "End Date"], dtype=str)
+
+        if load_fraction != 1.0:
+            case_df = case_df.sample(frac=load_fraction, random_state=load_seed)
         # in principle they are all int, history makes them a varchar/string
         # case_df["Patient ID"] = case_df["Patient ID"].apply(lambda id: re.sub("\D", "", id)) # remove all non-digits from id
         # case_df["Case ID"] = case_df["Case ID"].astype(int)
@@ -212,8 +215,6 @@ class Case:
                     patients[case.patient_id].add_case(case)
                     case.add_patient(patients[case.patient_id])
                     import_count += 1
-                    if load_limit is not None and import_count > load_limit:
-                        break
                 else:
                     nr_not_found += 1
                     continue

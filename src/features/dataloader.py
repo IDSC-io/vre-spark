@@ -150,7 +150,9 @@ class DataLoader:
                         load_rooms=True,
                         load_icd_codes=True,
                         from_range=None,
-                        to_range=None):
+                        to_range=None,
+                        load_fraction=1.0,
+                        load_fraction_seed=7):
         """Prepares dataset based on extracted data.
 
         If self.hdfs_pipe is ``True``, this will use the :meth:`get_hdfs_pipe()` method. Otherwise, the
@@ -180,7 +182,7 @@ class DataLoader:
         if load_patients:
             logging.info("[AGENT] loading patient data...")
             patients = Patient.create_patient_dict(self.patients_path, self.encoding,
-                                                   load_limit=self.load_limit)
+                                                   load_fraction=load_fraction, load_seed=load_fraction_seed)
 
         else:
             patients = dict()
@@ -207,7 +209,7 @@ class DataLoader:
         if load_cases or load_partners or load_stays:
             logging.info("[INTERACTION] loading case data...")
             cases = Case.create_case_map(self.cases_path, self.encoding, patients,
-                                         load_limit=self.load_limit)
+                                         load_fraction=load_fraction, load_seed=load_fraction_seed)
 
             # load Partner data from table: LA_ISH_NGPA
             if load_partners:
@@ -223,7 +225,7 @@ class DataLoader:
             if load_stays:
                 logging.info("[INTERACTION] loading stay data...")
                 Stay.add_stays_to_case(self.stays_path, self.encoding, cases, rooms, wards, partners,
-                                       load_limit=self.load_limit)
+                                       load_fraction=load_fraction, load_seed=load_fraction_seed)
                 # --> Note: Stay() objects are not part of the returned dictionary, they are only used in
                 #                           Case() objects --> Case().stays = [1 : Stay(), 2 : Stay(), ...]
             else:
@@ -328,9 +330,7 @@ class DataLoader:
             # load Employee data (RAP) from table: FAKT_TERMIN_MITARBEITER
             if load_care_data or load_employees:
                 logging.info("[AGENT] loading employee data from RAP")
-                employees = Employee.create_employee_map(self.get_hdfs_pipe(self.appointment_employee_path)
-                                                         if self.hdfs_pipe is True
-                                                         else self.get_csv_file(self.appointment_employee_path))
+                employees = Employee.create_employee_map(self.appointment_employee_path, encoding=self.encoding)
 
                 # Add Employees to Appointments using the same table
                 logging.info("[AGENT] add employees to appointments")
