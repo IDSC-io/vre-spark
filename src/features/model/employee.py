@@ -47,7 +47,7 @@ class Employee:
         if load_fraction != 1.0:
             employee_df = employee_df.sample(frac=load_fraction, random_state=load_seed)
 
-        employees_objects = list(map(lambda row: Employee(*row[0:1]), tqdm(employee_df.values.tolist())))
+        employees_objects = list(map(lambda row: Employee(*row[1:2]), tqdm(employee_df.values.tolist())))
         del employee_df
 
         employees = dict()
