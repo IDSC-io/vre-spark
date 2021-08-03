@@ -415,16 +415,21 @@ class SurfaceModel:
                          f'{node_degrees_after.count(0)} are isolated.')
 
     def trim_model(self, snapshot_dt_from=None, snapshot_dt_to=None):
-        """Trims the current model.
+        """Trims the current model by removing edges.
 
         Removes all edges for which the ``to`` attribute is larger than snapshot_dt, and updates the self.snapshot_dt
         attribute. However, this function does NOT remove isolated nodes.
 
         Args:
-            snapshot_dt (dt.dt()): dt.dt() object specifying to which timepoint the model should be trimmed
+            snapshot_dt_from (dt.dt()): dt.dt() object specifying from which timepoint the model should be trimmed
+            snapshot_dt_to (dt.dt()): dt.dt() object specifying to which timepoint the model should be trimmed
         """
-        if snapshot_dt_to is None:
-            raise Exception("Not snapshot dt to provided")
+        if snapshot_dt_from is None or snapshot_dt_to is None:
+            raise Exception("Incorrect snapshot dt range provided:", (snapshot_dt_from, snapshot_dt_to))
+
+        if not (self.from_range <= snapshot_dt_from and snapshot_dt_to < self.to_range):
+            raise Exception("Snapshot from and to range exceeds range of graph:", (self.from_range, self.to_range))
+
         deleted_edges = [edge_tuple for edge_tuple in self.S_GRAPH.edges(data=True, keys=True)
                          if edge_tuple[3]['to'] > snapshot_dt_to]
 
@@ -433,8 +438,8 @@ class SurfaceModel:
                               if edge_tuple[3]['from'] < snapshot_dt_from]
         # S_GRAPH.edges() returns a list of tuples of length 4 --> ('source_id', 'target_id', key, attr_dict)
         self.S_GRAPH.remove_edges_from(deleted_edges)
-        self.to_range = snapshot_dt_to
         self.from_range = snapshot_dt_from
+        self.to_range = snapshot_dt_to
 
     ################################################################################################################
     # Functions for updating attributes
@@ -879,7 +884,8 @@ class SurfaceModel:
                             building_id = room.ww_building_id
                         except:
                             building_id = None
-                        self.new_room_node(string_id=each_room.room_id, building_id=building_id, ward_id=each_room.ward.name if each_room.ward is not None else None,
+
+                        self.new_room_node(string_id=each_room.room_id, building_id=building_id, ward_id=each_room.ward_name ,
                                            room_id=each_room.get_ids())
                         room_list.append(each_room.room_id)
                     ####################################
@@ -957,8 +963,8 @@ class SurfaceModel:
         """
         all_nodes = self.S_GRAPH.nodes(data=True)  # list of tuples of ('source_id', key, {attr_dict } )
 
-        # Number of positive patients in the network
-        pos_pats = ['_' for node_data_tuple in all_nodes if not pd.isna(node_data_tuple[0]) and node_data_tuple[1]['type'] == 'Patient' and
+        # return positive patients in the network
+        pos_pats = [node_data_tuple[0] for node_data_tuple in all_nodes if not pd.isna(node_data_tuple[0]) and node_data_tuple[1]['type'] == 'Patient' and
                     node_data_tuple[1]['vre_status'] == 'pos']
 
         return pos_pats
