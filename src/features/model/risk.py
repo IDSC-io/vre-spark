@@ -25,6 +25,9 @@ class Risk:
         self.first_name = first_name
         self.birth_date = birth_date
 
+    def is_positive(self):
+        return self.result != "nn"
+
     @staticmethod
     def generate_screening_overview_map(lines):
         """Generates the ward screening overview dictionary.
@@ -91,7 +94,7 @@ class Risk:
         return oe_pflege_dict
 
     @staticmethod
-    def add_annotated_screening_data_to_patients(csv_path, encoding, patient_dict):
+    def add_annotated_screening_data_to_patients(csv_path, encoding, patient_dict, from_range, to_range):
         """Annotates and adds screening data to all patients in the model.
 
         This function is the core piece for adding VRE screening data to the model. It will read all screenings exported
@@ -156,8 +159,16 @@ class Risk:
             patient_dict (dict):    Dictionary mapping patient ids to Patient() --> {'00008301433' : Patient(), ... }
         """
         risk_df = pd.read_csv(csv_path, encoding=encoding, parse_dates=["Record Date"], dtype=str)
+
         # in principle they are all int, history makes them a varchar/string
         # risk_df["Patient ID"] = risk_df["Patient ID"].astype(int)
+
+        if from_range is not None:
+            risk_df = risk_df.loc[risk_df['Record Date'] > from_range]
+
+        if to_range is not None:
+            risk_df = risk_df.loc[risk_df['Record Date'] <= to_range]
+
         risk_objects = risk_df.progress_apply(lambda row: Risk(*row.to_list()), axis=1)
         stay_wards = []
         screening_wards = []
@@ -165,6 +176,7 @@ class Risk:
         nr_pat_not_found = 0
         nr_pat_no_relevant_stays_found = 0
         nr_ok = 0
+        nr_screenings_positive = 0
         for risk in tqdm(risk_objects.to_list()):
             if risk.patient_id not in patient_dict.keys():  # Check whether or not PID exists
                 nr_pat_not_found += 1
@@ -176,6 +188,9 @@ class Risk:
             patient_dict[risk.patient_id].add_risk(risk)
             nr_ok += 1
 
+            if risk.is_positive():
+                nr_screenings_positive += 1
+
                 # stay_wards.append('+'.join([each_stay.department for each_stay in potential_stays]))
                 # screening_wards.append(this_risk.options)
                 # print results to file
@@ -186,4 +201,4 @@ class Risk:
             #    nr_pat_no_relevant_stays_found += 1
             #    continue
 
-        logging.info(f"{nr_ok} screenings added, {nr_pat_not_found} patients from screening data not found, {nr_pat_no_relevant_stays_found} patients with no relevant stays found.")
+        logging.info(f"{nr_ok} screenings added, {nr_screenings_positive} positive screenings, {nr_pat_not_found} patients from screening data not found, {nr_pat_no_relevant_stays_found} patients with no relevant stays found.")

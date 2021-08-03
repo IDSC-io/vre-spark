@@ -17,7 +17,7 @@ class Room:
 
     def __init__(self, campus_id=None, ww_building_id=None, room_description=None, room_type=None,
                  sap_building_abbreviation1=None, sap_building_abbreviation2=None,
-                 department=None, ward=None, sap_room_id1=None, sap_room_id2=None, ww_floor_id=None, ww_room_id=None):
+                 department=None, ward_name=None, sap_room_id1=None, sap_room_id2=None, ww_floor_id=None, ww_room_id=None):
         """
         """
         self.campus_id = campus_id
@@ -27,7 +27,7 @@ class Room:
         self.room_type = room_type
         self.sap_building_abbreviations = [sap_building_abbreviation1, sap_building_abbreviation2]
         self.department = department
-        self.ward = ward
+        self.ward_name = ward_name
         self.sap_room_ids = [sap_room_id1, sap_room_id2]
         self.ww_floor_id = ww_floor_id
         self.floor_id = self.ww_building_id + " " + self.ww_floor_id if self.ww_building_id is not None and self.ww_floor_id is not None else None
@@ -47,7 +47,7 @@ class Room:
                     "Room IDs": self.sap_room_ids.copy().append(self.ww_room_id),
                     "Building IDs": self.sap_building_abbreviations.copy().append(self.ww_building_id),
                     "Department": self.department,
-                    "Ward": self.ward,
+                    "Ward": self.ward_name,
                     "Stays Qty": len(self.stays),
                     "Appointments Qty": len(self.appointments),
                     "Beds Qty": len(self.beds.keys())})
@@ -91,7 +91,7 @@ class Room:
 
         :param ward: ward object to be set as the new attribute.
         """
-        self.ward = ward
+        self.ward_name = ward
 
     def get_ids(self):
         """
@@ -137,7 +137,6 @@ class Room:
         rooms = dict()
         floors = dict()
         room_df = pd.read_csv(csv_path, encoding=encoding, dtype=str, index_col=0)
-        # room_objects = room_df.progress_apply(lambda row: Room(*row.to_list()), axis=1)
         room_objects = list(map(lambda row: Room(*row), tqdm(room_df.values.tolist())))
         for room in tqdm(room_objects):
             building = None

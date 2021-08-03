@@ -69,7 +69,7 @@ class Stay:
         return bwart
 
     @staticmethod
-    def add_stays_to_case(csv_path, encoding, cases, rooms, wards, partners, load_fraction=1.0, load_seed=7):
+    def add_stays_to_case(csv_path, encoding, cases, rooms, wards, partners, from_range, to_range, load_fraction=1.0, load_seed=7):
         """
         Reads the stays csv and performs the following:
         --> creates a Stay() object from the read-in line data
@@ -88,6 +88,7 @@ class Stay:
         :param room_ids: Dictionary mapping room IDs to Room()       --> {'127803' : Room(), ... }
         :param wards:    Dictionary mapping ward names to Ward()     --> {'N NORD' : Ward(), ... }
         :param partners: Dictionary mapping partner ids to Partner() --> {'0010000990' : Partner(), ... }
+        # TODO: Solve ward chaos
         """
         stay_df = pd.read_csv(csv_path, encoding=encoding, parse_dates=["Begin Datetime", "End Datetime"], dtype=str)
         if load_fraction != 1.0:
@@ -97,6 +98,13 @@ class Stay:
 
         # TODO: SAP NBEW without Room ID is dropped. Is that correct?
         stay_df = stay_df[~pd.isna(stay_df["SAP Room ID"])]
+
+        if from_range is not None:
+            stay_df = stay_df.loc[stay_df['Begin Datetime'] > from_range]
+
+        if to_range is not None:
+            stay_df = stay_df.loc[stay_df['End Datetime'] <= to_range]
+
 
         # stay_objects = stay_df.progress_apply(lambda row: Stay(*row.to_list()), axis=1)
         stay_objects = list(map(lambda row: Stay(*row), tqdm(stay_df.values.tolist())))

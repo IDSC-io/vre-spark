@@ -65,7 +65,7 @@ class DataLoader:
         self.appointment_room_path = os.path.join(self.base_path, "FAKT_TERMIN_RAUM.csv")
         self.appointment_employee_path = os.path.join(self.base_path, "FAKT_TERMIN_MITARBEITER.csv")
 
-        # TODO: Sort data by node attributes and edge information
+        # TODO: Sort data variables by node attributes and edge information
         self.medication_path = os.path.join(self.base_path, "FAKT_MEDIKAMENTE.csv")
         self.partner_path = os.path.join(self.base_path, "LA_ISH_NGPA.csv")
         self.case_partner_path = os.path.join(self.base_path, "LA_ISH_NFPZ.csv")
@@ -225,7 +225,7 @@ class DataLoader:
             if load_stays:
                 logging.info("[INTERACTION] loading stay data...")
                 Stay.add_stays_to_case(self.stays_path, self.encoding, cases, rooms, wards, partners,
-                                       load_fraction=load_fraction, load_seed=load_fraction_seed)
+                                       from_range=from_range, to_range=to_range, load_fraction=load_fraction, load_seed=load_fraction_seed)
                 # --> Note: Stay() objects are not part of the returned dictionary, they are only used in
                 #                           Case() objects --> Case().stays = [1 : Stay(), 2 : Stay(), ...]
             else:
@@ -233,7 +233,7 @@ class DataLoader:
         else:
             logging.info("[INTERACTION] loading cases omitted.")
 
-        # TODO: ward screenings and care map data is broken. Readd it.
+        # TODO: ward screenings and care map data are broken. Readd it.
         # Generate ward screening overview map
         # screen_map = Risk.generate_screening_overview_map(self.get_hdfs_pipe(self.VRE_ward_screenings_path)
         #                                                   if self.hdfs_pipe is True
@@ -263,7 +263,7 @@ class DataLoader:
             # add risks to patients to ensure VRE-positive patients are properly annotated
             Risk.add_annotated_screening_data_to_patients(self.vre_screenings_path,
                                                           self.encoding,
-                                                          patient_dict=patients)
+                                                          patient_dict=patients, from_range=from_range, to_range=to_range)
         else:
             logging.info("[RISK] loading risk screening data omitted.")
 
