@@ -87,6 +87,7 @@ class Employee:
                 continue
             if employees.get(employee_id, None) is None:
                 nr_employee_not_found += 1
+
                 continue
             appointments[appointment_id].add_employee(employees[employee_id])
             nr_ok += 1

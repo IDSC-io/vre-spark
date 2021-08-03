@@ -329,7 +329,7 @@ class DataLoader:
 
             # load Employee data (RAP) from table: FAKT_TERMIN_MITARBEITER
             if load_care_data or load_employees:
-                logging.info("[AGENT] loading employee data from RAP")
+                logging.info("[AGENT] loading employees from RAP")
                 employees = Employee.create_employee_map(self.appointment_employee_path, encoding=self.encoding)
 
                 # Add Employees to Appointments using the same table

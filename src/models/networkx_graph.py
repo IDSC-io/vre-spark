@@ -146,7 +146,7 @@ class SurfaceModel:
         # Flag indicating whether or not the self.add_edge_infection() function has been called on the graph
         # -> introduces the "infected" attribute for edges
         self.edges_infected = False
-        self.Nodes = {
+        self.nodes = {
             'Patient': set(),
             'Room': set(),
             'Device': set(),
@@ -236,13 +236,13 @@ class SurfaceModel:
         Returns:
             str or None: The type of node of string_id, or ``None`` if string_id is not found in the network.
         """
-        for key in self.Nodes.keys():
-            if string_id in self.Nodes[key]:  # self.Nodes[key] will be a set --> in operator performs very well
+        for key in self.nodes.keys():
+            if string_id in self.nodes[key]:  # self.nodes[key] will be a set --> in operator performs very well
                 return key
         return None
 
     def identify_node(self, node_id, node_type):
-        """Checks whether node_id is found in self.Nodes[node_type].
+        """Checks whether node_id is found in self.nodes[node_type].
 
         This function is more performant than identify_id(), since it already assumes that the node type of the string
         to be identified is known.
@@ -252,9 +252,9 @@ class SurfaceModel:
             node_type (str):    Type of node to be identified (e.g. 'Patient')
 
         Returns:
-            bool: `True` if node_id is found in self.Nodes[node_type], `False` otherwise.
+            bool: `True` if node_id is found in self.nodes[node_type], `False` otherwise.
         """
-        if node_id in self.Nodes[node_type]:
+        if node_id in self.nodes[node_type]:
             return True
         return False
 
@@ -295,7 +295,7 @@ class SurfaceModel:
             return
         risk_codes = [each_risk.result for each_risk in risk_dict.values() if each_risk.result != "nn"]
         self.S_GRAPH.add_node(str(string_id), type='Patient', risk=risk_dict, vre_status='pos' if len(risk_codes) != 0 else 'neg')
-        self.Nodes['Patient'].add(string_id)
+        self.nodes['Patient'].add(string_id)
 
     def new_room_node(self, string_id, building_id=None, ward_id=None, room_id=None, warn_log=False):
         """Add a room node to the network.
@@ -321,7 +321,7 @@ class SurfaceModel:
                           'room_id': 'NULL' if room_id is None else str(room_id), 'type': 'Room'
                           }
         self.S_GRAPH.add_node(str(string_id), **attribute_dict)
-        self.Nodes['Room'].add(str(string_id))
+        self.nodes['Room'].add(str(string_id))
 
     def new_device_node(self, string_id, name, warn_log=False):
         """Add a device node to the network.
@@ -340,7 +340,7 @@ class SurfaceModel:
             self.device_add_warnings += 1
             return
         self.S_GRAPH.add_node(str(string_id), type='Device', name=name)
-        self.Nodes['Device'].add(string_id)
+        self.nodes['Device'].add(string_id)
 
     def new_employee_node(self, string_id, warn_log=False):
         """Add an employee node to the network.
@@ -358,13 +358,13 @@ class SurfaceModel:
             self.employee_add_warnings += 1
             return
         self.S_GRAPH.add_node(str(string_id), type='Employee')
-        self.Nodes['Employee'].add(string_id)
+        self.nodes['Employee'].add(string_id)
 
     def new_edge(self, source_id, source_type, target_id, target_type, att_dict, log_warning=False):
         """Adds a new edge to the network.
 
         The added edge will link source_id of source_type to target_id of target_type. Note that the edge will ONLY be
-        added if both source_id and target_id are found in the self.Nodes attribute dictionary. In addition, all
+        added if both source_id and target_id are found in the self.nodes attribute dictionary. In addition, all
         key-value pairs in att_dict will be added to the newly created edge.
 
         Args:
@@ -968,6 +968,16 @@ class SurfaceModel:
                     node_data_tuple[1]['vre_status'] == 'pos']
 
         return pos_pats
+
+    def get_patients(self):
+
+        all_nodes = self.S_GRAPH.nodes(data=True)  # list of tuples of ('source_id', key, {attr_dict } )
+
+        # return patients in the network
+        pats = [node_data_tuple[0] for node_data_tuple in all_nodes if not pd.isna(node_data_tuple[0]) and node_data_tuple[1]['type'] == 'Patient']
+
+        return pats
+
 
     ################################################################################################################
     # Centrality Functions
