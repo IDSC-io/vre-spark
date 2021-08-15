@@ -47,7 +47,7 @@ class Medication:
         return self.drug_atc.startswith("J01")
 
     @staticmethod
-    def create_drug_map(csv_path, cases, encoding):
+    def create_drug_map(csv_path, cases, encoding, is_verbose=True):
         """Creates a dictionary of ATC codes to human readable drug names.
 
         This function will be called by the HDFS_data_loader.patient_data() function (lines is an iterator object).
@@ -74,7 +74,7 @@ class Medication:
         medications = dict()
         medication_df = pd.read_csv(csv_path, encoding=encoding, parse_dates=["Submission Date"], dtype=str)
         # medication_objects = medication_df.progress_apply(lambda row: Medication(*row.to_list()), axis=1)
-        medication_objects = list(map(lambda row: Medication(*row), tqdm(medication_df.values.tolist())))
+        medication_objects = list(map(lambda row: Medication(*row), tqdm(medication_df.values.tolist(), disable=not is_verbose)))
         del medication_df
         # TODO: This generates just a list of medications for each case, but this might not be what we want.
         for medication in tqdm(medication_objects):

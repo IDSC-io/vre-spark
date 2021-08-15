@@ -28,7 +28,7 @@ class Surgery:
         self.location_surgery_info = location_surgery_info
 
     @staticmethod
-    def add_surgeries_to_case(lines, cases, chops):
+    def add_surgeries_to_case(lines, cases, chops, is_verbose=True):
         """
         Creates Surgery() objects from a csv reader, and performs the following:
         --> Finds the CHOP code in the chops dict (given the chop code and catalog id, which is read from the csv)
@@ -48,7 +48,7 @@ class Surgery:
         nr_surgery_cancelled = 0
         nr_ok = 0
         lines_iters = itertools.tee(lines, 2)
-        for line in tqdm(lines_iters[1], total=sum(1 for _ in lines_iters[0])):
+        for line in tqdm(lines_iters[1], total=sum(1 for _ in lines_iters[0]), disable=is_verbose):
             surgery = Surgery(*line)
             if surgery.cancelled == 'X':  # ignore 'cancelled' surgeries
                 nr_surgery_cancelled += 1

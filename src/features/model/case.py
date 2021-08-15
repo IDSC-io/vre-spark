@@ -170,7 +170,7 @@ class Case:
         return stays
 
     @staticmethod
-    def create_case_map(csv_path, encoding, patients, load_fraction=1.0, load_seed=7):
+    def create_case_map(csv_path, encoding, patients, load_fraction=1.0, load_seed=7, is_verbose=True):
         """
         Read the case csv and create Case objects from the rows. Populate a dict with cases (case_id -> case) that are not 'storniert'. Note that the function goes both ways, i.e. it adds
         Cases to Patients and vice versa. This function will be called by the HDFS_data_loader.patient_data() function. The lines argument corresponds to a csv.reader() instance
@@ -196,7 +196,7 @@ class Case:
         # case_df["Case ID"] = case_df["Case ID"].astype(int)
         # case_df["Patient ID"] = case_df["Patient ID"].astype(int)
         #case_objects = case_df.progress_apply(lambda row: Case(*row.to_list()), axis=1)
-        case_objects = list(map(lambda row: Case(*row), tqdm(case_df.values.tolist())))
+        case_objects = list(map(lambda row: Case(*row), tqdm(case_df.values.tolist(), disable=not is_verbose)))
         del case_df
 
         import_count = 0
@@ -205,7 +205,7 @@ class Case:
         nr_not_inpatient_case = 0
         nr_case_not_active = 0
         cases = dict()
-        for case in tqdm(case_objects):
+        for case in tqdm(case_objects, disable=not is_verbose):
             # TODO: Rewrite to pandas
             # TODO: Hardcoded label, extract to configuration
             # TODO: Look into the consequences of adding closed cases

@@ -49,7 +49,7 @@ class Partner:
         self.referred_cases[case.case_id] = case
 
     @staticmethod
-    def create_partner_map(csv_path, encoding):
+    def create_partner_map(csv_path, encoding, is_verbose=True):
         """
         Creates and returns a map of business partners from a csv reader. This function will be called by the HDFS_data_loader.patient_data() function. The lines argument corresponds to a
         csv.reader() instance which supports the iterator protocol (see documentation for csv.reader in module "csv"). Each iteration over lines will contain a list of the
@@ -65,7 +65,7 @@ class Partner:
         partner_df = pd.read_csv(csv_path, encoding=encoding)
         partner_df["Partner ID"] = partner_df["Partner ID"].astype(int)
         #partner_objects = partner_df.progress_apply(lambda row: Partner(*row.to_list()), axis=1)
-        partner_objects = list(map(lambda row: Partner(*row), tqdm(partner_df.values.tolist())))
+        partner_objects = list(map(lambda row: Partner(*row), tqdm(partner_df.values.tolist(), disable=not is_verbose)))
         del partner_df
         partners = dict()
         for partner in tqdm(partner_objects):
@@ -75,7 +75,7 @@ class Partner:
         return partners
 
     @staticmethod
-    def add_partners_to_cases(csv_path, encoding, cases, partners, load_fraction=1.0, load_seed=7):
+    def add_partners_to_cases(csv_path, encoding, cases, partners, load_fraction=1.0, load_seed=7, is_verbose=True):
         """
         Reads lines from csv reader originating from SAP IS-H table NFPZ, and updates the referring physician (Partner() object) from partners to the corresponding case,
         and also adds the corresponding Case() to Partner() from cases. This function is called by the HDFS_data_loader.patient_data() method.
@@ -101,7 +101,7 @@ class Partner:
         nr_cancelled = 0
         nr_ok = 0
         # TODO: Rewrite loop to pandas
-        for i, row in tqdm(case_partners_df.iterrows(), total=len(case_partners_df)):
+        for i, row in tqdm(case_partners_df.iterrows(), total=len(case_partners_df), disable=not is_verbose):
             if row["EARZT"] == 'U':
                 if row["Cancelled"] != 'X':  # corresponds to the "Cancelled" column ('X' --> cancelled)
                     if cases.get(row["Case ID"], None) is None:

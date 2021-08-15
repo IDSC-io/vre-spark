@@ -20,7 +20,7 @@ class Device:
         self.name = name
 
     @staticmethod
-    def create_device_map(lines):
+    def create_device_map(lines, is_verbose):
         """Loads all devices into a dictionary based on lines in the csv file.
 
         This function will be called by the ``HDFS_data_loader.patient_data()`` function (lines is an iterator object).
@@ -45,14 +45,14 @@ class Device:
         logging.debug("create_device_map")
         devices = dict()
         lines_iters = itertools.tee(lines, 2)
-        for line in tqdm(lines_iters[1], total=sum(1 for _ in lines_iters[0])):
+        for line in tqdm(lines_iters[1], total=sum(1 for _ in lines_iters[0]), disable=not is_verbose):
             device = Device(*line)
             devices[device.id] = device
         logging.info(f"{len(devices)} devices created")
         return devices
 
     @staticmethod
-    def add_device_to_appointment(lines, appointments, devices):
+    def add_device_to_appointment(lines, appointments, devices, is_verbose=True):
         """Adds the device in ``devices`` to the respective appointment in ``appointments``.
 
         This function will be called by the HDFS_data_loader.patient_data() function (lines is an iterator object).
@@ -69,6 +69,7 @@ class Device:
             lines (iterator() object):  csv iterator from which data will be read
             appointments (dict):        Dictionary mapping appointment ids to Appointment() objects
 
+                                        :param is_verbose:
                                         :math:`\\longrightarrow` ``{ '36830543' : Appointment(), ... }``
             devices (dict):             Dictionary mapping  device_ids to Device() objects
 
@@ -76,19 +77,19 @@ class Device:
         """
         logging.debug("add_device_to_appointment")
         nr_appointment_not_found = 0
-        nr_device_not_found = 0
+        nr_device_created = 0
         nr_ok = 0
         lines_iters = itertools.tee(lines, 2)
-        for line in tqdm(lines_iters[1], total=sum(1 for _ in lines_iters[0])):
+        for line in tqdm(lines_iters[1], total=sum(1 for _ in lines_iters[0]), disable=not is_verbose):
             appointment_id = line[0]
             if appointments.get(appointment_id, None) is None:
                 nr_appointment_not_found += 1
                 continue
             device_id = line[1]
             if devices.get(device_id, None) is None:
-                nr_device_not_found += 1
-                continue
+                devices[device_id] = Device(device_id, device_id)
+                nr_device_created += 1
             appointments[appointment_id].add_device(devices[device_id])
             nr_ok += 1
         logging.info(f"{nr_ok} devices linked to appointments, {nr_appointment_not_found} appointments not found, "
-                     f"{nr_device_not_found} devices not found")
+                     f"{nr_device_created} devices created")

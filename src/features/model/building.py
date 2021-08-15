@@ -1,4 +1,5 @@
 import pandas as pd
+from tqdm import tqdm
 import logging
 
 
@@ -41,7 +42,7 @@ class Building:
             self.ids.append((str(id), str(system)))
 
     @staticmethod
-    def create_building_id_map(csv_path, encoding):
+    def create_building_id_map(csv_path, encoding, is_verbose=True):
         """
         Initializes the dictionary mapping room ids to Room() objects based on the provided csv file.
         This function will be called by the HDFS_data_loader.patient_data() function (lines is an iterator object). The underlying table is structured as follows:
@@ -57,7 +58,7 @@ class Building:
         """
         logging.debug("create_room_dict")
         buildings_df = pd.read_csv(csv_path, encoding=encoding, dtype=str, index_col=0)
-        buildings_objects = buildings_df.progress_apply(lambda row: Building(*row.to_list()), axis=1)
+        buildings_objects = list(map(lambda row: Building(*row), tqdm(buildings_df.values.tolist(), disable=not is_verbose)))
         buildings = {}
         for building in buildings_objects:
             buildings[building.ww_building_id] = building

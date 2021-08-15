@@ -57,7 +57,7 @@ class Treatment:
         self.employee = employee
 
     @staticmethod
-    def add_care_entries_to_case(csv_path, encoding, cases, employees, from_range=None, to_range=None):
+    def add_care_entries_to_case(csv_path, encoding, cases, employees, from_range=None, to_range=None, is_verbose=True):
         """Adds the entries from TACS as instances of Care() objects to the respective Case().
 
         This function will be called by the HDFS_data_loader.patient_data() function (lines is an iterator object).
@@ -92,10 +92,10 @@ class Treatment:
             care_df = care_df.loc[care_df['Date of Care'] <= to_range]
 
         # care_objects = care_df.progress_apply(lambda row: Treatment(*row.to_list()), axis=1)
-        care_objects = list(map(lambda row: Treatment(*row), tqdm(care_df.values.tolist())))
+        care_objects = list(map(lambda row: Treatment(*row), tqdm(care_df.values.tolist(), disable=not is_verbose)))
         del care_df
 
-        for care in tqdm(care_objects):
+        for care in tqdm(care_objects, disable=not is_verbose):
         # discard if we don't have the case
             case = cases.get(care.case_id, None)
             if case is None:

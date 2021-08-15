@@ -32,7 +32,7 @@ class ICDCode:
         self.cases.append(case)
 
     @staticmethod
-    def create_icd_code_map(lines):
+    def create_icd_code_map(lines, is_verbose=True):
         """Creates and returns a dictionary of all icd codes.
 
         This function will be called by the HDFS_data_loader.patient_data() function (lines is an iterator object).
@@ -58,7 +58,7 @@ class ICDCode:
         icd_dict = {}
 
         lines_iters = itertools.tee(lines, 2)
-        for line in tqdm(lines_iters[1], total=sum(1 for _ in lines_iters[0])):
+        for line in tqdm(lines_iters[1], total=sum(1 for _ in lines_iters[0]), disable=not is_verbose):
             this_icd = ICDCode(*each_line)
             icd_dict[this_icd.icd_code] = this_icd
         # Write success to log and return dictionary
@@ -66,7 +66,7 @@ class ICDCode:
         return icd_dict
 
     @staticmethod
-    def add_icd_codes_to_case(lines, cases):
+    def add_icd_codes_to_case(lines, cases, is_verbose=True):
         """Adds ICD codes to cases based on the ICD.fall_nummer attribute.
 
         For details on how each line in the lines iterator object is formatted, please refer to the function
@@ -82,7 +82,7 @@ class ICDCode:
         cases_found = 0
         unique_case_ids = []  # list of unique case ids processed
 
-        for each_line in tqdm(lines):
+        for each_line in tqdm(lines, disable=not is_verbose):
             this_icd = ICDCode(*each_line)
             if cases.get(this_icd.case_nr) is not None:  # default value for .get() is None
                 cases.get(this_icd.case_nr).add_icd_code(this_icd)

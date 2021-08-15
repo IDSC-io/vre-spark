@@ -23,12 +23,12 @@ class Room:
         self.campus_id = campus_id
         self.ww_building_id = ww_building_id
         self.room_description = room_description
-        self.room_id = sap_room_id2
+        self.room_id = sap_room_id2 if sap_room_id2 is not None else sap_room_id1
         self.room_type = room_type
-        self.sap_building_abbreviations = [sap_building_abbreviation1, sap_building_abbreviation2]
+        self.sap_building_abbreviations = [i for i in [sap_building_abbreviation1, sap_building_abbreviation2] if i is not None]
         self.department = department
         self.ward_name = ward_name
-        self.sap_room_ids = [sap_room_id1, sap_room_id2]
+        self.sap_room_ids = [i for i in [sap_room_id1, sap_room_id2] if i is not None]
         self.ww_floor_id = ww_floor_id
         self.floor_id = self.ww_building_id + " " + self.ww_floor_id if self.ww_building_id is not None and self.ww_floor_id is not None else None
         self.ww_room_id = ww_room_id
@@ -118,7 +118,7 @@ class Room:
         return overlapping_stays
 
     @staticmethod
-    def create_room_id_map(csv_path, buildings, encoding, load_limit=None):
+    def create_room_id_map(csv_path, buildings, encoding, load_limit=None, is_verbose=True):
         """
         Initializes the dictionary mapping room ids to Room() objects based on the provided csv file.
         This function will be called by the HDFS_data_loader.patient_data() function (lines is an iterator object). The underlying table is structured as follows:
@@ -137,8 +137,8 @@ class Room:
         rooms = dict()
         floors = dict()
         room_df = pd.read_csv(csv_path, encoding=encoding, dtype=str, index_col=0)
-        room_objects = list(map(lambda row: Room(*row), tqdm(room_df.values.tolist())))
-        for room in tqdm(room_objects):
+        room_objects = list(map(lambda row: Room(*row), tqdm(room_df.values.tolist(), disable=not is_verbose)))
+        for room in tqdm(room_objects, disable=not is_verbose):
             building = None
             floor = None
             for room_id in room.sap_room_ids:  # TODO: Solve the multiple room id disaster
@@ -183,7 +183,7 @@ class Room:
         return rooms, buildings, floors
 
     @staticmethod
-    def add_rooms_to_appointment(lines, appointments, rooms):
+    def add_rooms_to_appointment(lines, appointments, rooms, locations, is_verbose):
         """
         Reads room data from the csv file and adds the created Room() to an Appointment() in appointments and vice versa.
         This function will be called by the HDFS_data_loader.patient_data() function (lines is an iterator object). The underlying table is structured as follows:
@@ -195,12 +195,14 @@ class Room:
         :param appointments:    Dictionary mapping appointment ids to Appointment() objects --> { '36830543' : Appointment(), ... }
         :param rooms:           Dictionary mapping room names to a Room() object            --> {'BH N 125' : Room(), ... }
         """
+        # TODO: Appointments do not yet filter for locations
         logging.debug("add_room_to_appointment")
         nr_appointments_not_found = 0
         nr_ok = 0
         nr_rooms_created = 0
+        nr_none_room = 0
         lines_iters = itertools.tee(lines, 2)
-        for line in tqdm(lines_iters[1], total=sum(1 for _ in lines_iters[0])):
+        for line in tqdm(lines_iters[1], total=sum(1 for _ in lines_iters[0]), disable=not is_verbose):
             appointment_id = line[0]
             room_id = line[1]
             appointment_start = line[2]
@@ -209,31 +211,55 @@ class Room:
             if appointments.get(appointment_id, None) is None:
                 nr_appointments_not_found += 1
                 continue
-            # if room_id_map.get(room_id, None) is None:
-            #     nr_rooms_not_found += 1
-            #     continue
-            # name = room_id_map[room_id]
+
+            if room_id is None:
+                print(room_name, "without id")
+                nr_none_room += 1
+
             if rooms.get(room_name, None) is None:
                 new_room = Room(room_description=room_name)
                 new_room.room_id = room_id
-                new_room.add_id(id=room_id, system='SAP')
+                new_room.add_id(id=room_id, system='Appointment')
+                new_room.room_type = "Appointment Room"
                 rooms[room_name] = new_room
                 nr_rooms_created += 1
             rooms[room_name].add_appointment(appointments[appointment_id])
             appointments[appointment_id].add_room(rooms[room_name])
 
+            # keep the earliest start date and the latest end date
             # TODO: Fix date parsing and store start and end for multiple rooms
             if appointment_start != '':
                 try:
-                    appointments[appointment_id].start_datetime = datetime.strptime(appointment_start[:-1], "%Y-%m-%d %H:%M:%S.%f")
+                    start_datetime = datetime.strptime(appointment_start[:-1], "%Y-%m-%d %H:%M:%S.%f")
                 except:
-                    appointments[appointment_id].start_datetime = datetime.strptime(appointment_start, "%Y-%m-%d %H:%M:%S")
+                    start_datetime = datetime.strptime(appointment_start, "%Y-%m-%d %H:%M:%S")
+
+                if appointments[appointment_id].start_datetime > start_datetime:
+                    appointments[appointment_id].start_datetime = start_datetime
 
             if appointment_end != '':
                 try:
-                    appointments[appointment_id].end_datetime = datetime.strptime(appointment_end[:-1], "%Y-%m-%d %H:%M:%S.%f")
+                    end_datetime = datetime.strptime(appointment_end[:-1], "%Y-%m-%d %H:%M:%S.%f")
                 except:
-                    appointments[appointment_id].end_datetime = datetime.strptime(appointment_end, "%Y-%m-%d %H:%M:%S")
+                    end_datetime = datetime.strptime(appointment_end, "%Y-%m-%d %H:%M:%S")
+
+                if appointments[appointment_id].end_datetime < end_datetime:
+                    appointments[appointment_id].end_datetime = end_datetime
 
             nr_ok += 1
-        logging.info(f"{nr_ok} rooms added to appointments, {nr_appointments_not_found} appointments not found, {nr_rooms_created} new rooms created")
+
+        # TODO: Appointment rooms have totally different IDs than patient rooms!
+        # Remove appointments that do not include the prescribed locations
+        # deleted_appointments = set()
+        # for appointment_id, appointment in appointments.items():
+        #     for room in appointment.rooms:
+        #         if not any(location in room.room_id for location in locations):
+        #             deleted_appointments.add(appointment)
+        #
+        # for a in deleted_appointments:
+        #     a.case.appointments.remove(a)
+        #     appointments.remove(a)
+
+        logging.info(f"{nr_ok} rooms added to appointments, {nr_appointments_not_found} appointments not found, {nr_none_room} appointments without room,"
+                     f" {nr_rooms_created} new rooms created")
+                     # f", {len(deleted_appointments)} appointments deleted")

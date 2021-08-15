@@ -94,7 +94,7 @@ class Risk:
         return oe_pflege_dict
 
     @staticmethod
-    def add_annotated_screening_data_to_patients(csv_path, encoding, patient_dict, from_range, to_range):
+    def add_annotated_screening_data_to_patients(csv_path, encoding, patient_dict, from_range, to_range, is_verbose=True):
         """Annotates and adds screening data to all patients in the model.
 
         This function is the core piece for adding VRE screening data to the model. It will read all screenings exported
@@ -169,7 +169,7 @@ class Risk:
         if to_range is not None:
             risk_df = risk_df.loc[risk_df['Record Date'] <= to_range]
 
-        risk_objects = risk_df.progress_apply(lambda row: Risk(*row.to_list()), axis=1)
+        risk_objects = list(map(lambda row: Risk(*row), tqdm(risk_df.values.tolist(), disable=not is_verbose)))
         stay_wards = []
         screening_wards = []
         logging.debug("adding_all_screenings_to_patients")
@@ -177,7 +177,7 @@ class Risk:
         nr_pat_no_relevant_stays_found = 0
         nr_ok = 0
         nr_screenings_positive = 0
-        for risk in tqdm(risk_objects.to_list()):
+        for risk in tqdm(risk_objects, disable=not is_verbose):
             if risk.patient_id not in patient_dict.keys():  # Check whether or not PID exists
                 nr_pat_not_found += 1
                 continue

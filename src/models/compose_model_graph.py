@@ -49,10 +49,11 @@ def compose_model():
     patient_data = loader.prepare_dataset(load_medications=False,
                                           load_icd_codes=False,
                                           load_chop_codes=False,
-                                          load_surgeries=False,
+                                          load_surgeries=True,
                                           load_partners=False,
                                           from_range=start_range,
                                           to_range=end_range,
+                                          load_patients_in_locations=["BH O"],
                                           load_fraction=1.0,  # 0.1,
                                           load_fraction_seed=7)
     #####################################

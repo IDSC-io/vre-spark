@@ -92,7 +92,7 @@ class Chop:
         return self.chop_code_level2
 
     @staticmethod
-    def create_chop_map(lines):
+    def create_chop_map(lines, is_verbose=True):
         """Creates and returns a dict of all chop codes.
 
         The key of a chop code is ``<code>_<catalog>`` - different catalogs exist for different years. This function
@@ -118,7 +118,7 @@ class Chop:
         logging.debug("create_chop_dict")
         chops = dict()
         lines_iters = itertools.tee(lines, 2)
-        for line in tqdm(lines_iters[1], total=sum(1 for _ in lines_iters[0])):
+        for line in tqdm(lines_iters[1], total=sum(1 for _ in lines_iters[0]), disable=not is_verbose):
             chop = Chop(*line)
             chops[chop.chop_code + "_" + chop.chop_sap_catalog_id] = chop
             # based on the schema in the docstring, this would yield "Z62.99.30_16" or "Z62.99.99_10"

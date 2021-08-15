@@ -69,7 +69,7 @@ class Stay:
         return bwart
 
     @staticmethod
-    def add_stays_to_case(csv_path, encoding, cases, rooms, wards, partners, from_range, to_range, load_fraction=1.0, load_seed=7):
+    def add_stays_to_case(csv_path, encoding, cases, rooms, wards, partners, from_range, to_range, locations=None, load_fraction=1.0, load_seed=7, is_verbose=True):
         """
         Reads the stays csv and performs the following:
         --> creates a Stay() object from the read-in line data
@@ -99,15 +99,22 @@ class Stay:
         # TODO: SAP NBEW without Room ID is dropped. Is that correct?
         stay_df = stay_df[~pd.isna(stay_df["SAP Room ID"])]
 
+        # TODO: Why are there so many duplicates in the table? Is this still LA?
+        stay_df = stay_df.drop_duplicates(subset=["Case ID", "SAP Room ID", "Bed ID", "Begin Datetime", "End Datetime"])
+
         if from_range is not None:
             stay_df = stay_df.loc[stay_df['Begin Datetime'] > from_range]
 
         if to_range is not None:
             stay_df = stay_df.loc[stay_df['End Datetime'] <= to_range]
 
+        if locations is not None:
+            # get all stays of cases of which at least one stay is in one of the requested locations
+            location_stays_df = stay_df[stay_df["SAP Room ID"].str.contains('|'.join(locations))]
+            stay_df = stay_df[stay_df["Case ID"].isin(location_stays_df["Case ID"])]
 
         # stay_objects = stay_df.progress_apply(lambda row: Stay(*row.to_list()), axis=1)
-        stay_objects = list(map(lambda row: Stay(*row), tqdm(stay_df.values.tolist())))
+        stay_objects = list(map(lambda row: Stay(*row), tqdm(stay_df.values.tolist(), disable=not is_verbose)))
         del stay_df
         logging.debug("add_stay_to_case")
         nr_not_found = 0
@@ -116,7 +123,7 @@ class Stay:
         nr_wards_updated = 0
         nr_rooms_created = 0
         # TODO: Rewrite parts of loop to pandas checks before making all objects
-        for stay in tqdm(stay_objects):
+        for stay in tqdm(stay_objects, disable=not is_verbose):
                 if cases.get(stay.case_id, None) is not None:
                     cases[stay.case_id].add_stay(stay)
                     stay.add_case(cases[stay.case_id])

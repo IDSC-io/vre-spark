@@ -534,7 +534,7 @@ class Patient:
         return appointments
 
     @staticmethod
-    def create_patient_dict(csv_path, encoding, load_fraction=1.0, load_seed=7):
+    def create_patient_dict(csv_path, encoding, load_fraction=1.0, load_seed=7, is_verbose=True):
         """
         Read the patient csv and create Patient objects from the rows.
         Populate a dict (patient_id -> patient). This function will be called by the HDFS_data_loader.patient_data() function. The lines argument corresponds to a csv.reader() instance
@@ -564,9 +564,9 @@ class Patient:
         # with ThreadPoolExecutor() as executor:
         #     patient_objects = executor.map(create_patient, tqdm(patient_df.iterrows(), total=len(patient_df)))
         #patient_objects = patient_df.progress_apply(lambda row: Patient(*row.to_list()), axis=1)
-        patient_objects = list(map(lambda row: Patient(*row), tqdm(patient_df.values.tolist())))
+        patient_objects = list(map(lambda row: Patient(*row), tqdm(patient_df.values.tolist(), disable=not is_verbose)))
         del patient_df
-        for patient in tqdm(patient_objects):
+        for patient in tqdm(patient_objects, disable=not is_verbose):
             patients[patient.patient_id] = patient
             import_count += 1
 

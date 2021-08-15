@@ -19,7 +19,7 @@ class Employee:
         self.id = id
 
     @staticmethod
-    def create_employee_map(csv_path, encoding, load_fraction=1.0, load_seed=7):
+    def create_employee_map(csv_path, encoding, load_fraction=1.0, load_seed=7, is_verbose=True):
         """Reads the appointment to employee file and creates an Employee().
 
 
@@ -47,18 +47,18 @@ class Employee:
         if load_fraction != 1.0:
             employee_df = employee_df.sample(frac=load_fraction, random_state=load_seed)
 
-        employees_objects = list(map(lambda row: Employee(*row[1:2]), tqdm(employee_df.values.tolist())))
+        employees_objects = list(map(lambda row: Employee(*row[1:2]), tqdm(employee_df.values.tolist(), disable=not is_verbose)))
         del employee_df
 
         employees = dict()
-        for employee in tqdm(employees_objects):
+        for employee in tqdm(employees_objects, disable=not is_verbose):
             employees[employee.id] = employee
 
         logging.info(f"{len(employees)} employees created")
         return employees
 
     @staticmethod
-    def add_employees_to_appointment(lines, appointments, employees):
+    def add_employees_to_appointment(lines, appointments, employees, is_verbose=True):
         """Adds Employee() in employees to an Appointment().
 
         This function will be called by the HDFS_data_loader.patient_data() function (lines is an iterator object).
@@ -79,7 +79,7 @@ class Employee:
         nr_appointment_not_found = 0
         nr_ok = 0
         lines_iters = itertools.tee(lines, 2)
-        for line in tqdm(lines_iters[1], total=sum(1 for _ in lines_iters[0])):
+        for line in tqdm(lines_iters[1], total=sum(1 for _ in lines_iters[0]), disable=not is_verbose):
             employee_id = line[1]
             appointment_id = line[0]
             if appointments.get(appointment_id, None) is None:

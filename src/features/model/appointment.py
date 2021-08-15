@@ -4,12 +4,12 @@
 -----
 """
 
-import logging
 import itertools
-from datetime import datetime, timedelta
+import logging
+from datetime import timedelta
 
-from tqdm import tqdm
 import pandas as pd
+from tqdm import tqdm
 
 
 class Appointment:
@@ -25,6 +25,8 @@ class Appointment:
         self.date = date
         self.start_datetime = None
         self.end_datetime = None
+
+        self.case = None
 
         try:
             self.duration_in_mins = int(float(duration_in_mins))
@@ -63,7 +65,7 @@ class Appointment:
         self.employees.append(employee)
 
     @staticmethod
-    def create_appointment_map(csv_path, encoding, from_range=None, to_range=None):
+    def create_appointment_map(csv_path, encoding, from_range=None, to_range=None, is_verbose=True):
         """Loads the appointments from a csv reader instance.
 
         This function will be called by the ``HDFS_data_loader.patient_data()`` function (lines is an iterator object).
@@ -98,9 +100,9 @@ class Appointment:
             appointment_df = appointment_df.loc[appointment_df['Date'] <= to_range]
 
         # appointment_objects = appointment_df.progress_apply(lambda row: Appointment(*row.to_list()), axis=1)
-        appointment_objects = list(map(lambda row: Appointment(*row), tqdm(appointment_df.values.tolist())))
+        appointment_objects = list(map(lambda row: Appointment(*row), tqdm(appointment_df.values.tolist(), disable=not is_verbose)))
         del appointment_df
-        for appointment in tqdm(appointment_objects):
+        for appointment in tqdm(appointment_objects, disable=not is_verbose):
             appointments[appointment.id] = appointment
             nr_ok += 1
 
@@ -108,7 +110,7 @@ class Appointment:
         return appointments
 
     @staticmethod
-    def add_appointment_to_case(lines, cases, appointments):
+    def add_appointment_to_case(lines, cases, appointments, is_verbose=True):
         """Adds Appointment() objects to the SAP cases based on lines read from a csv file.
 
         This function will be called by the ``HDFS_data_loader.patient_data()`` function (lines is an iterator object).
@@ -136,7 +138,7 @@ class Appointment:
         nr_case_not_found = 0
         nr_ok = 0
         lines_iters = itertools.tee(lines, 2)
-        for line in tqdm(lines_iters[1], total=sum(1 for _ in lines_iters[0])):
+        for line in tqdm(lines_iters[1], total=sum(1 for _ in lines_iters[0]), disable=not is_verbose):
             appointment_id = line[0]
             case_id = line[2]
             if appointments.get(appointment_id, None) is None:
@@ -146,6 +148,13 @@ class Appointment:
                 nr_case_not_found += 1
                 continue
             cases[case_id].add_appointment(appointments[appointment_id])
+            appointments[appointment_id].case = cases[case_id]
             nr_ok += 1
+
+        deleted_appointments = [appointment_id for appointment_id, appointment in appointments.items() if appointment.case is None]
+
+        for a in deleted_appointments:
+            appointments.pop(a)
+
         logging.info(f"{nr_ok} appointments linked to cases, {nr_case_not_found} cases not found, "
-                     f"{nr_appointment_not_found} appointments not found")
+                     f"{nr_appointment_not_found} appointments not found, {len(deleted_appointments)} appointments deleted without case")
