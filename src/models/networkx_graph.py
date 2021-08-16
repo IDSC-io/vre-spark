@@ -294,10 +294,16 @@ class SurfaceModel:
             self.patient_add_warnings += 1
             return
         risk_codes = [each_risk.result for each_risk in risk_dict.values() if each_risk.result != "nn"]
-        self.S_GRAPH.add_node(str(string_id), type='Patient', risk=risk_dict, vre_status='pos' if len(risk_codes) != 0 else 'neg')
+        infection_date = datetime.datetime.max
+        for date, risk in risk_dict.items():
+            if risk.result != "nn":
+                infection_date = date
+                break
+
+        self.S_GRAPH.add_node(str(string_id), type='Patient', risk=risk_dict, infection_date=infection_date, vre_status='pos' if len(risk_codes) != 0 else 'neg')
         self.nodes['Patient'].add(string_id)
 
-    def new_room_node(self, string_id, building_id=None, ward_id=None, room_id=None, warn_log=False):
+    def new_room_node(self, string_id, building_id=None, ward_id=None, room_id=None, room_description=None, warn_log=False):
         """Add a room node to the network.
 
         Automatically sets the 'type' attribute to "Room" and ward to the "ward" attribute, and sets room_id to either
@@ -318,7 +324,9 @@ class SurfaceModel:
             return
         attribute_dict = {'building_id': 'NULL' if building_id is None else str(building_id),
                           'ward': 'NULL' if ward_id is None else str(ward_id),
-                          'room_id': 'NULL' if room_id is None else str(room_id), 'type': 'Room'
+                          'room_id': 'NULL' if room_id is None else str(room_id),
+                          'room_description': 'NULL' if room_description is None else str(room_description),
+                          'type': 'Room'
                           }
         self.S_GRAPH.add_node(str(string_id), **attribute_dict)
         self.nodes['Room'].add(str(string_id))
@@ -474,7 +482,7 @@ class SurfaceModel:
         # as --> { 'node_id' : {'newattr' : 'somevalue'} }
         nx.set_node_attributes(self.S_GRAPH, attrs)
 
-    def add_edge_infection(self, infection_distance=1):
+    def add_edge_infection(self, infection_distance=1, forward_in_time=False, colonialization_timedelta=datetime.timedelta(days=0)):
         """Sets "infected" attribute to all edges.
 
         This function will iterate over all edges in the network and set an additional attribute ``infected``, which
@@ -482,55 +490,63 @@ class SurfaceModel:
         ``pos``. For all other edges, this attribute will be set to ``False``.
         """
         logging.info(f"##################################################################################")
-        logging.info('Adding infection data to network edges...')
+        logging.info('Propagate infection through interaction edges...')
         error_count = 0
+        pos_devs, pos_emps, pos_rooms, pos_pats = set(), set(), set(), set()
+
         for _ in tqdm(range(infection_distance), desc="Infection distance", position=0):
-            total_count = 0
-            neg_infect_count = 0
-            pos_infect_count = 0
-            pos_devs = set()
-            pos_emps = set()
-            pos_rooms = set()
-            pos_pats = set()
-            nodes = []
+            neg_edges_count = 0
+            pos_edges_count = 0
+            total_edges_count = 0
+            nodes_to_infect = []
             for each_edge in tqdm(self.S_GRAPH.edges(data=True, keys=True), desc="Edge", position=1):
-                # try:
-                if self.S_GRAPH.nodes[each_edge[0]].get('vre_status', 'neg') == 'neg' \
-                        and self.S_GRAPH.nodes[each_edge[1]].get('vre_status', 'neg') == 'neg' \
-                        and not self.S_GRAPH.nodes[each_edge[0]].get('infected', False) \
-                        and not self.S_GRAPH.nodes[each_edge[1]].get('infected', False):
-                    self.update_edge_attributes(edge_tuple=(each_edge[0], each_edge[1], each_edge[2]),
-                                                attribute_dict={'infected': False})
-                    neg_infect_count += 1
-                else:
-                    self.update_edge_attributes(edge_tuple=(each_edge[0], each_edge[1], each_edge[2]),
-                                                attribute_dict={'infected': True})
+                try:
+                    node_0_negative = self.S_GRAPH.nodes[each_edge[0]].get('vre_status', 'neg') == 'neg' and not self.S_GRAPH.nodes[each_edge[0]].get('infected', False)
+                    node_1_negative = self.S_GRAPH.nodes[each_edge[1]].get('vre_status', 'neg') == 'neg' and not self.S_GRAPH.nodes[each_edge[1]].get('infected', False)
+                    # infect edges based on node state (neither nodes of edge is positive or infected, then the edge is not infected)
+                    if node_0_negative and node_1_negative:
+                        self.update_edge_attributes(edge_tuple=(each_edge[0], each_edge[1], each_edge[2]), attribute_dict={'infected': False})
+                        neg_edges_count += 1
+                    else:
+                        if forward_in_time:
+                            # get interaction end datetime
+                            edge_to = each_edge[3]["to"]
 
-                    for e in [0, 1]:
-                        if self.S_GRAPH.nodes[each_edge[e]].get('vre_status', 'neg') == 'neg' \
-                                and self.S_GRAPH.nodes[each_edge[e]]["type"] == "Patient":  # is any of these nodes a negative patient?
-                            pos_edges = 0
-                            neg_edges = 0
-                            for eval_edge in self.S_GRAPH.edges(each_edge[e], data=True, keys=True):  # how many infected edges does this patient have?
-                                if eval_edge[3].get("infected", False):
-                                    pos_edges += 1
-                                else:
-                                    neg_edges += 1
-                            # print(each_edge[e], pos_edges, neg_edges)
+                            # get infection dates of nodes, datetime.max means never infected
+                            node_0_infection_date = self.S_GRAPH.nodes[each_edge[0]].get('infection_date', datetime.datetime.max)
+                            node_1_infection_date = self.S_GRAPH.nodes[each_edge[1]].get('infection_date', datetime.datetime.max)
 
-                    nodes.append(each_edge[0])
-                    nodes.append(each_edge[1])
+                            # calculate the time of infection by assuming a colonialization prior to the official measurement
+                            node_0_infection_date -= colonialization_timedelta
+                            node_1_infection_date -= colonialization_timedelta
+                            # if node 0 was infected before the interaction ended, infect node 1 and vice versa
+                            if node_0_infection_date < edge_to:
+                                nodes_to_infect.append(each_edge[1])
+                                if node_1_infection_date > edge_to:  # add infection date if it is earlier than the prior infection date
+                                    self.S_GRAPH.nodes[each_edge[1]]["infection date"] = edge_to
+                                    # TODO: In principle, infection date could be set to edge_from here, but this could cause larger jumps back in time depending on length
 
-                    pos_infect_count += 1
-                # except Exception as e:  # e is currently not used
-                #     print(e)
-                #     self.update_edge_attributes(edge_tuple=(each_edge[0], each_edge[1], each_edge[2]),
-                #                                 attribute_dict={'infected': False})
-                #     error_count += 1
-                total_count += 1
+                            if node_1_infection_date < edge_to:
+                                nodes_to_infect.append(each_edge[0])
+                                if node_1_infection_date > edge_to:  # add infection date if it is earlier than the prior infection date
+                                    self.S_GRAPH.nodes[each_edge[0]]["infection date"] = edge_to
+                        else:
+                            nodes_to_infect.append(each_edge[0])
+                            nodes_to_infect.append(each_edge[1])
 
-            # updating nodes in the loop has runaway effects, transferring infection further that infection_distance
-            for node_id in nodes:
+                        self.update_edge_attributes(edge_tuple=(each_edge[0], each_edge[1], each_edge[2]), attribute_dict={'infected': True})
+
+                        pos_edges_count += 1
+                except Exception as e:  # e is currently not used
+                    print(e)
+                    error_count += 1
+                total_edges_count += 1
+
+            # update infected nodes (in the loop, this has runaway effects, transferring infection further that infection_distance)
+            for node_id in nodes_to_infect:
+                self.S_GRAPH.nodes[node_id]["infected"] = True
+
+                # update statistics
                 if self.S_GRAPH.nodes[node_id]["type"] == "Device":
                     pos_devs.add(node_id)
                 elif self.S_GRAPH.nodes[node_id]["type"] == "Employee":
@@ -540,11 +556,9 @@ class SurfaceModel:
                 elif self.S_GRAPH.nodes[node_id]["type"] == "Patient":
                     pos_pats.add(node_id)
 
-                self.S_GRAPH.nodes[node_id]["infected"] = True
-
             logging.warning(f'Encountered {error_count} errors during the identification of infected patient nodes')
-            logging.info(f"Infected network edges ({pos_infect_count} infected, "
-                         f"{neg_infect_count} uninfected edges of total {total_count} edges) "
+            logging.info(f"Infected network edges ({pos_edges_count} infected, "
+                         f"{neg_edges_count} uninfected edges of total {total_edges_count} edges) "
                          f"infecting {len(pos_pats)} patients, {len(pos_rooms)} rooms, {len(pos_emps)} employees, {len(pos_devs)} devices (total {len(pos_pats) + len(pos_rooms) + len(pos_emps) + len(pos_devs)}).")
         self.edges_infected = True
 
@@ -836,8 +850,9 @@ class SurfaceModel:
                         except:
                             building_id = None
 
-                        self.new_room_node(stay.room_id, building_id=building_id, ward_id=ward_name, room_id=stay.room.get_ids()
-                        if stay.room is not None else None)
+                        self.new_room_node(stay.room_id, building_id=building_id, ward_id=ward_name,
+                                           room_id=stay.room.get_ids() if stay.room is not None else None,
+                                           room_description=stay.room.room_description if stay.room is not None else None)
                         # .get_ids() will return a '@'-delimited list of [room_id]_[system] entries, or None
                         nbr_room_id += 1
                     # Add Patient-Room edge if it is within scope of the current snapshot
@@ -886,7 +901,8 @@ class SurfaceModel:
                             building_id = None
 
                         self.new_room_node(string_id=each_room.room_id, building_id=building_id, ward_id=each_room.ward_name ,
-                                           room_id=each_room.get_ids())
+                                           room_id=each_room.get_ids(),
+                                           room_description=each_room.room_description if each_room is not None else None)
                         room_list.append(each_room.room_id)
                     ####################################
                     # --> ADD EDGES based on specifications in self.edge_types
@@ -1185,3 +1201,29 @@ class SurfaceModel:
         logging.info(f"Successfully calculated betweenness centralities for {len(node_betweenness_rows)} nodes")
 
         return node_betweenness_df
+
+    def calculate_pagerank_centrality(self):
+        """
+        Calculate pagerank on the graph to find central nodes and use the initially known positive patients as personalization.
+        :return:
+        """
+        all_nodes = self.S_GRAPH.nodes(data=True)  # list of tuples of ('source_id', key, {attr_dict } )
+
+        # get positive patients in the network
+        pos_pats = {node_data_tuple[0]: 1 if (not pd.isna(node_data_tuple[0]) and node_data_tuple[1]['type'] == 'Patient' and node_data_tuple[1]['vre_status'] == 'pos') else 0 for node_data_tuple in all_nodes}
+
+        pr = nx.pagerank_numpy(self.S_GRAPH, personalization=pos_pats)
+        pagerank_rows = []
+        for each_node in tqdm(self.S_GRAPH.nodes(data=True)):
+            # each_node will be a tuple of length 2 --> ( 'node_id', {'att_1' : 'att_value1', ... } )
+
+            if pd.isna(each_node[0]):
+                continue
+
+            risk_status = each_node[1]["vre_status"] if "vre_status" in each_node[1] else 'neg'
+            pagerank_rows.append([each_node[0], each_node[1]['type'], risk_status, pr[each_node[0]]])
+
+        patient_degree_df = pd.DataFrame.from_records(pagerank_rows)
+        patient_degree_df.columns = ["Node ID", "Node Type", "Risk Status", "PageRank"]
+        patient_degree_df.sort_values(by="PageRank", ascending=False, inplace=True)
+        logging.info(f"Successfully calculated patient degree ratios for {len(pagerank_rows)} nodes.")

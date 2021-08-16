@@ -70,7 +70,7 @@ def compose_model():
     surface_graph.add_network_data(patient_dict=patient_data, case_subset='relevant_case')
     surface_graph.remove_isolated_nodes()
     surface_graph.inspect_network()
-    surface_graph.add_edge_infection(infection_distance=2)
+    surface_graph.add_edge_infection(infection_distance=2, forward_in_time=True)
 
     patient_data = None  # free up memory before graph processing!
 
@@ -82,13 +82,23 @@ def compose_model():
 
     pathlib.Path("./data/processed/metrics").mkdir(parents=True, exist_ok=True)
 
+    print("### Infection Degree")
     infection_degree_df = surface_graph.calculate_infection_degree()
     print("Top 50 across all nodes")
     print(infection_degree_df.head(50))
 
-    print("Top 50 of patients")
-    print(infection_degree_df[infection_degree_df["Node Type"] == "Patient"].head(50))
+    print("Top 50 of negative patients")
+    print(infection_degree_df[(infection_degree_df["Node Type"] == "Patient") & (infection_degree_df["Risk Status"] == "neg")].head(50))
     infection_degree_df.to_csv(f"./data/processed/metrics/{now_str}_infection_degree.csv", index=False)
+
+    print("### Personalized PageRank")
+    pagerank_df = surface_graph.calculate_pagerank_centrality()
+    print("Top 50 across all nodes")
+    print(pagerank_df.head(50))
+
+    print("Top 50 of negative patients")
+    print(pagerank_df[(infection_degree_df["Node Type"] == "Patient") & (infection_degree_df["Risk Status"] == "neg")].head(50))
+    pagerank_df.to_csv(f"./data/processed/metrics/{now_str}_pagerank_centrality.csv", index=False)
 
     # TODO: Reenable node betweenness statistics. Deactivated as it uses a lot of resources!
     # node_betweenness_df = surface_graph.calculate_node_betweenness()
