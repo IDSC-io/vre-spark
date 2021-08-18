@@ -100,11 +100,15 @@ def compose_model():
     print(pagerank_df[(infection_degree_df["Node Type"] == "Patient") & (infection_degree_df["Risk Status"] == "neg")].head(50))
     pagerank_df.to_csv(f"./data/processed/metrics/{now_str}_pagerank_centrality.csv", index=False)
 
-    # TODO: Reenable node betweenness statistics. Deactivated as it uses a lot of resources!
-    # node_betweenness_df = surface_graph.calculate_node_betweenness()
-    # print(node_betweenness_df.head(50))
-    # node_betweenness_df.to_csv(f"./data/processed/metrics/{now_str}_node_betweenness.csv", index=False)
-    #####################################
+    surface_graph.update_shortest_path_statistics(focus_nodes=surface_graph.get_positive_patients())
+    node_betweenness_df = surface_graph.calculate_node_betweenness()
+    print(node_betweenness_df.head(50))
+    node_betweenness_df.to_csv(f"./data/processed/metrics/{now_str}_node_betweenness.csv", index=False)
+
+    subset_betweenness_df = surface_graph.calculate_subset_betweenness()
+    print(subset_betweenness_df.head(50))
+    subset_betweenness_df.to_csv(f"./data/processed/metrics/{now_str}_subset_betweenness.csv", index=False)
+    ####################################
 
     logging.info("Data processed successfully!")
 

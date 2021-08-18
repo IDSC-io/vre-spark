@@ -570,7 +570,7 @@ class SurfaceModel:
                          f"infecting {len(pos_pats)} patients, {len(pos_rooms)} rooms, {len(pos_emps)} employees, {len(pos_devs)} devices (total {len(pos_pats) + len(pos_rooms) + len(pos_emps) + len(pos_devs)}).")
         self.edges_infected = True
 
-    def update_shortest_path_statistics(self, focus_nodes=None, approximate=False, max_path_length=None):
+    def update_shortest_path_statistics(self, focus_nodes=None, max_path_length=None):
         """Prerequisite function for calculating betweenness centrality.
 
         Adds new attributes to all nodes in focus_nodes, where each attribute is a pair of nodes (sorted alphabetically)
@@ -602,52 +602,30 @@ class SurfaceModel:
         logging.info("Update betweenness statistics...")
         target_nodes = focus_nodes if focus_nodes is not None else self.S_GRAPH.nodes
         node_combinations = list(itertools.combinations(target_nodes, 2))
-        # Returns a list of tuples containing all unique pairs of nodes in considered_nodes
+        # Returns a list of tuples containing all unique pairs of nodes in target_nodes
 
-        logging.info(f'--> Adding shortest path statistics considering {len(target_nodes)} nodes yielding '
-                     f'{len(node_combinations)} combinations.')
-        logging.info(f"Approximate set to {approximate}, maximum path length set to {max_path_length}")
+        logging.info(f'--> Adding shortest path statistics considering {len(target_nodes)} nodes yielding {len(node_combinations)} combinations.')
+        logging.info(f"Maximum path length set to {max_path_length}")
         for count, combo_tuple in enumerate(tqdm(node_combinations, total=len(node_combinations))):
-            if count % 100 == 0:
-                logging.info(f" <> Processed {count} combinations")
             if nx.has_path(self.S_GRAPH, combo_tuple[0], combo_tuple[1]) is False:
                 continue  # indicates a node pair in disconnected network parts
             # measure = datetime.datetime.now()
-            if approximate is False:  # This will write required prerequisites to the node files in self.data_dir
-                if self.node_files_written is False:
-                    raise self.NodeBetweennessException('Missing a required call to self.write_node_files() !')
-                all_shortest_paths = list(nx.all_shortest_paths(self.S_GRAPH, source=combo_tuple[0],
-                                                                target=combo_tuple[1]))
-                # Restay the first and last node (i.e. source and target) of all shortest paths
-                trim_short_paths = [path_list[1:(len(path_list) - 1)] for path_list in all_shortest_paths]
-                involved_nodes = [node for sublist in trim_short_paths for node in sublist]
-                node_counts = Counter(involved_nodes)
-                for each_key in node_counts:
-                    json_filepath = os.path.join(self.data_dir, self.parse_filename(each_key) + '.json')
-                    node_dict = self.load_from_json(path_to_file=json_filepath)  # Returns type dictionary
-                    if 'BW-Stats' not in node_dict.keys():
-                        node_dict['BW-Stats'] = [(node_counts[each_key], len(all_shortest_paths))]  # -> list of tuples
-                    else:
-                        node_dict['BW-Stats'].append((node_counts[each_key], len(all_shortest_paths)))
-                    # Save node_dict back to file
-                    self.save_to_json(path_to_file=json_filepath, saved_object=node_dict)
-            else:
-                shortest_pair_path = nx.shortest_path(self.S_GRAPH, source=combo_tuple[0], target=combo_tuple[1])
-                if max_path_length is not None and len(shortest_pair_path) > max_path_length:
-                    continue  # indicates a path too long to be considered relevant for transmission
-                # If shortest paths are "short enough", calculate the exact measure
-                all_shortest_paths = list(nx.all_shortest_paths(self.S_GRAPH, source=combo_tuple[0],
-                                                                target=combo_tuple[1]))
-                # Restay the first and last node (i.e. source and target) of all shortest paths
-                trim_short_paths = [path_list[1:(len(path_list) - 1)] for path_list in all_shortest_paths]
-                involved_nodes = [node for sublist in trim_short_paths for node in sublist]
-                node_counts = Counter(involved_nodes)
-                sorted_pair = sorted([combo_tuple[0], combo_tuple[1]])
-                update_attr_dict = {each_key: {'SP-' + sorted_pair[0] + '-' + sorted_pair[1]: (node_counts[each_key],
-                                                                                               len(all_shortest_paths))}
-                                    for each_key in node_counts if each_key not in sorted_pair}
-                # Then update node attributes
-                nx.set_node_attributes(self.S_GRAPH, update_attr_dict)
+            shortest_pair_path = nx.shortest_path(self.S_GRAPH, source=combo_tuple[0], target=combo_tuple[1])
+            if max_path_length is not None and len(shortest_pair_path) > max_path_length:
+                continue  # indicates a path too long to be considered relevant for transmission
+            # If shortest paths are "short enough", calculate the exact measure
+            all_shortest_paths = list(nx.all_shortest_paths(self.S_GRAPH, source=combo_tuple[0],
+                                                            target=combo_tuple[1]))
+            # Remove the first and last node (i.e. source and target) of all shortest paths
+            trim_short_paths = [path_list[1:(len(path_list) - 1)] for path_list in all_shortest_paths]
+            involved_nodes = [node for sublist in trim_short_paths for node in sublist]
+            node_counts = Counter(involved_nodes)
+            sorted_pair = sorted([combo_tuple[0], combo_tuple[1]])
+            update_attr_dict = {each_key: {'SP-' + sorted_pair[0] + '-' + sorted_pair[1]: (node_counts[each_key],
+                                                                                           len(all_shortest_paths))}
+                                for each_key in node_counts if each_key not in sorted_pair}
+            # Then update node attributes
+            nx.set_node_attributes(self.S_GRAPH, update_attr_dict)
         # Write it all to log
         logging.info(f"Successfully added betweenness statistics to the network !")
         # Adjust the self.shortest_path_stats
@@ -1191,24 +1169,54 @@ class SurfaceModel:
         # self.update_shortest_path_statistics()
         node_betweenness_rows = []
 
-        for node_tuple in tqdm(self.S_GRAPH.nodes(data=True)):
+        for each_node in tqdm(self.S_GRAPH.nodes(data=True)):
             # Returns tuples of length 2 --> (node_id, attribute_dict)
-            write_string = [node_tuple[0], self.identify_id(node_tuple[0])]
-            target_keys = [each_key for each_key in node_tuple[1].keys() if each_key.startswith('SP-')]
-            betweenness_score = sum([node_tuple[1][each_key][0] / node_tuple[1][each_key][1]
-                                     for each_key in target_keys])
-            write_string.append(betweenness_score)
+            risk_status = each_node[1]["vre_status"] if "vre_status" in each_node[1] else 'neg'  # get status of node
+            target_keys = [each_key for each_key in each_node[1].keys() if each_key.startswith('SP-')]
+            betweenness_score = sum([each_node[1][each_key][0] / each_node[1][each_key][1] for each_key in target_keys])
+            write_string = [each_node[0], each_node[1]['type'], risk_status, betweenness_score]
 
             node_betweenness_rows.append(write_string)
 
         node_betweenness_df = pd.DataFrame.from_records(node_betweenness_rows)
-        node_betweenness_df.columns = ['Node ID', 'Node Type', 'Betweenness Score']
-        node_betweenness_df.sort_values(by="Betweenness Score", ascending=False, inplace=True)
+        node_betweenness_df.columns = ['Node ID', 'Node Type', 'Risk Status', 'Centrality']
+        node_betweenness_df.sort_values(by="Centrality", ascending=False, inplace=True)
 
         # Write to log
         logging.info(f"Successfully calculated betweenness centralities for {len(node_betweenness_rows)} nodes")
 
         return node_betweenness_df
+
+    def calculate_subset_betweenness(self):
+        """
+        Calculate subset betweenness on the graph to find central nodes and use the initially known positive patients as personalization.
+        :return:
+        """
+        all_nodes = self.S_GRAPH.nodes(data=True)  # list of tuples of ('source_id', key, {attr_dict } )
+
+        # get positive patients in the network
+        pos_pats = {node_data_tuple[0]: 1 if (not pd.isna(node_data_tuple[0]) and node_data_tuple[1]['type'] == 'Patient' and node_data_tuple[1]['vre_status'] == 'pos') else 0 for node_data_tuple in all_nodes}
+
+        c = nx.betweenness_centrality_subset(self.S_GRAPH,
+                                              sources=self.get_positive_patients(),
+                                              targets=self.get_patients())
+        betweenness_rows = []
+        for each_node in tqdm(self.S_GRAPH.nodes(data=True)):
+            # each_node will be a tuple of length 2 --> ( 'node_id', {'att_1' : 'att_value1', ... } )
+
+            if pd.isna(each_node[0]):
+                continue
+
+            risk_status = each_node[1]["vre_status"] if "vre_status" in each_node[1] else 'neg'
+            betweenness_rows.append([each_node[0], each_node[1]['type'], risk_status, c[each_node[0]]])
+
+        betweenness_df = pd.DataFrame.from_records(betweenness_rows)
+        betweenness_df.columns = ["Node ID", "Node Type", "Risk Status", "Centrality"]
+        betweenness_df.sort_values(by="Centrality", ascending=False, inplace=True)
+
+        logging.info(f"Successfully calculated subset betweenness centrality for {len(betweenness_rows)} nodes.")
+
+        return betweenness_df
 
     def calculate_pagerank_centrality(self):
         """
@@ -1232,8 +1240,8 @@ class SurfaceModel:
             pagerank_rows.append([each_node[0], each_node[1]['type'], risk_status, pr[each_node[0]]])
 
         pagerank_df = pd.DataFrame.from_records(pagerank_rows)
-        pagerank_df.columns = ["Node ID", "Node Type", "Risk Status", "PageRank"]
-        pagerank_df.sort_values(by="PageRank", ascending=False, inplace=True)
+        pagerank_df.columns = ["Node ID", "Node Type", "Risk Status", "Centrality"]
+        pagerank_df.sort_values(by="Centrality", ascending=False, inplace=True)
 
         logging.info(f"Successfully calculated pagerank centrality for {len(pagerank_rows)} nodes.")
 
