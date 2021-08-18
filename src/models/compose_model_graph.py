@@ -18,7 +18,7 @@ sys.path.append("../..")
 
 import logging
 
-from datetime import datetime
+from datetime import datetime, timedelta
 import pathlib
 
 import click
@@ -70,7 +70,7 @@ def compose_model():
     surface_graph.add_network_data(patient_dict=patient_data, case_subset='relevant_case')
     surface_graph.remove_isolated_nodes()
     surface_graph.inspect_network()
-    surface_graph.add_edge_infection(infection_distance=2, forward_in_time=True)
+    surface_graph.add_edge_infection(infection_distance=2, forward_in_time=True, is_verbose=True)
 
     patient_data = None  # free up memory before graph processing!
 
