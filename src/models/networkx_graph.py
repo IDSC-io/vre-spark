@@ -133,7 +133,7 @@ class SurfaceModel:
 
     """
 
-    def __init__(self, data_dir='.', edge_types=None):
+    def __init__(self, edge_types=None):
         """Initiates the graph in networkx (see class docstring for details).
 
         Args:
@@ -162,8 +162,6 @@ class SurfaceModel:
         self.betweenness_centrality = None
         # Changed to a dictionary mapping nodes to betweenness centrality scores once the
         # self.export_node_betweenness() function is called
-
-        self.data_dir = data_dir
 
         self.shortest_path_stats = False
         # indicates whether shortest path statistics have been added to nodes via update_shortest_path_statistics()
