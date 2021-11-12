@@ -225,3 +225,11 @@ class Case:
 
         logging.info(f"{nr_ok} cases ok, {nr_not_found} patients not found, {nr_case_not_active} cases not active")
         return cases
+
+
+    def __repr__(self):
+        return str(dict((key, value) for key, value in self.__dict__.items()
+                if not callable(value) and not key.startswith('__')))
+
+    def __str__(self):
+        return self.__repr__()

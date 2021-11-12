@@ -92,3 +92,10 @@ class ICDCode:
                 cases_not_found += 1
         logging.info(f'Added {cases_found} ICD codes to {len(set(unique_case_ids))} relevant cases,'
                      f'{cases_not_found} cases not found')
+
+    def __repr__(self):
+        return str(dict((key, value) for key, value in self.__dict__.items()
+                    if not callable(value) and not key.startswith('__')))
+
+    def __str__(self):
+        return self.__repr__()

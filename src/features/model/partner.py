@@ -120,3 +120,10 @@ class Partner:
                 nr_not_physician += 1
 
         logging.info(f"{nr_ok} partners ok, {nr_cases_not_found} cases not found, {nr_partners_not_found} partners not found, {nr_not_physician} not physicians, {nr_cancelled} cancelled cases")
+
+    def __repr__(self):
+        return str(dict((key, value) for key, value in self.__dict__.items()
+                    if not callable(value) and not key.startswith('__')))
+
+    def __str__(self):
+        return self.__repr__()

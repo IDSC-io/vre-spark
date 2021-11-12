@@ -17,3 +17,10 @@ class Ward:
             if e_dt >= start_dt and m.from_datetime <= end_dt:
                 overlapping_stays.append(m)
         return overlapping_stays
+
+    def __repr__(self):
+        return str(dict((key, value) for key, value in self.__dict__.items()
+                if not callable(value) and not key.startswith('__')))
+
+    def __str__(self):
+        return self.__repr__()

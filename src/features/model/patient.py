@@ -682,3 +682,9 @@ class Patient:
     def get_patients_by_ids(all_patients: dict, patient_ids):
         return {patient_id: all_patients[patient_id] for patient_id in tqdm(patient_ids) if patient_id in all_patients}
 
+    def __repr__(self):
+        return str(dict((key, value) for key, value in self.__dict__.items()
+                    if not callable(value) and not key.startswith('__')))
+
+    def __str__(self):
+        return self.__repr__()

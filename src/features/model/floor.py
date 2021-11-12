@@ -15,3 +15,10 @@ class Floor:
         self.ww_floor_id = ww_floor_id
         self.floor_id = self.ww_building_id + " " + self.ww_floor_id if self.ww_building_id is not None and self.ww_floor_id is not None else None
         self.rooms = dict()
+
+    def __repr__(self):
+        return str(dict((key, value) for key, value in self.__dict__.items()
+                    if not callable(value) and not key.startswith('__')))
+
+    def __str__(self):
+        return self.__repr__()
