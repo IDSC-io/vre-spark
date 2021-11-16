@@ -166,24 +166,47 @@ class DataLoader:
                         is_verbose=True):
         """Prepares dataset based on extracted data.
 
-        If self.hdfs_pipe is ``True``, this will use the :meth:`get_hdfs_pipe()` method. Otherwise, the
-        :meth:`get_csv_file()` method is used.
-
         Args:
             load_partners (bool):   Whether or not to load partners (defaults to ``True``).
             load_medications (bool) Whether to not to load medications (defaults to ``True``).
             risk_only (bool):       Whether or not to use only risk data (defaults to ``False``).
 
+                    :param load_patients: load patients
+                    :param load_risks: load patient risk node attribute
+                    :param load_medications: load patient medications
+                    :param load_icd_codes: load ICD-10 code diagnoses
+                    :param load_cases: load cases of patients
+                    :param load_partners: load medical partners of medical process
+                    :param load_stays: load statys, which relate patients to rooms
+                    :param load_appointments: load appointments, which relate patients, rooms, devices and employees
+                    :param load_care_data:  load treatments, which relate patients and employees
+                    :param load_surgeries: load surgeries
+                    :param load_chop_codes: load chop-codes
+                    :param load_employees: load employees
+                    :param load_devices: load devices
+                    :param load_rooms: load rooms
+                    :param load_buildings: load buildings, which relate rooms to geographical locations
+
+                    :param risk_only:
+
+                    :param from_range: entities selected with interactions only starting from
+                    :param to_range: entities select with interaction only going on up to
+
+                    :param load_patients_in_locations: load only patients residing in indicated locations
+                    :param load_fraction: load only a fraction of data (debugging purposes)
+                    :param load_fraction_seed: load fraction with fixed seed (for reproducibility)
+                    :param is_verbose: be verbose during load
         Returns:
-            dict:   Dictionary containing all VRE-relevant objects of the form
+            dict:   Dictionary containing all model objects of the form
 
                     { "rooms" :math:`\\longrightarrow` *Rooms*,
 
                     "wards" :math:`\\longrightarrow` *Wards*, etc. }
 
-            Please refer to the ``vre/src/main/python/vre/model`` folder documentation for more details on the
-            various objects.
         """
+        if load_patients_in_locations is None:
+            load_patients_in_locations = []
+         
         wards = dict()  # TODO: Preload wards if necessary in the future, they are in the rooms_identifiers.csv
 
         if is_verbose:
@@ -284,7 +307,7 @@ class DataLoader:
                 # --> Note: Stay() objects are not part of the returned dictionary, they are only used in
                 #                           Case() objects --> Case().stays = [1 : Stay(), 2 : Stay(), ...]
 
-                if load_patients_in_locations is not None or load_patients_in_locations != []:
+                if len(load_patients_in_locations) != 0:
                     nr_non_location_patients = 0
                     location_patients = dict()
                     for patient in patients.values():

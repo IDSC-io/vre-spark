@@ -24,7 +24,7 @@ class Treatment:
     def __init__(
             self,
             patient_id,
-            employee_nr,
+            employee_id,
             date,
             patient_type,
             patient_status,
@@ -41,7 +41,7 @@ class Treatment:
 
         self.date = date
         self.duration_in_minutes = int(duration_in_minutes)
-        self.employee_nr = employee_nr
+        self.employee_id = employee_id
 
         self.employee = None
 
@@ -104,9 +104,9 @@ class Treatment:
             case.add_care(care)
 
             # create employee if not already existing
-            employee = employees.get(care.employee_nr, None)
+            employee = employees.get(care.employee_id, None)
             if employee is None:
-                employee = Employee(care.employee_nr)
+                employee = Employee(care.employee_id)
                 nr_employee_created += 1
             else:
                 nr_employee_found += 1

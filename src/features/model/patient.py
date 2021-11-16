@@ -11,6 +11,8 @@ from src.features.model import Stay, Appointment
 
 from typing import List
 
+from src.features.model.treatment import Treatment
+
 
 class Patient:
 
@@ -287,21 +289,37 @@ class Patient:
 
         return relevant_medications
 
-    def get_chop_codes(self, ):
+    def get_chop_codes(self):
         """
         Which chop codes (surgeries) was the patient exposed to.
-        :return: Set of Chops
+        :return: list of chops (types of surgeries)
         """
         # TODO: Reimplement relevant case and date
         # (case, dt) = self.get_relevant_case_and_date()
         # if case is None:
         #     return None
-        chops = set()
+        chops = []
         for case in self.cases.values():
             for surgery in case.surgeries:
                 # if surgery.date <= dt:
-                chops.add(surgery.chop)
+                chops.append(surgery.chop)
         return chops
+
+    def get_surgeries(self):
+        """
+        Which surgeries was the patient exposed to.
+        :return: list of surgeries
+        """
+        # TODO: Reimplement relevant case and date
+        # (case, dt) = self.get_relevant_case_and_date()
+        # if case is None:
+        #     return None
+        surgeries = []
+        for case in self.cases.values():
+            for surgery in case.surgeries:
+                # if surgery.date <= dt:
+                surgeries.append(surgery)
+        return surgeries
 
     def has_surgery(self):
         """
@@ -311,6 +329,11 @@ class Patient:
         relevant_chops = self.get_chop_codes()
         return False if relevant_chops is None else len(relevant_chops) > 0
 
+    def get_antibiotics_qty(self):
+        """
+        Get number of antibiotics.
+        """
+        return 
     def get_dispform(self):
         """
         What kind of forms of drug administration happened during the relevant case before the relevant date?
@@ -533,6 +556,17 @@ class Patient:
 
         return appointments
 
+    def get_treatments(self) -> List[Treatment]:
+        """
+        Get all treatments of a patient.
+        :return:
+        """
+        treatments = []
+        for case in self.cases.values():
+            treatments.extend(case.cares)
+
+        return treatments
+    
     @staticmethod
     def create_patient_dict(csv_path, encoding, load_fraction=1.0, load_seed=7, is_verbose=True):
         """
