@@ -71,10 +71,10 @@ class Building:
         return {"Campus ID": self.campus_id, "WW Building ID": self.ww_building_id,
                 "SAP Building Abbreviation 1":self.sap_building_abbreviation1, "SAP Building Abbreviation 2":self.sap_building_abbreviation2,
                 "Building Full ID": self.ww_building_full_id, "Building Common Name": self.building_common_name, "Street": self.street, "Longitude": self.longitude, "Latitude": self.latitude}
-
-    def __repr__(self):
-        return str(dict((key, value) for key, value in self.__dict__.items()
-                    if not callable(value) and not key.startswith('__')))
-
-    def __str__(self):
-        return self.__repr__()
+    # TODO: Leads to stackoverflow
+    # def __repr__(self):
+    #     return str(dict((key, value) for key, value in self.__dict__.items()
+    #                 if not callable(value) and not key.startswith('__')))
+    #
+    # def __str__(self):
+    #     return self.__repr__()

@@ -8,6 +8,7 @@ from tqdm import tqdm
 from src.features.model import Bed
 from src.features.model.building import Building
 from src.features.model.floor import Floor
+from src.features.model.data_model_constants import ICUs
 
 
 class Room:
@@ -263,10 +264,12 @@ class Room:
         logging.info(f"{nr_ok} rooms added to appointments, {nr_appointments_not_found} appointments not found, {nr_none_room} appointments without room,"
                      f" {nr_rooms_created} new rooms created")
                      # f", {len(deleted_appointments)} appointments deleted")
-
-    def __repr__(self):
-        return str(dict((key, value) for key, value in self.__dict__.items()
-                if not callable(value) and not key.startswith('__')))
-
-    def __str__(self):
-        return self.__repr__()
+    def is_icu(self):
+        return self.ward.name in ICUs
+    # TODO: Leads to stackoverflow
+    # def __repr__(self):
+    #     return str(dict((key, value) for key, value in self.__dict__.items()
+    #             if not callable(value) and not key.startswith('__')))
+    #
+    # def __str__(self):
+    #     return self.__repr__()

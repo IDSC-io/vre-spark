@@ -170,10 +170,10 @@ class Stay:
                 nr_ok += 1
 
         logging.info(f"{nr_ok} stays ok, {nr_not_found} cases not found, {nr_not_formatted} malformed, {nr_wards_updated} wards updated, {nr_rooms_created} new rooms created")
-
-    def __repr__(self):
-        return str(dict((key, value) for key, value in self.__dict__.items()
-                if not callable(value) and not key.startswith('__')))
-
-    def __str__(self):
-        return self.__repr__()
+    # TODO: Leads to stackoverflow
+    # def __repr__(self):
+    #     return str(dict((key, value) for key, value in self.__dict__.items()
+    #             if not callable(value) and not key.startswith('__')))
+    #
+    # def __str__(self):
+    #     return self.__repr__()

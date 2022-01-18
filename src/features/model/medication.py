@@ -90,10 +90,10 @@ class Medication:
 
         logging.info(f"{len(medications)} medications created, {nr_cases_not_found} cases not found")
         return medications
-
-    def __repr__(self):
-        return str(dict((key, value) for key, value in self.__dict__.items()
-                    if not callable(value) and not key.startswith('__')))
-
-    def __str__(self):
-        return self.__repr__()
+    # TODO: Leads to stackoverflow
+    # def __repr__(self):
+    #     return str(dict((key, value) for key, value in self.__dict__.items()
+    #                 if not callable(value) and not key.startswith('__')))
+    #
+    # def __str__(self):
+    #     return self.__repr__()
