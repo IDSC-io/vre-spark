@@ -812,7 +812,7 @@ class SurfaceModel:
                     logging.warning('Encountered empty patient ID !')
                     continue
                 # Add patient node
-                self.new_patient_node(str(this_pat_id), risk_dict=patient.risks)
+                self.new_patient_node(str(this_pat_id), risk_dict=patient.risk_screenings)
                 #########################################
                 # --> Step 1: Add rooms based on Stay() objects to the network
                 #########################################

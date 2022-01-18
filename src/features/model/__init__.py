@@ -12,6 +12,6 @@ from src.features.model.ward import Ward
 from src.features.model.stay import Stay
 from src.features.model.partner import Partner
 from src.features.model.patient import Patient
-from src.features.model.risk import Risk
+from src.features.model.risk_screening import RiskScreening
 from src.features.model.surgery import Surgery
 from src.features.model.building import Building

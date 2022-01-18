@@ -25,6 +25,8 @@ def cleanup_dataset(overwrite_files=False):
     # make the interim path if not available
     pathlib.Path(interim_data_path).mkdir(parents=True, exist_ok=True)
 
+    # encoding = "ISO-8859-1"
+    encoding = None
     csv_files = [each_file for each_file in os.listdir(raw_data_path) if each_file.endswith('.csv')]
 
     for each_file in csv_files:
@@ -37,7 +39,7 @@ def cleanup_dataset(overwrite_files=False):
             continue
 
         if path.name == "DIM_FALL.csv":
-            df = pd.read_csv(path, encoding="ISO-8859-1", dtype=str)
+            df = pd.read_csv(path, encoding=encoding, dtype=str)
             df.columns = ["Patient ID", "Case ID", "Case Type ID", "Case Status", "Case Type", "Start Date", "End Date",
                           "Patient Type", "Patient Status"]
 
@@ -56,8 +58,11 @@ def cleanup_dataset(overwrite_files=False):
             df.columns = ["Device ID", "Device Name"]
             df = df.set_index("Device ID")
         elif path.name == "DIM_PATIENT.csv":
-            df = pd.read_csv(path, encoding="ISO-8859-1", dtype=str)
+            df = pd.read_csv(path, encoding=encoding, dtype=str)
             df.columns = ["Patient ID", "Gender", "Birth Date", "Zip Code", "Place of Residence", "Canton", "Language"]
+            # TODO: Recreate dataset excluding patients
+            # TODO: WHERE [dim_patient_status]='aktiv' AND [is_early_arrived]=0 AND [is_deleted]=0 AND dim_patient_geburtsdatum!='1753-01-01' AND [dim_patient_typ]='Standard Patient'
+            # df = df[df["Birth Date"] != "1753-01-01"]  # drop all patients without valid birth date
             df.loc[df["Gender"] == "männlich", "Gender"] = "male"
             df.loc[df["Gender"] == "weiblich", "Gender"] = "female"
             df = df.set_index("Patient ID")

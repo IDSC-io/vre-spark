@@ -25,7 +25,7 @@ class Patient:
         self.canton = canton
         self.language = language
         self.cases = dict();  """ dictionary mapping case ids to case objects"""
-        self.risks = dict();  """dictionary mapping dt.dt() objects to Risk() objects, indicating at which datetime a particular VRE code has been entered in one of the Insel systems """
+        self.risk_screenings = dict();  """dictionary mapping dt.dt() objects to Risk() objects, indicating at which datetime a particular VRE code has been entered in one of the Insel systems """
 
     def get_relevant_case_and_date(self):
         case = self.get_relevant_case()
@@ -40,13 +40,13 @@ class Patient:
     def add_case(self, case):
         self.cases[case.case_id] = case
 
-    def add_risk(self, risk):
+    def add_risk_screening(self, risk_screening):
         """
-        Adds a new risk to the Patients risk dict.
+        Adds a new risk screening to the Patients risk screening dict.
         :param risk:
         :return:
         """
-        self.risks[risk.recording_date] = risk
+        self.risk_screenings[risk_screening.recording_date] = risk_screening
 
     def has_risk(self, risk_list=None):
         """
@@ -56,8 +56,8 @@ class Patient:
         :return:
         """
         # TODO[BE]: Extend to any kind of risks again
-        for risk in self.risks.values():
-            if risk.result != 'nn':
+        for risk_screening in self.risk_screenings.values():
+            if risk_screening.result != 'nn':
                 return True
 
         return False
@@ -87,9 +87,9 @@ class Patient:
             code_text_list = [(32, None), (42, None), (142, None)]
 
         for code_text in code_text_list:
-            if self.risks.get(code_text[0], None) is not None:
-                if code_text[1] is None or self.risks[code_text[0]].description == code_text[1]:
-                    return self.risks[code_text[0]].er_dt
+            if self.risk_screenings.get(code_text[0], None) is not None:
+                if code_text[1] is None or self.risk_screenings[code_text[0]].description == code_text[1]:
+                    return self.risk_screenings[code_text[0]].er_dt
         return None
 
     def get_age(self):
@@ -716,9 +716,10 @@ class Patient:
     def get_patients_by_ids(all_patients: dict, patient_ids):
         return {patient_id: all_patients[patient_id] for patient_id in tqdm(patient_ids) if patient_id in all_patients}
 
-    def __repr__(self):
-        return str(dict((key, value) for key, value in self.__dict__.items()
-                    if not callable(value) and not key.startswith('__')))
-
-    def __str__(self):
-        return self.__repr__()
+    # TODO: Leads to stackoverflow
+    # def __repr__(self):
+    #     return str(dict((key, value) for key, value in self.__dict__.items()
+    #                 if not callable(value) and not key.startswith('__')))
+    #
+    # def __str__(self):
+    #     return self.__repr__()

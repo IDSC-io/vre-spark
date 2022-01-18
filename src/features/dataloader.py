@@ -20,7 +20,7 @@ sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'model
 from tqdm import tqdm
 
 from src.features.model import Patient
-from src.features.model import Risk
+from src.features.model import RiskScreening
 from src.features.model import Case
 from src.features.model import Room
 from src.features.model import Stay
@@ -225,7 +225,7 @@ class DataLoader:
                 if is_verbose:
                     logging.info("[AGENT ATTRIBUTE] loading risk screening data...")
                 # add risks to patients to ensure VRE-positive patients are properly annotated
-                Risk.add_annotated_screening_data_to_patients(self.vre_screenings_path,
+                RiskScreening.add_annotated_screening_data_to_patients(self.vre_screenings_path,
                                                               self.encoding,
                                                               patient_dict=patients, from_range=from_range, to_range=to_range, is_verbose=is_verbose)
             else:

@@ -10,7 +10,7 @@ sys.path.append("../vre/model")
 from src.features.model import Patient
 from src.features.model import Case
 from src.features.model import Stay
-from src.features.model import Risk
+from src.features.model import RiskScreening
 from src.features.model import Medication
 from src.features.model import Chop
 from src.features.model import Surgery
@@ -78,7 +78,7 @@ def patient_data():
         wards,
         partners,
     )
-    Risk.add_annotated_screening_data_to_patients(risks_path, encoding, patients)
+    RiskScreening.add_annotated_screening_data_to_patients(risks_path, encoding, patients)
 
     drugs = Medication.create_drug_map(get_lines(medication_path))
     Medication.add_medications_to_case(medication_path, cases)

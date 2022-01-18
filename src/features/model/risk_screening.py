@@ -6,14 +6,15 @@ from tqdm import tqdm
 import pandas as pd
 
 
-class Risk:
-    """Models a ``Risk`` (i.e. Screening) object.
+class RiskScreening:
+    """Models a ``RiskScreening`` (i.e. Screening) object.
     """
 
     def __init__(self, order_id, recording_date, measurement_date, first_name, last_name, birth_date,
                  patient_id, result):
         """Initiates a Risk (i.e. Screening) object.
         """
+        # TODO: [BE] The relevant date is recording date or measurement date? I believe it would be measurement date but they are mostly the same date.
         self.order_id = order_id
         self.recording_date = recording_date.date()
         self.patient_id = patient_id.zfill(11) if not pd.isna(patient_id) else ""  # extend the patient id to length 11 to get a standardized representation
@@ -158,18 +159,18 @@ class Risk:
             lines (iterator):       iterator object of the to-be-read file `not` containing the header line
             patient_dict (dict):    Dictionary mapping patient ids to Patient() --> {'00008301433' : Patient(), ... }
         """
-        risk_df = pd.read_csv(csv_path, encoding=encoding, parse_dates=["Record Date"], dtype=str)
+        risk_screening_df = pd.read_csv(csv_path, encoding=encoding, parse_dates=["Record Date"], dtype=str)
 
         # in principle they are all int, history makes them a varchar/string
         # risk_df["Patient ID"] = risk_df["Patient ID"].astype(int)
 
         if from_range is not None:
-            risk_df = risk_df.loc[risk_df['Record Date'] > from_range]
+            risk_screening_df = risk_screening_df.loc[risk_screening_df['Record Date'] > from_range]
 
         if to_range is not None:
-            risk_df = risk_df.loc[risk_df['Record Date'] <= to_range]
+            risk_screening_df = risk_screening_df.loc[risk_screening_df['Record Date'] <= to_range]
 
-        risk_objects = list(map(lambda row: Risk(*row), tqdm(risk_df.values.tolist(), disable=not is_verbose)))
+        risk_screening_objects = list(map(lambda row: RiskScreening(*row), tqdm(risk_screening_df.values.tolist(), disable=not is_verbose)))
         stay_wards = []
         screening_wards = []
         logging.debug("adding_all_screenings_to_patients")
@@ -177,18 +178,18 @@ class Risk:
         nr_pat_no_relevant_stays_found = 0
         nr_ok = 0
         nr_screenings_positive = 0
-        for risk in tqdm(risk_objects, disable=not is_verbose):
-            if risk.patient_id not in patient_dict.keys():  # Check whether or not PID exists
+        for risk_screening in tqdm(risk_screening_objects, disable=not is_verbose):
+            if risk_screening.patient_id not in patient_dict.keys():  # Check whether or not PID exists
                 nr_pat_not_found += 1
                 continue
 
             # check if patient had an official stay at the hospital during the risk
             #potential_stays = patient_dict.get(risk.patient_id).get_stays_at_date(risk.recording_date)
             #if True: # len(potential_stays) > 0:  # indicates at least one potential match
-            patient_dict[risk.patient_id].add_risk(risk)
+            patient_dict[risk_screening.patient_id].add_risk_screening(risk_screening)
             nr_ok += 1
 
-            if risk.is_positive():
+            if risk_screening.is_positive():
                 nr_screenings_positive += 1
 
                 # stay_wards.append('+'.join([each_stay.department for each_stay in potential_stays]))
@@ -202,10 +203,11 @@ class Risk:
             #    continue
 
         logging.info(f"{nr_ok} screenings added, {nr_screenings_positive} positive screenings, {nr_pat_not_found} patients from screening data not found, {nr_pat_no_relevant_stays_found} patients with no relevant stays found.")
-
-    def __repr__(self):
-        return str(dict((key, value) for key, value in self.__dict__.items()
-                if not callable(value) and not key.startswith('__')))
-
-    def __str__(self):
-        return self.__repr__()
+    # TODO: Leads to stackoverflow
+    # TODO [BE]: How to solve printing objects reasonably such that they are printed extensively when on recursion level 0, else in reduced form?
+    # def __repr__(self):
+    #     return str(dict((key, value) for key, value in self.__dict__.items()
+    #             if not callable(value) and not key.startswith('__')))
+    #
+    # def __str__(self):
+    #     return self.__repr__()
