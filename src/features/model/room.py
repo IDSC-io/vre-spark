@@ -264,8 +264,10 @@ class Room:
         logging.info(f"{nr_ok} rooms added to appointments, {nr_appointments_not_found} appointments not found, {nr_none_room} appointments without room,"
                      f" {nr_rooms_created} new rooms created")
                      # f", {len(deleted_appointments)} appointments deleted")
+    
     def is_icu(self):
-        return self.ward.name in ICUs
+        return self.ward_name in ICUs
+
     # TODO: Leads to stackoverflow
     # def __repr__(self):
     #     return str(dict((key, value) for key, value in self.__dict__.items()
