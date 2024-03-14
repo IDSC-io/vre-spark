@@ -1,3 +1,5 @@
+Officially published code repository of research paper [A. Atkinson and B. Ellenberger et al. - Extending outbreak investigation with machine learning and graph theory: Benefits of new tools with application to a nosocomial outbreak of a multidrug-resistant organism](https://pubmed.ncbi.nlm.nih.gov/36111457/).
+
 vre-spark
 ==============================
 
